@@ -1,0 +1,88 @@
+//------------------------------------------------------------------------
+// CSS
+
+/*
+
+!.gitignore
+
+!cstrike/
+cstrike/*
+!cstrike/addons
+cstrike/addons/*
+!cstrike/addons/stripper
+cstrike/addons/stripper/*
+!cstrike/addons/stripper/global_filters.cfg
+
+!cstrike/addons/sourcemod
+cstrike/addons/sourcemod/*
+!cstrike/addons/sourcemod/configs/
+cstrike/addons/sourcemod/configs/*
+!cstrike/addons/sourcemod/configs/adminroom
+!cstrike/addons/sourcemod/configs/bosshp
+!cstrike/addons/sourcemod/configs/dev_zones
+!cstrike/addons/sourcemod/configs/savelevel
+
+!cstrike/cfg
+cstrike/cfg/*
+!cstrike/cfg/sourcemod
+cstrike/cfg/sourcemod/*
+!cstrike/cfg/sourcemod/entwatch
+!cstrike/cfg/sourcemod/zombiereloaded
+
+//------------------------------------------------------------------------
+// Private
+
+cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
+
+//------------------------------------------------------------------------
+// Stripper
+
+// Noctali
+cstrike/addons/stripper/maps/ze_LOTR_Isengard_v2_3.cfg
+cstrike/addons/stripper/maps/ze_paranoid_rezurrection_v11_9.cfg
+cstrike/addons/stripper/maps/ze_LOTR_Minas_Tirith_v2_2fix.cfg
+cstrike/addons/stripper/maps/ze_LOTR_Minas_Tirith_v3_5.cfg
+cstrike/addons/stripper/maps/ze_lotr_minas_tirith_v3_3.cfg
+
+// Soft Serve
+cstrike/addons/stripper/maps/ze_chroma_v0_4.cfg
+cstrike/addons/stripper/maps/ze_mist_v1_3.cfg
+cstrike/addons/stripper/maps/ze_ocarina_of_time_v1_0.cfg
+
+// Vanya
+cstrike/addons/stripper/maps/ze_crazy_escape_css2.cfg
+cstrike/addons/stripper/maps/ze_johnny_nukem_b8_3.cfg
+cstrike/addons/stripper/maps/ze_johnny_nukem_beta7.cfg
+cstrike/addons/stripper/maps/ze_surf_froyo_css.cfg
+cstrike/addons/stripper/maps/ze_surf_froyo_css3.cfg
+
+// Dakotec
+cstrike/addons/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
+
+// George
+cstrike/addons/stripper/maps/ze_eden_a3s.cfg
+
+// FPTyel, MOLTARD, NOCTALI, ZACADE, NEON, Heyfumi, NiceShot
+cstrike/addons/stripper/maps/ze_ffvii_mako_russianversion134.cfg
+
+// HEYFUMI
+cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_css4.cfg
+cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_v8_4.cfg
+cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_v8_4fix.cfg
+
+// UNLOZE
+cstrike/addons/stripper/maps/ze_super_mario_64_v2_b9.cfg
+cstrike/addons/stripper/maps/ze_three_eyes_v0_7s_fix.cfg
+cstrike/addons/stripper/maps/ze_fiendlordkeep_v4_2.cfg
+cstrike/addons/stripper/maps/ze_totally_new_wester.cfg
+
+cstrike/addons/stripper/maps/ze_moltentemple_a4.cfg
+cstrike/addons/stripper/maps/ze_moltentemple_a5.cfg
+
+cstrike/addons/stripper/maps/ze_rush_b_s1.cfg
+
+cstrike/addons/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
+
+// Nide
+cstrike/addons/stripper/maps/ze_light_retribution_v1s.cfg
+
