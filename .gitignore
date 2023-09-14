@@ -100,4 +100,7 @@ cstrike/cfg/sourcemod/*
 
 # ZombieReloaded
 cstrike/cfg/sourcemod/zombiereloaded
+cstrike/cfg/sourcemod/zombiereloaded/laser/*
+cstrike/cfg/sourcemod/zombiereloaded/events/*
+cstrike/cfg/sourcemod/zombiereloaded/select_zr_mod/*
 cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
