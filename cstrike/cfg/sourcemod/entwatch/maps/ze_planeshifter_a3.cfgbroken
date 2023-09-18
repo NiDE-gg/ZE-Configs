@@ -13,8 +13,8 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "578965"
-        "mode"              "2" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
+        "hammerid"          "578967"
+        "mode"              "1" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "0"
         "cooldown"          "60"
         "maxamount"         "0"
@@ -32,8 +32,8 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "579227"
-        "mode"              "2" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
+        "hammerid"          "579211"
+        "mode"              "1" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "0"
         "cooldown"          "60"
         "maxamount"         "0"
@@ -51,8 +51,8 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "578876"
-        "mode"              "3" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
+        "hammerid"          "578880"
+        "mode"              "1" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "9"
         "cooldown"          "0"
         "maxamount"         "0"
@@ -70,8 +70,8 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "579702"
-        "mode"              "2" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
+        "hammerid"          "579710"
+        "mode"              "1" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "0"
         "cooldown"          "60"
         "maxamount"         "0"
@@ -89,7 +89,7 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "579177"
+        "hammerid"          "579175"
         "mode"              "2" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "0"
         "cooldown"          "70"
@@ -108,7 +108,7 @@
         "forcedrop"         "true"
         "chat"              "true"
         "hud"               "true"
-        "hammerid"          "579157"
+        "hammerid"          "579151"
         "mode"              "2" // 0 = No button, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses.
         "maxuses"           "0"
         "cooldown"          "100"
