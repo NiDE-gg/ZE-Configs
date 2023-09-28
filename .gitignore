@@ -3,58 +3,6 @@
 # If you wish to edit one of these configs, bring your changes directly to a server manager
 
 //-----------------
-// Maps Strippers
-//-----------------
-
-# Nide
-cstrike/addons/stripper/maps/ze_light_retribution_v1s.cfg
-cstrike/addons/stripper/maps/ze_FFVII_Cosmo_Canyon_v5fix.cfg
-
-# UNLOZE
-cstrike/addons/stripper/maps/ze_rush_b_s1.cfg
-cstrike/addons/stripper/maps/ze_moltentemple_a4.cfg
-cstrike/addons/stripper/maps/ze_moltentemple_a5.cfg
-cstrike/addons/stripper/maps/ze_fiendlordkeep_v4_2.cfg
-cstrike/addons/stripper/maps/ze_totally_new_wester.cfg
-cstrike/addons/stripper/maps/ze_super_mario_64_v2_b9.cfg
-cstrike/addons/stripper/maps/ze_three_eyes_v0_7s_fix.cfg
-cstrike/addons/stripper/maps/ze_FFVII_Mako_Reactor_v5_3.cfg
-cstrike/addons/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
-
-# George
-cstrike/addons/stripper/maps/ze_eden_a3s.cfg
-
-# Dakotec
-cstrike/addons/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
-
-# Soft Serve
-cstrike/addons/stripper/maps/ze_mist_v1_3.cfg
-cstrike/addons/stripper/maps/ze_chroma_v0_4.cfg
-cstrike/addons/stripper/maps/ze_ocarina_of_time_v1_0.cfg
-
-# HEYFUMI
-cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_css4.cfg
-cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_v8_4.cfg
-cstrike/addons/stripper/maps/ze_ffvii_malgo_reactor_v8_4fix.cfg
-
-# Vanya
-cstrike/addons/stripper/maps/ze_surf_froyo_css.cfg
-cstrike/addons/stripper/maps/ze_surf_froyo_css3.cfg
-cstrike/addons/stripper/maps/ze_johnny_nukem_b8_3.cfg
-cstrike/addons/stripper/maps/ze_crazy_escape_css2.cfg
-cstrike/addons/stripper/maps/ze_lotr_isengard_v2_3.cfg
-cstrike/addons/stripper/maps/ze_johnny_nukem_beta7.cfg
-cstrike/addons/stripper/maps/ze_lotr_isengard_v2_3_hp.cfg
-
-# Noctali
-cstrike/addons/stripper/maps/ze_LOTR_Isengard_v2_3.cfg
-cstrike/addons/stripper/maps/ze_LOTR_Minas_Tirith_v3_5.cfg
-cstrike/addons/stripper/maps/ze_lotr_minas_tirith_v3_3.cfg
-cstrike/addons/stripper/maps/ze_LOTR_Minas_Tirith_v2_2fix.cfg
-cstrike/addons/stripper/maps/ze_paranoid_rezurrection_v11_9.cfg
-cstrike/addons/stripper/maps/ze_ffvii_mako_russianversion134.cfg
-
-//-----------------
 // Servers configs
 //-----------------
 
@@ -70,11 +18,6 @@ cstrike/*
 !cstrike/addons
 cstrike/addons/*
 
-# Strippers
-!cstrike/addons/stripper
-cstrike/addons/stripper/*
-!cstrike/addons/stripper/global_filters.cfg
-
 # SourceMod
 !cstrike/addons/sourcemod
 cstrike/addons/sourcemod/*
@@ -86,6 +29,9 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/bosshp
 !cstrike/addons/sourcemod/configs/dev_zones
 !cstrike/addons/sourcemod/configs/savelevel
+## Strippers
+!cstrike/addons/sourcemod/configs/stripper
+!cstrike/addons/sourcemod/configs/stripper/global_filters.cfg
 
 # Server Configs
 !cstrike/cfg
@@ -104,3 +50,55 @@ cstrike/cfg/sourcemod/zombiereloaded/laser/*
 cstrike/cfg/sourcemod/zombiereloaded/events/*
 cstrike/cfg/sourcemod/zombiereloaded/select_zr_mod/*
 cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
+
+//-----------------
+// Maps Strippers
+//-----------------
+
+# Nide
+cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v5fix.cfg
+
+# UNLOZE
+cstrike/addons/sourcemod/configs/stripper/maps/ze_rush_b_s1.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a4.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a5.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_fiendlordkeep_v4_2.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_totally_new_wester.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_super_mario_64_v2_b9.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_three_eyes_v0_7s_fix.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Mako_Reactor_v5_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
+
+# George
+cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
+
+# Dakotec
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
+
+# Soft Serve
+cstrike/addons/sourcemod/configs/stripper/maps/ze_mist_v1_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_chroma_v0_4.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ocarina_of_time_v1_0.cfg
+
+# HEYFUMI
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_css4.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_v8_4.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_v8_4fix.cfg
+
+# Vanya
+cstrike/addons/sourcemod/configs/stripper/maps/ze_surf_froyo_css.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_surf_froyo_css3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_johnny_nukem_b8_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_crazy_escape_css2.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_isengard_v2_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_johnny_nukem_beta7.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_isengard_v2_3_hp.cfg
+
+# Noctali
+cstrike/addons/sourcemod/configs/stripper/maps/ze_LOTR_Isengard_v2_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_LOTR_Minas_Tirith_v3_5.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v3_3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_LOTR_Minas_Tirith_v2_2fix.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_paranoid_rezurrection_v11_9.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_mako_russianversion134.cfg
