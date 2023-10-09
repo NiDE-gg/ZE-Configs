@@ -58,6 +58,7 @@ cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 # Nide
 cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v5fix.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v5test4.cfg
 
 # UNLOZE
 cstrike/addons/sourcemod/configs/stripper/maps/ze_rush_b_s1.cfg
