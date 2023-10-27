@@ -23,7 +23,7 @@
     {
         "name"              "Melter"
         "shortname"         "Melter"
-        "color"             "{ORANGE}"
+        "color"             "{orange}"
         "buttonclass"       "func_button"
         "filtername"        "item_melter_filter"
         "hasfiltername"     "true"
