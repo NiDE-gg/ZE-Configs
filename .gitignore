@@ -57,8 +57,9 @@ cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 
 # Nide
 cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v1_1.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_cosmo_canyon_v2_1.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v5fix.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Cosmo_Canyon_v5test4.cfg
 
 # UNLOZE
 cstrike/addons/sourcemod/configs/stripper/maps/ze_rush_b_s1.cfg
@@ -84,17 +85,16 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_ocarina_of_time_v1_0.cfg
 
 # HEYFUMI
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_css4.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_css4_2.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_v8_4.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_malgo_reactor_v8_4fix.cfg
 
 # Vanya
 cstrike/addons/sourcemod/configs/stripper/maps/ze_surf_froyo_css.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_surf_froyo_css3.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_johnny_nukem_beta7.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_johnny_nukem_b8_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_crazy_escape_css2.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_isengard_v2_3.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_johnny_nukem_beta7.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_isengard_v2_3_hp.cfg
 
 # Noctali
 cstrike/addons/sourcemod/configs/stripper/maps/ze_LOTR_Isengard_v2_3.cfg
