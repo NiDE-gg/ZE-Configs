@@ -1,7 +1,7 @@
 # NiDE ZE Configs
 
-The css ze config are mostly private plugins and hard to find. So I created this Github to share with ze server administrators.
-Contact me: https://nide.gg/
+The css ze config are mostly private plugins and hard to find. So we created this Github to share with ze server administrators.
+Contact us: https://nide.gg/
 
 A collection of entWatch, stripper and BossHP configs for NiDE CS:SOURCE ZE, please be aware that the stripper configs are not an extensive list of everything used on our server.
 
@@ -19,33 +19,43 @@ Stripper is quite a complicated beast and unfortunately a single template is not
 
 Find entity classnames that start with "weapon_" as a starting point for creating these. For each item you're going to want a new block, make sure the blocks are numbered correctly if you're copy/pasting them. The format is available below.
 
+[Colour List: Use Color Codes](https://github.com/srcdslab/sm-plugin-MultiColors/blob/master/addons/sourcemod/scripting/include/multicolors.inc#L870-#L1045)
+
 ```
 "entities"
 {
-    "0"
-    {
-        "name"              "" //name of the item to show in chat
-        "shortname"         "" //name of the item to show in scoreboard
-        "color"             "" //colour to use in chat (use hex color)
-        "buttonclass"       "" //what classname the button entity uses, usually just func_button
-        "filtername"        "" //filtername that the items filter entity uses (if applicable, see below)
-        "hasfiltername"     "" //true if the item uses a filter entity to check the user, false otherwise
-        "blockpickup"       "" //always false
-        "allowtransfer"     "" //true for human items, false for zm items
-        "forcedrop"         "" //true for human items, false for zm items
-        "chat"              "" //always true
-        "hud"               "" //always true
-        "hammerid"          "" //hammerid of the weapon_ entity for the item
-        "mode"              "" //0 = nothing 1 = spam protection only, 2 = cooldown, 3 = limited uses, 4 = limited uses with cooldown, 5 = cooldown that only gets triggered after all maxuses are used
-        "maxuses"           "" //max uses of the item (if applicable)
-        "cooldown"          "" //cooldown of the item (if applicable)
-        "maxamount"         "" //how many instances of this item can exist
-        "physbox"           "" //OPTIONAL: "true" if this item is a physbox so it would allow bullets/knife to shoot/knife through. If it's false, dont bother adding this line.
-        "trigger"           "" //OPTIONAL: hammerid of the trigger that gives a player the item if one exists
-    }
+	"0"
+	{
+		"name"				""			//String, FullName of Item (Chat)
+		"shortname"			""			//String, ShortName of Item (Hud)
+		"color"				"{default}"	//String, One of the colors. (Chat, Glow)
+		"buttonclass"		""			//String, Button Class, Can use "game_ui" for Right Click activation method
+		"filtername"		""			//String, Filter for Activator
+		"blockpickup"		"false"		//Bool, The item cannot be picked up
+		"allowtransfer"		"false"		//Bool, Allow admins to transfer an item
+		"forcedrop"			"false"		//Bool, The item will be dropped if player dies or disconnects
+		"chat"				"false"		//Bool, Display chat items
+		"chat_uses"			"false"		//Bool, Display chat someone is using an item(if disabled chat)
+		"hud"				"false"		//Bool, Display Hud items
+		"hammerid"			"0"			//Integer, weapon_* HammerID
+		"energyid"			"0"			//Integer, Math counter HammerID (For modes 6 & 7)
+		"mode"				"0"			//Integer, Mode for item. 0 = Can hold E, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses, 6 = Counter - stops when minimum is reached, 7 = Counter - stops when maximum is reached
+		"maxuses"			"0"			//Integer, Maximum uses for modes 3, 4, 5
+		"cooldown"			"0"			//Integer, Cooldown of item for modes 2, 4, 5
+		"buttonid"			"0"			//Integer, Allows you to set the main button for cooldown to track in EntWatch. Use HammerID of the button
+		"trigger"			"0"			//Integer, Sets a trigger that an ebanned player cant activate, mostly to prevent picking up weapon_knife items
+		"pt_spawner"		""			//String, Allows admins to spawn items. Not recommended to use because it can break the items. Type point_template which spawns the item
+		"physbox"			"false"		//Bool, Needs module physbox. Not recommended to use. If the item has func_physbox then bullets and grenades won't touch the physbox
+		"use_priority"		"true"		//Bool, Enabled by default. You can disable the forced pressing of the button on a specific item
+		
+		"buttonclass2"		""			//String, Button Class for the Second Button, Can use "game_ui" for Right Click activation method
+		"energyid2"			"0"			//Integer, Math counter HammerID for the Second Button (For modes 6 & 7)
+		"mode2"				"0"			//Integer, Mode for item for the Second Button. 0 = Can hold E, 1 = Spam protection only, 2 = Cooldowns, 3 = Limited uses, 4 = Limited uses with cooldowns, 5 = Cooldowns after multiple uses, 6 = Counter - stops when minimum is reached, 7 = Counter - stops when maximum is reached
+		"maxuses2"			"0"			//Integer, Maximum uses for modes 3, 4, 5 for the Second Button
+		"cooldown2"			"0"			//Integer, Cooldown of item for modes 2, 4, 5 for the  Second Button
+		"buttonid2"			"0"			//Integer, Allows you to set the Second Button for cooldown to track in EntWatch. Use HammerID of the button
+	}
 }
 ```
-
-### entWatch Colour List Use Hexadecimal Color Codes
 
 inspired by [GFLClan](https://gflclan.com/)
