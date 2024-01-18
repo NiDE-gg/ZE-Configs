@@ -7,6 +7,9 @@ A collection of EntWatch, Stripper, Savelevel, AdminRoom and BossHP configs CS:S
 > [!TIP]
 > Under each configs template you will find a clean template ready to use. (Copy & Paste)
 
+> [!IMPORTANT]
+> Linux users: capitalization matters (maps name, cfg, ..)
+
 # How to Contribute
 
 For making any of these configs, you'll want a tool like [VIDE](http://www.riintouge.com/VIDE/)'s entity lump editor, or [entSpy](https://gamebanana.com/tools/5876) to navigate the entities in a map. You can also compare maps with current configs in this repository and see how it has already been done if you're looking for functional examples of things.
