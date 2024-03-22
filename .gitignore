@@ -51,9 +51,9 @@ cstrike/cfg/sourcemod/zombiereloaded/events/*
 cstrike/cfg/sourcemod/zombiereloaded/select_zr_mod/*
 cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 
-//-----------------
-// Maps Strippers
-//-----------------
+//------------------------
+// Maps Strippers/Configs
+//------------------------
 
 # Nide
 cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
@@ -75,8 +75,34 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
 # George
 cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
 
-# Rix
+# Rix - Ported maps from CSGO
+cstrike/cfg/sourcemod/entwatch/maps/ze_bulhufas_a1_1_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_bulhufas_a1_1_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_bulhufas_a1_1_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_Cyberspace_v1_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_Cyberspace_v1_s.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_Cyberspace_v1_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_jerry_malaka_escape_v2fix_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_jerry_malaka_escape_v2fix_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_jerry_malaka_escape_v2fix_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_lootus_v2_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_lootus_v2_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_lootus_v2_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_uyuni_v1_6_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_uyuni_v1_6_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_uyuni_v1_6_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_xenovation_v3_5_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_xenovation_v3_5_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_xenovation_v3_5_s.cfg
+
+cstrike/cfg/sourcemod/entwatch/maps/ze_palace_of_minolila_v1_s.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_palace_of_minolila_v1_s.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_palace_of_minolila_v1_s.cfg
 
 # Dakotec
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
