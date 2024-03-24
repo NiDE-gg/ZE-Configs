@@ -76,10 +76,6 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
 
 # Rix - Ported maps from CSGO
-cstrike/cfg/sourcemod/entwatch/maps/ze_bulhufas_a1_1_s.cfg
-cstrike/addons/sourcemod/configs/bosshp/ze_bulhufas_a1_1_s.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_bulhufas_a1_1_s.cfg
-
 cstrike/cfg/sourcemod/entwatch/maps/ze_Cyberspace_v1_s.cfg
 cstrike/addons/sourcemod/configs/bosshp/ze_Cyberspace_v1_s.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_Cyberspace_v1_s.cfg
