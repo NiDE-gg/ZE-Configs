@@ -96,9 +96,9 @@ cstrike/cfg/sourcemod/entwatch/maps/ze_xenovation_v3_5_s.cfg
 cstrike/addons/sourcemod/configs/bosshp/ze_xenovation_v3_5_s.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_xenovation_v3_5_s.cfg
 
-cstrike/cfg/sourcemod/entwatch/maps/ze_palace_of_minolila_v1_s.cfg
-cstrike/addons/sourcemod/configs/bosshp/ze_palace_of_minolila_v1_s.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_palace_of_minolila_v1_s.cfg
+cstrike/cfg/sourcemod/entwatch/maps/ze_palace_of_minolila_v1_s2.cfg
+cstrike/addons/sourcemod/configs/bosshp/ze_palace_of_minolila_v1_s2.cfg
+cstrike/addons/sourcemod/configs/stripper/maps/ze_palace_of_minolila_v1_s2.cfg
 
 # Dakotec
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
