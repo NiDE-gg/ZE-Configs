@@ -68,9 +68,11 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a5.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_fiendlordkeep_v4_2.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_totally_new_wester.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_super_mario_64_v2_b9.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_three_eyes_v0_7s_fix.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_FFVII_Mako_Reactor_v5_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
+
+# Lv. 100 Crobat
+cstrike/addons/sourcemod/configs/stripper/maps/ze_three_eyes_v0_7s_fix.cfg
 
 # George
 cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
