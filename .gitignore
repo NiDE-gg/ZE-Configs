@@ -41,6 +41,9 @@ cstrike/cfg/*
 !cstrike/cfg/sourcemod
 cstrike/cfg/sourcemod/*
 
+# Mapdownloader - Auto synch
+!cstrike/maps/auto-mapdownloader-ze.csv
+
 # EntWatch
 !cstrike/cfg/sourcemod/entwatch
 
