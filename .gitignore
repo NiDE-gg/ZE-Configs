@@ -28,7 +28,9 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/adminroom
 !cstrike/addons/sourcemod/configs/bosshp
 !cstrike/addons/sourcemod/configs/dev_zones
+!cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
+
 ## Strippers
 !cstrike/addons/sourcemod/configs/stripper
 !cstrike/addons/sourcemod/configs/stripper/global_filters.cfg
