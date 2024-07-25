@@ -31,6 +31,9 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
 
+# MCE
+!cstrike/addons/sourcemod/configs/mapchooser_extended.cfg
+
 ## Strippers
 !cstrike/addons/sourcemod/configs/stripper
 !cstrike/addons/sourcemod/configs/stripper/global_filters.cfg
