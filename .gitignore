@@ -54,9 +54,11 @@ cstrike/cfg/sourcemod/*
 
 # EntWatch
 !cstrike/cfg/sourcemod/entwatch
+cstrike/addons/sourcemod/configs/entwatch/maps/*
 
 # ZombieReloaded
 cstrike/cfg/sourcemod/zombiereloaded/*
+cstrike/addons/sourcemod/configs/zr/maps/*
 cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 
 //------------------------
