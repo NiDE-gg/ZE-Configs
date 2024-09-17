@@ -28,6 +28,7 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/adminroom
 !cstrike/addons/sourcemod/configs/bosshp
 !cstrike/addons/sourcemod/configs/dev_zones
+!cstrike/addons/sourcemod/configs/entwatch/maps
 !cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
 
@@ -51,10 +52,6 @@ cstrike/cfg/sourcemod/*
 
 # Mapdownloader - Auto synch
 !cstrike/maps/auto-mapdownloader-ze.csv
-
-# EntWatch
-!cstrike/cfg/sourcemod/entwatch
-cstrike/addons/sourcemod/configs/entwatch/maps/*
 
 # ZombieReloaded
 cstrike/cfg/sourcemod/zombiereloaded/*
