@@ -28,7 +28,7 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/adminroom
 !cstrike/addons/sourcemod/configs/bosshp
 !cstrike/addons/sourcemod/configs/dev_zones
-!cstrike/addons/sourcemod/configs/entwatch/maps
+!cstrike/addons/sourcemod/configs/entwatch
 !cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
 
