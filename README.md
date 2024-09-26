@@ -1,31 +1,30 @@
 # NiDE ZE Configs
 
-The css ze config are mostly private plugins and hard to find. So we created this Github to share with ze server administrators.
+This repository was created with the intention of sharing configs with other ze server administrators.
 
-A collection of EntWatch, Stripper, Savelevel, AdminRoom and BossHP configs CS:SOURCE ZE based on open sources plugins from [srcdslab](https://github.com/srcdslab). Please be aware that the stripper configs are not an extensive list of everything used on our server.
+This is a collection of EntWatch, Stripper, Savelevel, AdminRoom and BossHP configs for CS:Source ZE based on open source plugins from [srcdslab](https://github.com/srcdslab). Please be aware that the stripper configs are not an extensive list of everything used on our server.
 
 > [!TIP]
-> Under each configs template you will find a clean template ready to use. (Copy & Paste)
-
+> Clean templates are under explanations for you to copy and paste.
 > [!IMPORTANT]
 > Linux users: capitalization matters (maps name, cfg, ..)
 
-# How to Contribute
+## How to Contribute
 
-For making any of these configs, you'll want a tool like [VIDE](http://www.riintouge.com/VIDE/)'s entity lump editor, or [entSpy](https://gamebanana.com/tools/5876) to navigate the entities in a map. You can also compare maps with current configs in this repository and see how it has already been done if you're looking for functional examples of things.
+For making any of these configs, you'll want a tool like [VIDE](http://www.riintouge.com/VIDE/)'s entity lump editor, [bspsrc](https://github.com/ata4/bspsrc), or [entSpy](https://gamebanana.com/tools/5876) to navigate the entities in a map. You can also compare maps with current configs in this repository and see how it has already been done if you're looking for functional examples.
 
 > [!IMPORTANT]
-> Make sure the filename of the config matches the map name on the server.
+> Make sure the filename and the capitalization of the config matches the map name on the server.
 
 ## Stripper
 
-Stripper is quite a complicated beast and unfortunately a single template is not really going to help you too much. If you're looking for a good starting point to learn Stripper, you can check out [this tutorial](https://gflclan.com/forums/topic/47449-stripper-cfgs-guide/). If you have any questions regarding stripper creation you can always join our [#mapping channel](https://discord.nide.gg) on Discord for assistance.
+Stripper is quite a complicated beast and unfortunately a single template is not really going to help you too much. If you're looking for a good starting point to learn Stripper, you can check out [this tutorial](https://eufrag.com/topic/2045-stripper-cfgs-guide/). If you have any questions regarding stripper creation you can always join our [#mapping channel](https://discord.nide.gg) on Discord for assistance.
 
-# Configs Formatting
+## Config Formatting
 
-## EntWatch
+### EntWatch
 
-Find entity classnames that start with "weapon_" as a starting point for creating these. For each item you're going to want a new block, make sure the blocks are numbered correctly if you're copy/pasting them. The format is available below.
+Find entity classnames that start with "weapon_*" as a starting point for creating these. For each item you're going to want a new block, make sure the blocks are numbered correctly if you're copy/pasting them. The format is available below.
 
 > [!NOTE]
 > Entwatch configs are made to work with [DarkerZ's Entwatch-DZ Plugin](https://github.com/srcdslab/sm-plugin-EntWatch). We cannot guarantee compatability with other forks of entwatch plugin.
@@ -44,6 +43,7 @@ Find entity classnames that start with "weapon_" as a starting point for creatin
         "allowtransfer"     "true"  // Allow weapon to be etransfered
         "forcedrop"         "true"  // Force weapon to drop if player dies/disconnects
         "chat"              "true"  // Does item show up in the chat
+        "chatuses"          "true"  // Does item usage show up in the chat
         "hud"               "true"  // Does item show up in the hud
         "hammerid"          ""      // Hammer ID of the weapon_* entity
         "mode"              ""      // Item mode (Read Below)
@@ -64,7 +64,7 @@ Find entity classnames that start with "weapon_" as a starting point for creatin
 ```
 
 <details>
-  <summary>Copy & Paste</summary>
+  <summary>Template</summary>
 
   ```text
     "entities"
@@ -80,33 +80,7 @@ Find entity classnames that start with "weapon_" as a starting point for creatin
             "allowtransfer"     "true"
             "forcedrop"         "true"
             "chat"              "true"
-            "hud"               "true"
-            "hammerid"          ""
-            "mode"              ""
-            "maxuses"           ""
-            "cooldown"          ""
-            "trigger"           ""
-            "buttonid"          ""
-            "energyid"          ""
-            "buttonclass2"      ""
-            "mode2"             ""
-            "maxuses2"          ""
-            "cooldown2"         ""
-            "buttonid2"         ""
-            "energyid2"         ""
-            "pt_spawner"        ""
-        }
-        "1"
-        {
-            "name"              ""
-            "shortname"         ""
-            "color"             ""
-            "buttonclass"       ""
-            "filtername"        ""
-            "blockpickup"       "false"
-            "allowtransfer"     "true"
-            "forcedrop"         "true"
-            "chat"              "true"
+            "chatuses"          "true"
             "hud"               "true"
             "hammerid"          ""
             "mode"              ""
@@ -138,11 +112,13 @@ Mode | Description
 3 | Items with limited uses and no CD
 4 | Items with limited uses and normal CD
 5 | Items with several uses before CD (lightning on cosmo)
-6 | Items with limited ammo (OnHitMin outputs)
-7 | Items with limited ammo (OnHitMax outputs)
+6 | Items using math_counter (OnHitMin outputs)
+7 | Items using math_counter (OnHitMax outputs)
 
 #### Entwatch Colors
-[Colour List: Use Color Codes](https://github.com/srcdslab/sm-plugin-MultiColors/blob/master/addons/sourcemod/scripting/include/multicolors.inc#L870-#L1045)
+
+Below is a quick list of colors, but here is a [Full List of color codes](https://github.com/srcdslab/sm-plugin-MultiColors/blob/master/addons/sourcemod/scripting/include/multicolors.inc#L870-#L1045) that can be used.
+
 - {red}
 - {darkred}
 - {lightblue}
@@ -158,10 +134,10 @@ Mode | Description
 - {purple}
 - {pink}
 
-### Entwatch stripper commands
-
+#### Entwatch stripper commands
 
 **[Dynamic Entwatch Item Names Guide](https://nide.gg/forums/topic/4346-dynamic-entwatch-item-names-guide/)**
+
 - `sm_setcooldown [hammerid] [cooldown]`
 - `sm_setmaxuses [hammerid] [uses]`
 - `sm_addmaxuses [hammerid] [uses]`
@@ -177,30 +153,103 @@ Mode | Description
 - `sm_ewlockbutton [hammerid] [0/1]`
 - `sm_ewlockbutton2 [hammerid] [0/1]`
 
+### BossHP
 
-## Save Level Config
+BossHP plugin supports both targetname and hammerID for both triggers and breakable/counter. Use `#` to tell the plugin to search by hammerID. Outputs are written down in `<targetname>:<output>` format (e.g. `BossName1:OnHealthChanged`). The `"trigger"` keyvalue is required for a boss to display, and `"breakable"` and `"counter"` are required based on the `"method"` of the boss.
+
+```text
+"bosses"
+{
+    "0"
+    {
+        "name"              ""              // Name to display in HUD
+        "method"            "hpbar"         // Type of boss: breakable, counter, hpbar
+        "trigger"           ""              // Output that triggers the boss to be displayed
+        "timeout"           ""              // OPT: Time in seconds before boss stops displaying in HUD
+        "killtrigger"       ""              // OPT: Output that stops the boss from being displayed
+        "hurttrigger"       ""              // OPT: Output to track that damages the boss
+        "multitrigger"      ""              // OPT: 1/0 - Display boss more than once based on "trigger"
+        "namefixup"         ""              // OPT: 1/0 - Account for name fixup on point_template bosses
+        "showbeaten"        ""              // OPT: 1/0 - Display top boss damage after boss dies
+
+        "breakable"         ""              // Targetname/hammerid of breakable/physbox
+        "counter"           ""              // Targetname/hammerid of health counter
+        "backup"            ""              // argetname/hammerid of backup counter
+        "iterator"          ""              // Targetname/hammerid of iterator counter
+    }
+}
+```
+
+<details>
+  <summary>Template</summary>
+
+  ```text
+    "bosses"
+    {
+        "0"
+        {
+            "name"              ""
+            "method"            "counter"
+            "trigger"           ""
+
+            "counter"           ""
+        }
+        "0"
+        {
+            "name"              ""
+            "method"            "hpbar"
+            "trigger"           ""
+
+            "counter"           ""
+            "backup"            ""
+            "iterator"          ""
+        }
+        "0"
+        {
+            "name"              ""
+            "method"            "breakable"
+            "trigger"           ""
+
+            "breakable"         ""
+        }
+        "" // OPTIONAL KEYVALUES
+        {
+            "timeout"           ""
+            "killtrigger"       ""
+            "hurttrigger"       ""
+            "multitrigger"      ""
+            "namefixup"         ""
+            "showbeaten"        ""
+        }
+    }
+  ```
+
+</details>
+
+### Save Level Config
+
 [Find examples here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/savelevel)
 
 ```text
 "levels"
 {
-    "0" //Number of the level, starting at 0 and increasing by 1 per level. In general level 0 should be set to as if it were a newly joined player with no levels.
+    "0" // Number of the level, starting at 0 and increasing by 1 per level. In general level 0 should be set to as if it were a newly joined player with no levels.
     {
-        "name" ""     //The name of the level to be used with the sm_level command. Typically Level 0, Level 1, Level 2, etc.
-        "match"       //Block used to detect which level a player is. If this is the default/unset level, this block is unneeded.
+        "name" ""     // The name of the level to be used with the sm_level command. Typically Level 0, Level 1, Level 2, etc.
+        "match"       // Block used to detect which level a player is. If this is the default/unset level, this block is unneeded.
         {
-            //Use only 1 of outputs, math, or props in a match block. The set one determines which method is used to check entities for the level.
-            "math"       //Matches an output's number parameter on an add or subtract input.
+            // Use only 1 of outputs, math, or props in a match block. The set one determines which method is used to check entities for the level.
+            "math"       // Matches an output's number parameter on an add or subtract input.
             {
-                "" ""    //Datamap to check. Typically used with m_OnUser# (ie. "m_OnUser1" "leveling_counter,Add,1" would check against a 1 there).
+                "" ""    // Datamap to check. Typically used with m_OnUser# (ie. "m_OnUser1" "leveling_counter,Add,1" would check against a 1 there).
             }
-            "props"      //Matches a networked property of an entity.
+            "props"      // Matches a networked property of an entity.
             {
-                "" ""    //Datamap to check. Typically used with m_iName. (ie. "m_iName" "1" checks for a targetname of 1)
+                "" ""    // Datamap to check. Typically used with m_iName. (ie. "m_iName" "1" checks for a targetname of 1)
             }
-            "outputs"    //Matches an output. Typically use math or props instead of outputs if possible.
+            "outputs"    // Matches an output. Typically use math or props instead of outputs if possible.
             {
-                "" ""    //Datamap to check. May use any output datamap.
+                "" ""    // Datamap to check. May use any output datamap.
             }
         }
     }
@@ -208,39 +257,40 @@ Mode | Description
 ```
 
 <details>
-  <summary>Copy & Paste</summary> 
+  <summary>Template</summary>
 
-```text
-"levels"
-{
-    "0"
+  ```text
+    "levels"
     {
-        "name"                  ""
-        "match"
+        "0"
         {
-            "math"
+            "name"                  ""
+            "match"
             {
-                ""              ""
+                "math"
+                {
+                    ""              ""
+                }
+                "props"
+                {
+                    ""              ""
+                }
+                "outputs"
+                {
+                    ""              ""
+                }
             }
-            "props"
+            "restore"
             {
-                ""              ""
+                "AddOutput"         ""
+                "DeleteOutput"      ""
+                "m_iFrags"          ""
+                ""                  ""
             }
-            "outputs"
-            {
-                ""              ""
-            }
-        }
-        "restore"
-        {
-            "AddOutput"         ""
-            "DeleteOutput"      ""
-            "m_iFrags"          ""
-			""                  ""
         }
     }
-}
-```
+  ```
+
 </details>
 
 ## Contact Us
@@ -250,6 +300,6 @@ Mode | Description
 
 ## Special Shoutout
 
-- [GFLClan](https://gflclan.com/) - Inspired us to share publicly our configs 
+- [GFLClan](https://gflclan.com/) - Inspired us to make our configs public
 - [Koen](https://github.com/notkoen/) - For the design of this Readme
 - [Members of srcsdslab](https://github.com/orgs/srcdslab/people) - Making all of this possible
