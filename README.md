@@ -6,7 +6,6 @@ This is a collection of EntWatch, Stripper, Savelevel, AdminRoom and BossHP conf
 
 > [!TIP]
 > Clean templates are under explanations for you to copy and paste.
-
 > [!IMPORTANT]
 > Linux users: capitalization matters (maps name, cfg, ..)
 
@@ -229,7 +228,7 @@ BossHP plugin supports both targetname and hammerID for both triggers and breaka
 
 ### Save Level Config
 
-[Find examples here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/savelevel)
+The SaveLevel plugin stores player information and restores such information if a player reconnects. Find sample configs [here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/savelevel).
 
 ```text
 "levels"
@@ -294,6 +293,55 @@ BossHP plugin supports both targetname and hammerID for both triggers and breaka
 
 </details>
 
+### Moving NPC Configs
+
+The Moving NPC plugin allows for maps to rely on an external plugin for moving boss/NPC support without using traditional entities. Find sample configs [here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/movingnpc).
+
+```text
+"npc"
+{
+    "0"
+    {
+        "tickrate"          ""                     // Tickrate in seconds, e.g 0.1 = min(10, server tickrate) ticks per second. Default 0.1
+        "distance"          ""                     // Max target search distance. Default 5000.0
+        "retarget"          ""                     // Retarget time in seconds(depends on npc`s tickrate). Default 7.5
+        "forward_factor"    ""                     // Forward factor. Default 1.0
+        "turning_factor"    ""                     // Turning factor. Default 0.5
+        "lifetime"          ""                     // Lifetime. If 0.0 npc will exists until you kill it on the map. Default 0.0
+
+        "attachment"        ""
+        "thruster_side"     ""
+        "thruster_forward"  ""
+        "template"          ""
+    }
+}
+```
+
+<details>
+  <summary>Template</summary>
+
+  ```text
+    "npc"
+    {
+        "0"
+        {
+            "tickrate"          ""
+            "distance"          ""
+            "retarget"          ""
+            "forward_factor"    ""
+            "turning_factor"    ""
+            "lifetime"          ""
+
+            "attachment"        ""
+            "thruster_side"     ""
+            "thruster_forward"  ""
+            "template"          ""
+        }
+    }
+  ```
+
+</details>
+
 ## Contact Us
 
 - [Forums](https://nide.gg/forums/)
@@ -302,5 +350,5 @@ BossHP plugin supports both targetname and hammerID for both triggers and breaka
 ## Special Shoutout
 
 - [GFLClan](https://gflclan.com/) - Inspired us to make our configs public
-- [Koen](https://github.com/notkoen/) - For the design of this Readme
+- [koen](https://github.com/notkoen/) - For the design of this Readme
 - [Members of srcsdslab](https://github.com/orgs/srcdslab/people) - Making all of this possible
