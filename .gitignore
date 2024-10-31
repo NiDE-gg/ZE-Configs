@@ -62,10 +62,6 @@ cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 // Maps Strippers/Configs
 //------------------------
 
-# Nide
-cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_cosmo_canyon_v5fix.cfg
-
 # UNLOZE
 cstrike/addons/sourcemod/configs/stripper/maps/ze_rush_b_s1.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a4.cfg
@@ -74,6 +70,9 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_fiendlordkeep_v4_2.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_totally_new_wester.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_mako_reactor_v5_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
+
+# Henry
+cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
 
 # George
 cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
