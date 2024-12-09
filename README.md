@@ -6,6 +6,7 @@ This is a collection of EntWatch, Stripper, Savelevel, AdminRoom and BossHP conf
 
 > [!TIP]
 > Clean templates are under explanations for you to copy and paste.
+
 > [!IMPORTANT]
 > Linux users: capitalization matters (maps name, cfg, ..)
 
