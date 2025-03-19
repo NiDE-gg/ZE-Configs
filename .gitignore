@@ -15,7 +15,7 @@ cstrike/*
 !cstrike/
 
 # Vscripts
-!cstrike/scripts/vscripts/*
+!cstrike/scripts/vscripts/**
 
 # Addons
 !cstrike/addons
@@ -34,6 +34,7 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/entwatch
 !cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
+!cstrike/addons/sourcemod/configs/musicname
 
 # MCE
 !cstrike/addons/sourcemod/configs/mapchooser_extended.cfg
