@@ -15,7 +15,9 @@ cstrike/*
 !cstrike/
 
 # Vscripts
-!cstrike/scripts/vscripts/**/*
+!cstrike/scripts
+cstrike/scripts/*
+!cstrike/scripts/vscripts
 
 # Addons
 !cstrike/addons
