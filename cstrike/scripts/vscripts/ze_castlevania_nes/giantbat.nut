@@ -35,13 +35,13 @@ function OnPostSpawn(){
 	//::NetProps.SetPropInt(limit,"m_flCompareValue",value);
 	limit.AcceptInput("SetCompareValue", value.tostring(), null, null)
 	// printl("- COUNTER SPAWN - "+value)
-
+	
 
 	MODEL = self.FirstMoveChild();
 	HITBOX = MODEL.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(300*ctcount) // 700 starting hp + 300/player
+	maxhealth = HITBOX.GetHealth()+(40*ctcount) // 700 starting hp + 300/player
 
 	HITBOX.SetHealth(maxhealth)
 	// printl("RESCALED HP "+maxhealth)
@@ -102,7 +102,7 @@ function Death(){
 	if(value < 15){
 		EntFire("stage1_gb_maker", "ForceSpawnAtEntityOrigin", "!caller", 0.45, null)
 		EntFire("stage1_gb_maker", "ForceSpawnAtEntityOrigin", "!caller", 0.45, null)
-	} else {
+	} else { 
 		if (countdead == value && countdead >= 15){
 			local orb = SpawnEntityFromTable("prop_dynamic",{
 				model = "models/props_isaac/lamb_tearhoming.mdl",
@@ -112,17 +112,17 @@ function Death(){
 				DefaultAnim = "ref",
 				rendercolor = "255 0 0",
 			});
-
+	
 			orb.SetOrigin(self.GetOrigin());
 			local down = QAngle(90,0,0)
 			orb.SetForwardVector(down.Forward())
-
+			
 			orb.ValidateScriptScope();
 			orb.GetScriptScope().wave_rate <- 0.5;
 			orb.GetScriptScope().wave_amplitude <- 1;
 			orb.GetScriptScope().sine <- -1.00;
 			orb.GetScriptScope().speed <- 2;
-
+	
 			orb.GetScriptScope().Think <- function(){
 
 				local checkpos = self.GetOrigin();
@@ -138,7 +138,7 @@ function Death(){
 				size += (size * (sin(sine) * 0.01));
 				sine += wave_rate;
 				NetProps.SetPropFloat(self, "m_flModelScale", size)
-
+				
 				local pos = self.GetOrigin();
                 local forward = self.GetForwardVector();
                 pos += (forward * speed);
@@ -153,7 +153,7 @@ function Death(){
 			orb.GetScriptScope().SoftlockPrevention <- function(){
 				self.SetOrigin(Vector(2832,8712,-2631))
 			}
-
+			
 				//enable the Think tick
 			AddThinkToEnt(orb,"Think");
 			EntFireByHandle(orb, "RunScriptCode", "SoftlockPrevention()", 10, null, null)
@@ -172,7 +172,7 @@ function Hurt(){
     local perc = (HITBOX.GetHealth() * 100) / maxhealth;
     local mishp = 100 - perc;
     local bardamage = 0
-
+    
     bardamage = (fabs(16 * mishp/100));
     bardamage = bardamage.tointeger();
 
@@ -182,11 +182,11 @@ function Hurt(){
     for(local i=0; i < bars; i++){
         hpbar.append("▮");
     }
-
+    
     for(local i=0; i < bardamage; i++){
         hpbar.append("▯");
     }
-
+        
 
     //ClientPrint(activator, 4, "ENEMY : "+health+ " ( "+perc.tointeger()+"% )")
     ClientPrint(activator, 4, "ENEMY "+hpbar[0]+hpbar[1]+hpbar[2]+hpbar[3]+hpbar[4]+hpbar[5]+hpbar[6]+hpbar[7]+hpbar[8]+hpbar[9]+hpbar[10]+hpbar[11]+hpbar[12]+hpbar[13]+hpbar[14]+hpbar[15]+" "+health+"/"+maxhealth)
@@ -198,7 +198,7 @@ function testThink(){
 
 		if (Time() - last_target_time >= 6.0) {
 			ENEMY = TargetPlayer()
-			last_target_time = Time();
+			last_target_time = Time();   
 		}
 		// Mob has enemy, do stuff
 		if (ENEMY != null){
@@ -243,7 +243,7 @@ function LookForEnemy(){
 }
 
 function MoveToEnemy(){
-
+	
 	NPC_POS = self.GetOrigin()
 
     if (ENEMY == null || ENEMY_POS == null) return
@@ -252,7 +252,7 @@ function MoveToEnemy(){
 		ENEMY = null
 		ENEMY_POS = null
 		return
-	}
+	} 
 
 	local limit;
 	local value;
@@ -264,7 +264,7 @@ function MoveToEnemy(){
 		if (Time() - last_hit_time >= attackcd) {
 			MODEL.AcceptInput("SetAnimation","attack",null,null);
 			EntFireByHandle(MODEL, "SetAnimation", "fly", 0.49, null, null);
-
+		
 			local damage = 25 - (value * 1.5)
 			// printl("DAMAGE | " + damage);
 			// printl("ATK RATE | " + attackcd);
@@ -283,7 +283,7 @@ function MoveToEnemy(){
 
 			last_hit_time = Time();
 		}
-
+		
 	} else {
 		if (!ENEMY.IsAlive()) return
 	}
@@ -304,11 +304,11 @@ function MoveToEnemy(){
 
 	if (TraceLinePlayersIncluded(npc_bottom, npc_bottom, ENEMY) < 0.99){ // there's a step in front of npc
 		jump_height = 150
-	}
+	}	
 
 	if (TraceLinePlayersIncluded(self.GetOrigin()-(self.GetLeftVector()*JUMP_TRACE_OFFSET), ENEMY_POS, ENEMY) < 1){ // Right
 		boost_right = true;
-
+		
 	}
 	if (TraceLinePlayersIncluded(self.GetOrigin()+(self.GetLeftVector()*JUMP_TRACE_OFFSET), ENEMY_POS, ENEMY) < 1){ // Left
 		boost_left = true;
@@ -317,7 +317,7 @@ function MoveToEnemy(){
 
     local velocity = (ENEMY_POS - NPC_POS);
 	velocity.Norm();
-	velocity.x = velocity.x * (200 + (value*2));
+	velocity.x = velocity.x * (200 + (value*2)); 
 	velocity.y = velocity.y * (200 + (value*2));
 	velocity.z = velocity.z * (100 + (value*2));
 
