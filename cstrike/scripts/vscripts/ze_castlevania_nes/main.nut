@@ -42,9 +42,10 @@ CollectEventsInScope
 			if (text.find("map") != null && (text.find("laser") != null || text.find("lasers") != null)){
 				//ClientPrint(null, 3, "\x04"+playername+" is a \x07laserfag")
 				ClientPrintSafe(null, "^00FF00 "+player_name+" is a ^FF0000dirty laser rat")
+				Laserfags[player_userid] <- player_name
 			}
-			Laserfags[player_userid] <- player_name
 		} else {
+			
 		}
 
        
@@ -111,20 +112,6 @@ function player_hp() {
         }
     }
 } 
-
-function HolyWaterNadesTick()
-{
-	EntFireByHandle(self,"RunScriptCode"," HolyWaterNadesTick(); ",0.1,null,null);
-	for(local h;h=Entities.FindByClassname(h,"hegrenade_projectile");)
-	{
-		local nadelen = h.GetName().len()
-		if(h==null||!h.IsValid()||nadelen>0)continue;
-		h.ValidateScriptScope();
-		h.SetModel("models/hob_cv/hobcv_water.mdl");
-	}
-}
-
-//EntFireByHandle(self,"RunScriptCode"," HolyWaterNadesTick(); ",1.00,null,null);
 
 function HorribleNightOverlay(){
 	local so_1 = SpawnEntityFromTable("env_screenoverlay",{

@@ -117,7 +117,7 @@ function Spawn(){
 			hmin = Vector(-37, -41, -25)
 			hmax = Vector(37, 41, 25)
 			MODEL.SetModelScale(1.0,0)
-			MODEL.SetModel("models/hob_cv/hobcv_gargoyle.mdl")
+			MODEL.SetModel("models/hob_cv/hobcv_gargoyle.mdl") 
 			HITBOX.SetOrigin(hitboxorigin+Vector(0,0,68))
 			npc_selected = 3
 			break;

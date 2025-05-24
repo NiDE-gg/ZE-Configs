@@ -341,8 +341,8 @@ function Death(){
 
 	self.SetVelocity(Vector(0,0,-16));
 
-	EntFire("boss_dracula_nuke","SetModelScale","0.0 1",0,null)
-
+	EntFire("boss_dracula_nukemodel","SetModelScale","0.0 1",0,null)
+	EntFire("boss_dracula_nukemodel","Kill","",1,null)
 	local sound = sound_hurt[RandomInt(0, 3)];		
 	EmitSoundEx({
 		sound_name = sound,
@@ -483,8 +483,8 @@ function SecondPhase(){
 	EntFireByHandle(tp_relay, "Trigger", "", 9, null, null); // tp
 	EntFireByHandle(self, "RunScriptCode", "GoSecondArena()", 9, null, null); // tp
 
-	EntFireByHandle(TOUCHHURT,"Enable","",9,null,null);
-	EntFireByHandle(HITBOX,"SetDamageFilter","",9,null,null);
+	EntFireByHandle(TOUCHHURT,"Enable","",12,null,null);
+	EntFireByHandle(HITBOX,"SetDamageFilter","",10.5,null,null);
 	
 	EntFireByHandle(self, "RunScriptCode", "SECONDPHASE<-true", 9, null, null); 
 	EntFireByHandle(self, "RunScriptCode", "TRANSFORMING<-false", 9, null, null); 
@@ -521,6 +521,7 @@ function RepositionHitbox() {
 function NukeEveryone(){
 	if(timeout==true){
 		HITBOX_MONSTER.SetHealth(maxhealth_monster)
+		EntFire("boss_dracula_nukemodel", "SetModelScale", "6 2", 0.0, null)
 		for(local h;h=Entities.FindByClassname(h,"player");)
 		{
 			if(h==null||!h.IsValid()||h.IsAlive()==false)continue;
@@ -574,48 +575,39 @@ function Think(){
 				local cage_zm_dracula;
     			cage_zm_dracula = Entities.FindByName(null, "s2_zm_drac_cage")
 
-				local s2_end_check;
-    			s2_end_check = Entities.FindByName(null, "s2_end_check")
-
-				EntFireByHandle(cage_zm_dracula,"Kill","",5.0,null,null);
-
 				printl("LAST RESORT ATTACK")
 
 				local meteor = SpawnEntityFromTable("prop_dynamic",{
-					model = "models/kaemon/makov6/kae_meteor.mdl",
-					targetname = "boss_dracula_nuke"
+					model = "models/props_isaac/lamb_teardark.mdl",
+					targetname = "boss_dracula_nukemodel"
 					disableshadows = 1,
 					StartDisabled = 1,
-					skin = 1,
 					DefaultAnim = "idle4"
 					disablereceiveshadows = 1,
+					rendercolor = "0 0 0"
+					renderfx = "15"
 				});
 
-				local meteor_layer = SpawnEntityFromTable("prop_dynamic",{
-					model = "models/kaemon/makov6/kae_meteor.mdl",
-					targetname = "boss_dracula_nuke"
-					disableshadows = 1,
-					StartDisabled = 1,
-					rendermode = 1,
-					renderamt = 100,
-					DefaultAnim = "idle4"
-					disablereceiveshadows = 1,
-				});
+				meteor.ValidateScriptScope();
+				meteor.GetScriptScope().wave_rate <- 0.5;
+				meteor.GetScriptScope().wave_amplitude <- 1;
+				meteor.GetScriptScope().sine <- -1.00;
 
-				meteor.SetModelScale(0,0)
-				meteor_layer.SetModelScale(0,0)
+				meteor.GetScriptScope().PulsateThink <- function(){
+					local size = NetProps.GetPropFloat(self, "m_flModelScale")
+					size += (size * (sin(sine) * 0.01));
+					sine += wave_rate;
+					NetProps.SetPropFloat(self, "m_flModelScale", size)
+					return -1;
+				};
+				AddThinkToEnt(meteor,"PulsateThink");
+				meteor.SetModelScale(0.1,0)
 
 				meteor.SetOrigin(self.GetOrigin()+Vector(0,0,632))
-				meteor_layer.SetOrigin(self.GetOrigin()+Vector(0,0,632))
 
-				EntFireByHandle(meteor, "SetModelScale", "0.1 1", 2, null, null)
-				EntFireByHandle(meteor_layer, "SetModelScale", "0.1025 1", 2, null, null)
-
-				EntFireByHandle(meteor, "SetPlaybackRate", "12", 2, null, null);
-				EntFireByHandle(meteor_layer, "SetPlaybackRate", "12", 2, null, null);
+				EntFireByHandle(meteor, "SetModelScale", "1 1", 2, null, null)
 
 				EntFireByHandle(meteor, "Enable", "", 2.1, null, null)
-				EntFireByHandle(meteor_layer, "Enable", "", 2.1, null, null)
 
 				HITBOX_MONSTER.SetHealth(quarterhp)
 				EntFireByHandle(MONSTER, "SetAnimation", "changestart", 2, null, null);
@@ -623,15 +615,22 @@ function Think(){
 				EntFireByHandle(MONSTER, "SetDefaultAnimation", "", 2.1, null, null);
 				EntFireByHandle(MONSTER, "SetPlaybackRate", "0.01", 3.5, null, null);
 
-				EntFireByHandle(meteor, "SetModelScale", "0.3 15", 3.5, null, null)
-				EntFireByHandle(meteor_layer, "SetModelScale", "0.3025 15", 3.5, null, null)
+				EntFireByHandle(meteor, "SetModelScale", "4 15", 3.5, null, null)
 				EntFireByHandle(HITBOX_MONSTER,"SetDamageFilter","",3.5,null,null);
 
-				for(local i = 3.5; i <= 18.5; i += 0.25){
-					EntFireByHandle(self,"RunScriptCode","SpawnFirePillar(0,true)",i,null,null);
-				}
+				EntFire("console","Command","say *** THE END IS NEAR ***",3.50,null);
+				EntFire("console","Command","say *** THE END IS NEAR ***",3.51,null);
+				EntFire("console","Command","say *** THE END IS NEAR ***",3.52,null);
 
-				EntFireByHandle(self, "RunScriptCode", "NukeEveryone()", 21.5, null, null) // 15 seconds after boss goes vulnerable again to kill it before timeout nuke
+				for(local i = 3.5; i <= 18.5; i += 0.2){
+					if(!DEAD){
+						EntFireByHandle(self,"RunScriptCode","SpawnFirePillar(0,true)",i,null,null);
+					}
+				}
+			
+				EntFireByHandle(cage_zm_dracula,"Break","",12.0,null,null);
+				
+				EntFireByHandle(self, "RunScriptCode", "NukeEveryone()", 23.5, null, null) // 20 seconds after boss goes vulnerable again to kill it before timeout nuke
 			}
 		}
 	}
@@ -984,7 +983,7 @@ function AttackMonsterRanged(){
 			EntFireByHandle(MONSTER, "SetDefaultAnimation", "", 0.1, null, null);
 	
 			for(local i = 2; i <= 4; i += 0.2){
-				EntFireByHandle(self,"RunScriptCode","ShootFireBullet("+RandomFloat(-0.5,0.5)+",15,true)",i,null,null);
+				EntFireByHandle(self,"RunScriptCode","ShootFireBullet("+RandomFloat(-0.45,0.45)+",15,true)",i,null,null);
 			}
 
 			EntFireByHandle(MONSTER, "SetAnimation", "fireballend", 4.5, null, null);
@@ -999,16 +998,22 @@ function AttackMonsterRanged(){
 
 			EntFireByHandle(MONSTER, "SetAnimation", "fireballstart", 0, null, null);
 			EntFireByHandle(MONSTER, "SetDefaultAnimation", "", 0.1, null, null);
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0,10,true)", 2, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.5,10,true)", 2, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.5,10,true)", 2, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(1,10,true)", 2, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-1,10,true)", 2, null, null);
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0,15,true)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.5,15,true)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.5,15,true)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(1,15,true)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-1,15,true)", 2, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.2,10,true)", 3, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.2,10,true)", 3, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.6,10,true)",3, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.6,10,true)", 3, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.2,15,true)", 2.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.2,15,true)", 2.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.6,15,true)",2.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.6,15,true)", 2.5, null, null); 
+
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0,15,true)", 3, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.5,15,true)", 3, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.5,15,true)", 3, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(1,15,true)", 3, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-1,15,true)", 3, null, null);
 
 			EntFireByHandle(MONSTER, "SetAnimation", "fireballend", 3.5, null, null);
 			EntFireByHandle(MONSTER, "SetDefaultAnimation", "wait", 3.6, null, null);
@@ -1016,7 +1021,7 @@ function AttackMonsterRanged(){
 			break;
 		case 3:
 
-			for(local i = 0; i <= 1; i += 0.1){
+			for(local i = 0; i <= 1.3; i += 0.1){
 				EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
 			}
 
@@ -1152,8 +1157,13 @@ function Attack(){
 			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0)", 1, null, null); 
 			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.5)", 1, null, null); 
 			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.5)", 1, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.25)", 2, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.25)", 2, null, null); 
+
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.25)", 1.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.25)", 1.5, null, null); 
+
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(0.5)", 2, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootFireBullet(-0.5)", 2, null, null); 
 
 			EntFireByHandle(CAPE, "SetAnimation", "shootendA", 3.5, null, null);
 			EntFireByHandle(MODEL, "SetAnimation", "shootendA", 3.5, null, null);
@@ -1549,7 +1559,7 @@ function ShootFireBullet(angle,fspeed = 6,monster=false){
     //set up the particle script variables and think-function
     particle.ValidateScriptScope();
     particle.GetScriptScope().damage <- 30;
-    particle.GetScriptScope().damage_range <- 32.00;
+    particle.GetScriptScope().damage_range <- 48.00;
     particle.GetScriptScope().damage_cooldown <- 0.5;
     particle.GetScriptScope().touchers <- {};
     particle.GetScriptScope().speed <- fspeed;
@@ -1663,7 +1673,7 @@ function SpawnFirePillar(origin = 0,random=false){
 	}
 
 	particle.ValidateScriptScope();
-    particle.GetScriptScope().damage <- 5;
+    particle.GetScriptScope().damage <- 10;
     particle.GetScriptScope().damage_range <- 64.00;
     particle.GetScriptScope().damage_cooldown <- 0.1;
     particle.GetScriptScope().touchers <- {};
@@ -1689,7 +1699,7 @@ function SpawnFirePillar(origin = 0,random=false){
 			local newhp = h.GetHealth() - damage;
 			if(newhp <= 0)EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
 			else{ 
-				h.TakeDamage(5, 8, self);
+				h.TakeDamage(10, 8, self);
 				h.AcceptInput("IgniteLifetime", "2", null, null)
 			}
         }
@@ -1927,8 +1937,8 @@ function Boom(){
 	local boom = SpawnEntityFromTable("env_explosion", 
 	{
 		spawnflags   = 0
-		iMagnitude   = 130
-		iRadiusOverride = 400
+		iMagnitude   = 180
+		iRadiusOverride = 512
 		origin       = self.GetOrigin()
 		ignoredEntity = HITBOX_MONSTER
 	})

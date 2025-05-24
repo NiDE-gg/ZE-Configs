@@ -64,6 +64,7 @@ ENEMY <- null;
 DEAD <- false;
 SPAWNING <- true;
 ATTACKING <- false;
+DRAINING <- false;
 
 ENEMY_LAST_POSITION <- null;
 LOS_COUNT <- 0;
@@ -121,7 +122,7 @@ function OnPostSpawn(){
 	HURT = HITBOX.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(3125*ctcount) // 2000 starting hp + 1500/per player
+	maxhealth = HITBOX.GetHealth()+(3750*ctcount) // 2000 starting hp + 1500/per player
 
 	halfhp = maxhealth / 2
 
@@ -402,6 +403,12 @@ function SpawnAfterImageScale(){
 	
 }
 
+function MonsterLookat(){
+	local target = ENEMY.GetCenter() - self.GetOrigin();
+	target.Norm();
+	self.SetForwardVector(Vector(target.x, target.y, 0))
+}
+
 function Attack(){
 	if (DEAD) return
 	if (CURSEREADY == true){
@@ -439,6 +446,11 @@ function Attack(){
 	}
 
 	if (Time() - last_hit_time >= 1.75) {
+
+		for(local i = 0; i <= 1; i += 0.1){
+			EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+		}
+
 		ATTACKING <- true;
 		self.__KeyValueFromInt("movetype", 0); // Disable movement
 		EntFireByHandle(HURT, "Enable", "", 0.75, null, null);
@@ -459,6 +471,11 @@ function Attack(){
 function AttackRanged(){
 	if (DEAD) return
 	if (Time() - last_hit_time >= 1.75) {
+
+		for(local i = 0; i <= 0.7; i += 0.1){
+			EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+		}
+
 		ATTACKING <- true;
 		self.__KeyValueFromInt("movetype", 0); // Disable movement
 		EntFireByHandle(HURT, "Enable", "", 0.75, null, null);
@@ -668,6 +685,7 @@ function FireBossClone(angle){
 }
 
 function ReturnToNormal(){
+	DRAINING <- false
 	EntFireByHandle(MODEL, "Enable", "", 0, null, null);
 	EntFireByHandle(MODEL, "SetModelScale", "0.75 2", 0, null, null)
 	for (local i = 0; i < 1.8; i += 0.05) {
@@ -684,6 +702,9 @@ function ReturnToNormal(){
 
 function SpawnSprite(){
 	if (DEAD) return
+
+	DRAINING <- true
+
 	local cursed = ENEMY
 	local cursedpos = cursed.GetOrigin()
 
@@ -733,9 +754,12 @@ function SpawnSprite(){
 	cursed.GetScriptScope().bossbase <- self;
 	cursed.GetScriptScope().bosshitbox <- HITBOX;
 	cursed.GetScriptScope().maxhp <- maxhealth;
+	cursed.GetScriptScope().parorigin <- particle.GetOrigin()+Vector(0,0,52);
 	cursed.GetScriptScope().DrainHealth <- function () {
 		if (self.IsAlive()) {
 			local hp = self.GetHealth()
+			local currhp = self.GetHealth()
+			local bosslocal = bossbase.GetOrigin()
 			local bosshealth = bosshitbox.GetHealth()// 2000 starting hp + 1500/per player
 			local radius = 256
 			local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); //CONVERT SCRIPT UNITS TO HAMMER UNITS
@@ -770,6 +794,7 @@ function SpawnSprite(){
 			}
 			else {
 				hp = self.SetHealth(hp-1)
+				//printl("- CURRENT CURSED HP - " + currhp)
 				if(bosshealth <= maxhp){
 					bosshitbox.SetHealth(bosshealth+50)
 				}
@@ -780,9 +805,20 @@ function SpawnSprite(){
 					pitch = 50,
 					volume = 0.5,
 				});
+
+				local drainindicator = Entities.CreateByClassname("point_worldtext");
+					drainindicator.SetOrigin(parorigin+Vector(RandomFloat(-16, 16),RandomFloat(-16, 16),RandomFloat(0,8)));
+					drainindicator.__KeyValueFromString("font","9");
+					drainindicator.__KeyValueFromString("orientation","1");
+					drainindicator.__KeyValueFromString("message","+50");
+					drainindicator.__KeyValueFromInt("textsize",RandomInt(8, 12));
+					drainindicator.__KeyValueFromString("color","80 200 120");
+				EntFireByHandle(drainindicator,"Kill","",0.05,null,null);
+				
 			}
 		} else{
-			if (self==null||!self.IsValid()||self.IsAlive()==false){
+			if (self==null||!self.IsValid()||self.IsAlive()==false||self.GetTeam()!=3||!self.IsPlayer()){
+				printl("- - Something wrong happened here... - -")
 				nadetrigger.Destroy()
 				EntFireByHandle(particle, "Kill", "", 0, null, null);
 				EntFireByHandle(bossbase, "RunScriptCode", "ReturnToNormal()", 0, null, null); 
@@ -792,8 +828,24 @@ function SpawnSprite(){
 		}
 	
 		EntFireByHandle(self,"RunScriptCode","DrainHealth()",0.05,null,null);
+		
 	}
-	EntFireByHandle(cursed,"RunScriptCode","DrainHealth()",0.,null,null);
+	EntFireByHandle(cursed,"RunScriptCode","DrainHealth()",0,null,null);
+	EntFireByHandle(self,"RunScriptCode","CheckCursedPlayer(activator)",0.1,cursed,null);
+}
+
+::CheckCursedPlayer <- function(player){
+
+	if (!DRAINING) return
+	
+	//print("Checking if player "+NetProps.GetPropString(player, "m_szNetname")+" DC'd...")
+	if (player!=null){
+		//printl("good...")
+		EntFireByHandle(self,"RunScriptCode","CheckCursedPlayer(activator)",0.1,player,null);
+	} else {
+		printl("||| The cursed player disconnected mid-curse? Surely they aren't trolling or trying to break the boss :) |||")
+		EntFireByHandle(self, "RunScriptCode", "ReturnToNormal()", 0, null, null); 
+	}
 }
 
 function SpawnParticleSound(nade){

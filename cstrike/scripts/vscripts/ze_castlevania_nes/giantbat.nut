@@ -41,7 +41,7 @@ function OnPostSpawn(){
 	HITBOX = MODEL.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(40*ctcount) // 700 starting hp + 300/player
+	maxhealth = HITBOX.GetHealth()+(30*ctcount) // 700 starting hp + 300/player
 
 	HITBOX.SetHealth(maxhealth)
 	// printl("RESCALED HP "+maxhealth)

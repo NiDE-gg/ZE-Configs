@@ -138,7 +138,7 @@ function Think(){
 			while (target=Entities.FindByClassname(target, "player")){
 			if (target.IsValid() && (target.GetCenter()-self.GetCenter()).LengthSqr() < WAKEUP_RANGE_SQR && target.GetTeam() == 3 && target.GetHealth() > 0 && IsLOS(target)){
 				once_wakeup = true
-				local randomdelay = RandomInt(1, 10)
+				local randomdelay = RandomInt(1, 5)
 				// printl("ct in range, waking up in "+randomdelay+" seconds")
 				EntFireByHandle(HITBOX,"Break","",60,null,null);
 				EntFireByHandle(MODEL, "SetPlaybackRate", "1", randomdelay, null, null);
