@@ -1,46 +1,88 @@
 // ================================
 // Lethal Company-style Quota System for CSS VScript
+// Optimized & Commented Version
 // ================================
 
-::quota_script <- this; // Register global reference
+// Register this script globally so we can call it via "RunScriptCode"
+::quota_script <- this;
 
 // ----------------------
-// GLOBAL STATE
+// GLOBAL STATE VARIABLES
 // ----------------------
+
+// Quota goal and current progress
 ::QuotaGoal <- 0;
 ::CurrentQuota <- 0;
 ::QuotaMetAlready <- false;
+
+// Scrap spawn tracking
 ::ScrapSpawnQueue <- null;
 ::ScrapSpawnIndex <- 0;
-::HeldScrapWeapons <- [];
-::LastPickupTimes <- {}; // Anti-spam cooldown per item
-::LastHealthMap <- {}; // Track last known player healths
+
+// Tracking held scrap and spam prevention
+::HeldScrapWeapons <- [];         // List of held scrap objects
+::LastPickupTimes <- {};          // Prevent rapid spam pickups
+::LastHealthMap <- {};            // Stores last known health for CT players
+
+// Player caching for performance
+::CachedCTPlayers <- [];          // List of cached CT players (team 3)
+
+// Debug logging toggle
+::DEBUG_MODE <- true;
+
+// Used to trigger quota display refresh
+local StaticTimerValue = 0;
+
+// ----------------------
+// DEBUG PRINT FUNCTION
+// ----------------------
+
+// Simple conditional logger
+function DebugPrint(msg)
+{
+    if (::DEBUG_MODE == true)
+    {
+        printl("[Quota DEBUG] " + msg);
+    }
+}
 
 // ----------------------
 // DISPLAY FUNCTIONS
 // ----------------------
+
+// Updates the on-screen quota display
 function ShowQuota()
 {
     local msg = "message Quota: " + ::CurrentQuota + " / " + ::QuotaGoal;
-    printl("DEBUG: Updating quota display: " + msg);
-    EntFire("quota_display", "AddOutput", msg, 0.0);
-    EntFire("quota_display", "Display", "", 0.0);
+    EntFire("quota_display", "AddOutput", msg, 0.1);
+
+    // Ensure the refresher is enabled once
+    if (StaticTimerValue == 0)
+    {
+        StaticTimerValue = 1;
+    }
+
+    if (StaticTimerValue == 1)
+    {
+        EntFire("quota_refresher", "Enable");
+    }
 }
 
+// Displays a message when the quota is met
 function ShowQuotaMetMessage()
 {
     local msg = "message Quota Met!";
-    EntFire("quota_display", "AddOutput", msg, 0.0);
-    EntFire("quota_display", "Display", "", 0.0);
+    EntFire("quota_display", "AddOutput", msg, 0.1);
 }
 
 // ----------------------
 // QUOTA LOGIC
 // ----------------------
+
+// Adjusts the quota count and updates UI/state accordingly
 function AddToQuota(value)
 {
     ::CurrentQuota += value;
-    printl("Quota updated: " + ::CurrentQuota + " / " + ::QuotaGoal);
 
     if (::CurrentQuota >= ::QuotaGoal)
     {
@@ -49,7 +91,7 @@ function AddToQuota(value)
             ::QuotaMetAlready = true;
             ShowQuotaMetMessage();
             EntFire("quota_hit_sound", "PlaySound", "", 0.0);
-            printl("Quota met! Sound triggered.");
+            DebugPrint("Quota met! Goal reached.");
         }
         else
         {
@@ -60,7 +102,7 @@ function AddToQuota(value)
     {
         if (::QuotaMetAlready)
         {
-            printl("Quota dropped below threshold. Resetting quota state.");
+            DebugPrint("Quota dropped below goal. Resetting.");
             ::QuotaMetAlready = false;
         }
 
@@ -68,19 +110,19 @@ function AddToQuota(value)
     }
 }
 
+// Triggered at round end to determine outcome
 function CheckQuota()
 {
-    printl("Checking quota at end of round: " + ::CurrentQuota + " / " + ::QuotaGoal);
     EntFire("quota_refresher", "Disable");
 
     if (::CurrentQuota >= ::QuotaGoal)
     {
-        printl("Quota met! Good ending.");
+        DebugPrint("Quota met at end of round.");
         EntFire("good_ending_relay", "Trigger");
     }
     else
     {
-        printl("Quota failed! Bad ending.");
+        DebugPrint("Quota not met at end of round.");
         EntFire("bad_ending_relay", "Trigger");
     }
 }
@@ -88,31 +130,55 @@ function CheckQuota()
 // ----------------------
 // DYNAMIC QUOTA SETUP
 // ----------------------
-function CalculateDynamicQuota()
+
+// Caches alive CT players (team 3) to reduce FindByClassname spam
+function UpdateCachedCTPlayers()
 {
-    local humanCount = 0;
+    ::CachedCTPlayers.clear();
     local player = null;
 
-    while ((player = Entities.FindByClassname(player, "player")) != null)
+    while ((player = Entities.FindByClassname(player, "player")) != null )
     {
-        if (player.IsValid() && player.GetHealth() > 0 && player.GetTeam() == 3)
+        if (player != null && player.IsValid() && player.GetTeam() == 3)
         {
-            humanCount++;
+            local team = player.GetTeam();
+            DebugPrint("Found player: " + player + " | Team: " + team);
+
+            if (team == 3)
+            {
+                ::CachedCTPlayers.append(player);
+            }
+        }
+        else
+        {
+            DebugPrint("Skipped invalid or null player.");
         }
     }
 
+    DebugPrint("CT Player cache updated. Count: " + ::CachedCTPlayers.len());
+
+    // Schedule to re-cache every 5 seconds
+    EntFire("quota_script", "RunScriptCode", "quota_script.UpdateCachedCTPlayers();", 5.0);
+}
+
+// Based on number of CT players, sets the quota goal
+function CalculateDynamicQuota()
+{
+    local humanCount = ::CachedCTPlayers.len();
     local baseQuota = humanCount * 20;
     local variation = baseQuota * 0.1;
     local randomizedQuota = baseQuota + RandomInt(-variation.tointeger(), variation.tointeger());
 
     ::QuotaGoal = randomizedQuota;
-    printl("Dynamic Quota Goal set: " + ::QuotaGoal + " (" + humanCount + " CTs alive)");
+    DebugPrint("Dynamic Quota set: " + ::QuotaGoal + " (" + humanCount + " CTs)");
     ShowQuota();
 }
 
 // ----------------------
 // SCRAP SPAWNING
 // ----------------------
+
+// Utility: Randomly shuffles an array
 function ShuffleArray(arr)
 {
     for (local i = arr.len() - 1; i > 0; i--)
@@ -124,6 +190,7 @@ function ShuffleArray(arr)
     }
 }
 
+// Begins random scrap spawning
 function SpawnRandomScrap()
 {
     ::ScrapSpawnQueue = [];
@@ -137,21 +204,23 @@ function SpawnRandomScrap()
 
     ShuffleArray(::ScrapSpawnQueue);
 
+    // Limit max scrap spawn points
     local numToSpawn = 100;
     if (::ScrapSpawnQueue.len() > numToSpawn)
     {
         ::ScrapSpawnQueue.resize(numToSpawn);
     }
 
-    printl("Starting scrap spawn...");
+    DebugPrint("Scrap spawn initiated. Total spawn points: " + ::ScrapSpawnQueue.len());
     ScheduleNextScrapSpawn(0.0);
 }
 
+// Spawns one scrap per call, then schedules itself again
 function ScheduleNextScrapSpawn(delay)
 {
     if (::ScrapSpawnIndex >= ::ScrapSpawnQueue.len())
     {
-        printl("All scrap items spawned.");
+        DebugPrint("All scrap items spawned.");
         return;
     }
 
@@ -160,8 +229,7 @@ function ScheduleNextScrapSpawn(delay)
 
     EntFire("maker_case", "PickRandomShuffle", "", 0.0);
     EntFireByHandle(relay, "Trigger", "", 0.05, null, null);
-
-    printl("Spawned scrap at: " + relay.GetName());
+    DebugPrint("Spawned scrap at relay: " + relay.GetName());
 
     EntFire("quota_script", "RunScriptCode", "quota_script.ScheduleNextScrapSpawn(0.1);", 0.2);
 }
@@ -169,24 +237,34 @@ function ScheduleNextScrapSpawn(delay)
 // ----------------------
 // SCRAP PICKUP & DROP TRACKING
 // ----------------------
+
+// When a player picks up a scrap item
 function OnScrapPickedUp(weaponEnt, value)
 {
-    if (!weaponEnt || !weaponEnt.IsValid()) return;
+    if (weaponEnt == null || !weaponEnt.IsValid()) 
+    {
+        DebugPrint("Invalid scrap pickup.");
+        return;
+    }
 
     local name = weaponEnt.GetName();
     local now = Time();
-    local cooldown = 1.5;
+    local cooldown = 0.5;
 
     if (name in ::LastPickupTimes && (now - ::LastPickupTimes[name]) < cooldown)
     {
-        printl("Pickup blocked due to cooldown: " + name);
+        DebugPrint("Pickup cooldown active for: " + name);
         return;
     }
 
     ::LastPickupTimes[name] <- now;
 
     local owner = weaponEnt.GetOwner();
-    if (!owner || !owner.IsValid()) return;
+    if (owner == null || !owner.IsValid()) 
+    {
+        DebugPrint("Scrap has no valid owner.");
+        return;
+    }
 
     local holderId = owner.entindex();
 
@@ -198,10 +276,11 @@ function OnScrapPickedUp(weaponEnt, value)
         scrapName = name
     });
 
+    DebugPrint("Scrap picked up: " + name + " (+" + value + ") by " + holderId);
     AddToQuota(value);
-    printl("Scrap picked up: " + name + " (+" + value + ") by entindex " + holderId);
 }
 
+// Called every second to check for dropped/removed scrap
 function PollDroppedScrap()
 {
     local stillHeld = [];
@@ -210,17 +289,16 @@ function PollDroppedScrap()
     {
         local ent = entry.ent;
 
-        if (!ent || !ent.IsValid())
+        if (ent == null || !ent.IsValid())
         {
-            printl("Scrap entity destroyed: -" + entry.value);
+            DebugPrint("Scrap destroyed: -" + entry.value);
             AddToQuota(-entry.value);
             continue;
         }
 
-        // Check if it's dropped (i.e., no owner anymore)
         if (ent.GetOwner() == null)
         {
-            printl("Scrap was dropped: -" + entry.value + " (" + entry.scrapName + ")");
+            DebugPrint("Scrap dropped: -" + entry.value + " (" + entry.scrapName + ")");
             AddToQuota(-entry.value);
             continue;
         }
@@ -229,21 +307,32 @@ function PollDroppedScrap()
     }
 
     ::HeldScrapWeapons = stillHeld;
-    EntFire("quota_script", "RunScriptCode", "quota_script.PollDroppedScrap();", 1.0);
+
+    // Schedule next check
+    EntFire("quota_script", "RunScriptCode", "quota_script.PollDroppedScrap();", 0.25);
 }
 
+// ----------------------
+// PLAYER DEATH TRACKING
+// ----------------------
+
+// Detects dead players and removes their scrap from quota
 function PollDeadPlayers()
 {
-    local player = null;
-
-    while ((player = Entities.FindByClassname(player, "player")) != null)
+    foreach (player in ::CachedCTPlayers)
     {
-        if (!player.IsValid() || player.GetTeam() != 3) continue;
+        if (player == null || !player.IsValid())
+        {
+            DebugPrint("Invalid cached player in PollDeadPlayers.");
+            continue;
+        }
 
         local hp = player.GetHealth();
+        //DebugPrint("Polling player: " + player + ", HP: " + hp);
 
-        if (player in ::LastHealthMap && ::LastHealthMap[player] > 0 && hp <= 0)
+        if ((player in ::LastHealthMap) && ::LastHealthMap[player] > 0 && hp <= 0)
         {
+            DebugPrint("Detected death: " + player);
             OnPlayerDeathDetected(player);
         }
 
@@ -253,10 +342,9 @@ function PollDeadPlayers()
     EntFire("quota_script", "RunScriptCode", "quota_script.PollDeadPlayers();", 0.25);
 }
 
+// When a CT dies, remove quota for their held scrap
 function OnPlayerDeathDetected(player)
 {
-    printl("Detected death of player: " + player);
-
     local stillHeld = [];
     local playerId = player.entindex();
 
@@ -264,7 +352,7 @@ function OnPlayerDeathDetected(player)
     {
         if (entry.holderId == playerId)
         {
-            printl("Removing quota due to death: -" + entry.value + " (" + entry.scrapName + ")");
+            DebugPrint("Removing quota due to death: -" + entry.value + " (" + entry.scrapName + ")");
             AddToQuota(-entry.value);
             continue;
         }

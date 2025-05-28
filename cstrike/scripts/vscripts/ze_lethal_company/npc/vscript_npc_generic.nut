@@ -84,7 +84,6 @@ function initFields() {
 }
 
 //Below are functions used to spawn various entities for NPCs
-
 function genPhysbox(modelName, name, mass_scale, spawnOrigin, isHealth, scripts) {
 	local physb = SpawnEntityFromTable("func_physbox", {
 		model = modelName,
@@ -230,13 +229,13 @@ function spawnNpc(npcType, node) {
 	if (npcType == 0) 
 	{
 		npc = {
-			physb = genPhysbox(gmNpcDog.physb, "npc_dog_physb" + npcNumber, 0, spawnOrigin + Vector(0, 0, 88), false, "ze_lethal_company_map/NPC/vscript_npc_dog.nut"),
+			physb = genPhysbox(gmNpcDog.physb, "npc_dog_physb" + npcNumber, 0, spawnOrigin + Vector(0, 0, 88), false, "ze_lethal_company/npc/vscript_npc_dog.nut"),
 			physbFilter = genPhysboxFilter("npc_dog_physb" + npcNumber, "npc_dog_filter" + npcNumber),
-			model = genModel(gmNpcDog.model, "npc_dog_model" + npcNumber, spawnOrigin - Vector(0, 0, 4), "walk", "ze_lethal_company_map/NPC/vscript_npc_movement.nut"),
+			model = genModel(gmNpcDog.model, "npc_dog_model" + npcNumber, spawnOrigin - Vector(0, 0, 4), "walk", "ze_lethal_company/npc/vscript_npc_movement.nut"),
 			keep = genPhysKeepUpright("npc_dog_physb" + npcNumber, "npc_dog_keep" + npcNumber),
 			push = genPush(gmNpcDog.push, "npc_dog_push" + npcNumber, 0, "npc_dog_filter" + npcNumber, spawnOrigin + Vector(0, 0, 8), Vector(0, 0, 0), 130000),
 			pushup = genPush(gmNpcDog.push, "npc_dog_pushup" + npcNumber, 1, "npc_dog_filter" + npcNumber, spawnOrigin + Vector(0, 0, 8), Vector(-90, 0, 0), 90000),
-			physbHealth = genPhysbox(gmNpcDog.physbHealth, "npc_dog_physb_health" + npcNumber, 0, spawnOrigin + Vector(0, 0, 80), true, "ze_lethal_company_map/NPC/vscript_npc_health.nut"),
+			physbHealth = genPhysbox(gmNpcDog.physbHealth, "npc_dog_physb_health" + npcNumber, 0, spawnOrigin + Vector(0, 0, 80), true, "ze_lethal_company/npc/vscript_npc_health.nut"),
 			attackPush = genPush(gmNpcDog.push, "npc_dog_attackpush" + npcNumber, 1, "npc_dog_filter" + npcNumber, spawnOrigin + Vector(0, 0, 128), Vector(-45, 0, 0), 90000),
 			trigger = genTriggerMultiple(gmNpcDog.trigger, "npc_dog_trigger" + npcNumber, 0, spawnOrigin, "MapFilterCT"),
 			hurt = genHurt(gmNpcDog.hurt, "npc_dog_hurt" + npcNumber, 0, 32, 1, spawnOrigin + Vector(-8, 0, 4), "MapFilterCT"),
@@ -251,24 +250,25 @@ function spawnNpc(npcType, node) {
 		npc.hurt.AcceptInput("SetParent", "!activator", npc.model, null);
 		npc.attackHurt.AcceptInput("SetParent", "!activator", npc.model, null);
 		EntityOutputs.AddOutput(npc.physbHealth, "OnHealthChanged", "!self", "RunScriptCode", "subtract(1)", 0.0, -1);
+		EntityOutputs.AddOutput(npc.physbHealth, "OnHealthChanged", "!self", "RunScriptCode", "setHpPerPlayer(30)", 0.0, 1);
 		EntityOutputs.AddOutput(npc.trigger, "OnStartTouch", "npc_dog_physb" + npcNumber, "RunScriptCode", "triggerAttack()", 0.0, -1);
 		npcGroup.rawset("dog" + npcNumber, npc);
 		npc.physb.GetScriptScope().initNpcFields("dog" + npcNumber, npc.physbFilter, npc.model, npc.push,
 			npc.attackPush, npc.trigger, npc.hurt, npc.attackHurt);
 		npc.model.GetScriptScope().initMovementFields(spawnNode, 180.0, npc.pushup);
-		npc.physbHealth.GetScriptScope().initHealthFields(npc.physb, 0, 24);
+		npc.physbHealth.GetScriptScope().initHealthFields(npc.physb, 100, 0);
 		npc.physb.GetScriptScope().doAction(NpcAction.update);
 	} 
 	else if (npcType == 1) 
 	{
 		npc = {
-			physb = genPhysbox(gmNpcHBug.physb, "npc_hbug_physb" + npcNumber, 500, spawnOrigin + Vector(0, 0, 8), false, "ze_lethal_company_map/NPC/vscript_npc_hbug.nut"),
+			physb = genPhysbox(gmNpcHBug.physb, "npc_hbug_physb" + npcNumber, 500, spawnOrigin + Vector(0, 0, 8), false, "ze_lethal_company/npc/vscript_npc_hbug.nut"),
 			physbFilter = genPhysboxFilter("npc_hbug_physb" + npcNumber, "npc_hbug_filter" + npcNumber),
-			model = genModel(gmNpcHBug.model, "npc_hbug_model" + npcNumber, spawnOrigin - Vector(0, 0, 2), "idle", "ze_lethal_company_map/NPC/vscript_npc_movement.nut"),
+			model = genModel(gmNpcHBug.model, "npc_hbug_model" + npcNumber, spawnOrigin - Vector(0, 0, 2), "idle", "ze_lethal_company/npc/vscript_npc_movement.nut"),
 			keep = genPhysKeepUpright("npc_hbug_physb" + npcNumber, "npc_hbug_keep" + npcNumber),
 			push = genPush(gmNpcHBug.push, "npc_hbug_push" + npcNumber, 0, "npc_hbug_filter" + npcNumber, spawnOrigin, Vector(0, 0, 0), 140000),
 			pushup = genPush(gmNpcHBug.push, "npc_hbug_pushup" + npcNumber, 1, "npc_hbug_filter" + npcNumber, spawnOrigin, Vector(-90, 0, 0), 75000),
-			physbHealth = genPhysbox(gmNpcHBug.physbHealth, "npc_hbug_physb_health" + npcNumber, 0, spawnOrigin + Vector(0, 0, 52), true, "ze_lethal_company_map/NPC/vscript_npc_health.nut"),
+			physbHealth = genPhysbox(gmNpcHBug.physbHealth, "npc_hbug_physb_health" + npcNumber, 0, spawnOrigin + Vector(0, 0, 52), true, "ze_lethal_company/npc/vscript_npc_health.nut"),
 			trigger = genTriggerMultiple(gmNpcHBug.trigger, "npc_hbug_trigger" + npcNumber, 0, spawnOrigin + Vector(0, 0, 54), "MapFilterCT"),
 			hurt = genHurt(gmNpcHBug.trigger, "npc_hbug_hurt" + npcNumber, 1, 44, 128, spawnOrigin + Vector(0, 0, 54), "MapFilterCT")
 		};
@@ -279,13 +279,14 @@ function spawnNpc(npcType, node) {
 		npc.trigger.AcceptInput("SetParent", "!activator", npc.model, null);
 		npc.hurt.AcceptInput("SetParent", "!activator", npc.model, null);
 		EntityOutputs.AddOutput(npc.physbHealth, "OnHealthChanged", "!self", "RunScriptCode", "subtract(1)", 0.0, -1);
+		EntityOutputs.AddOutput(npc.physbHealth, "OnHealthChanged", "!self", "RunScriptCode", "setHpPerPlayer(10)", 0.0, 1);
 		EntityOutputs.AddOutput(npc.physbHealth, "OnHealthChanged", "npc_hbug_physb" + npcNumber, "RunScriptCode", "shootAt()", 0.0, -1);
 		EntityOutputs.AddOutput(npc.trigger, "OnStartTouch", "npc_hbug_physb" + npcNumber, "RunScriptCode", "triggerAttack()", 0.0, -1);
 		npcGroup.rawset("hbug" + npcNumber, npc);
 		npc.physb.GetScriptScope().initNpcFields("hbug" + npcNumber, npc.physbFilter, npc.model, npc.pushup, npc.trigger, npc.hurt);
 		npc.model.GetScriptScope().initMovementFields(spawnNode, 240.0, npc.pushup);
 		npc.model.GetScriptScope().setUpVectorPushDifference(-20);
-		npc.physbHealth.GetScriptScope().initHealthFields(npc.physb, 0, 2);
+		npc.physbHealth.GetScriptScope().initHealthFields(npc.physb, 100, 0);
 		npc.physb.GetScriptScope().doAction(NpcAction.update);
 	}
 }
