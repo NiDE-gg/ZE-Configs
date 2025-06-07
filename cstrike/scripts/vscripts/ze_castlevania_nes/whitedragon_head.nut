@@ -25,7 +25,7 @@ local resumespeed = false;
 local smoothness = 0.035
 
 local radiusmain = 1024
-local soundlevelmain = (40 + (20 * log10(radiusmain / 36.0))).tointeger(); 
+local soundlevelmain = (40 + (20 * log10(radiusmain / 36.0))).tointeger();
 
 for(local h;h=Entities.FindByClassname(h,"player");)
 {
@@ -51,7 +51,7 @@ function OnPostSpawn(){
     MODEL.GetScriptScope().touchers <- {};
     MODEL.GetScriptScope().speed <- 5;
     MODEL.GetScriptScope().headhp <- maxhealth;
-    MODEL.GetScriptScope().WDTotalSegments <- RandomInt(10,10);
+    MODEL.GetScriptScope().WDTotalSegments <- RandomInt(15,15);
     MODEL.GetScriptScope().wave_rate <- 0.1;
     MODEL.GetScriptScope().wave_amplitude <- 5;
     MODEL.GetScriptScope().sine <- -1.00;
@@ -90,7 +90,7 @@ function Hurt(){
     local perc = (headhp * 100) / maxhealth;
     local mishp = 100 - perc;
     local bardamage = 0
-    
+
     bardamage = (fabs(16 * mishp/100));
     bardamage = bardamage.tointeger();
 
@@ -100,7 +100,7 @@ function Hurt(){
     for(local i=0; i < bars; i++){
         hpbar.append("▮");
     }
-    
+
     for(local i=0; i < bardamage; i++){
         hpbar.append("▯");
     }
@@ -120,7 +120,7 @@ function Hurt(){
 
     //ClientPrint(activator, 4, "ENEMY : "+health+ " ( "+perc.tointeger()+"% )")
     ClientPrint(shooter, 4, "ENEMY "+hpbar[0]+hpbar[1]+hpbar[2]+hpbar[3]+hpbar[4]+hpbar[5]+hpbar[6]+hpbar[7]+hpbar[8]+hpbar[9]+hpbar[10]+hpbar[11]+hpbar[12]+hpbar[13]+hpbar[14]+hpbar[15]+" "+headhp+"/"+maxhealth)
-        
+
 }
 
 function TargetPlayer() {
@@ -152,9 +152,9 @@ function TargetPlayer() {
 
         }
         return end
-        
+
     }
-   
+
 }
 
 
@@ -193,7 +193,7 @@ function Death(){
 
     local relay_end_boner = Entities.FindByName(null, "s1_after_bone_relay")
     EntFireByHandle(relay_end_boner,"Trigger","",3.0,null,null);
-    
+
     EntFireByHandle(MODEL, "SetDefaultAnimation", "", 0.1, null, null)
     MODEL.AcceptInput("SetAnimation", "rage_start", null, null)
     MODEL.AcceptInput("SetPlaybackRate", "5", null, null)
@@ -203,7 +203,7 @@ function Think(){
 
     local halfhp = maxhealth / 2
 
-    if(headhp <= 0){ 
+    if(headhp <= 0){
         if (onlyonce_death == false) {
             onlyonce_death = true;
             HITBOX.AcceptInput("Break", "", null, null)
@@ -211,9 +211,9 @@ function Think(){
     }
     local bulspeed = speed + 5
 
-    if(headhp <= halfhp){ 
+    if(headhp <= halfhp){
         if (resumespeed){
-            
+
             firecd *= 0.9995;
             smoothness += 0.000005;
             MODEL.AcceptInput("SetPlaybackRate", speed.tostring(), null, null)
@@ -224,11 +224,11 @@ function Think(){
         }else{
             speed*=0.98;
         }
-        
+
         if (Time() - last_bullet_time >= firecd) {
             if (!DEAD && rage){
                 //printl(firecd)
-                
+
                 local cont = 0
                 for (local i=WDTotalSegments; i >= 0; i--) {
                     EntFire("wd_segment_"+i, "RunScriptCode", "ShowFire();",cont,null)
@@ -236,7 +236,7 @@ function Think(){
                     if(i==0){
                         EntFireByHandle(MODEL, "SetAnimation", "rage_end", cont, null, null)
                         EntFireByHandle(MODEL, "SetPlaybackRate", "1", cont+0.02, null, null)
-                        EntFireByHandle(self, "RunScriptCode", "ShootFireBullet("+bulspeed+")", cont, null, null); 
+                        EntFireByHandle(self, "RunScriptCode", "ShootFireBullet("+bulspeed+")", cont, null, null);
                     }
                 }
 
@@ -249,7 +249,7 @@ function Think(){
             EntFireByHandle(MODEL,"RunScriptCode","StopHead()",0,null,null);
             EntFireByHandle(MODEL,"RunScriptCode","HeadRageSpeed()",3.2,null,null);
         }
-    }   
+    }
 
 
 
@@ -279,7 +279,7 @@ function Think(){
 
     if (Time() - last_target_time >= 3) {
         target = TargetPlayer()
-        last_target_time = Time();   
+        last_target_time = Time();
     }
 
     for(local j;j=Entities.FindByNameWithin(j,"wd_boss_death_goto",self.GetOrigin(),128);){
@@ -287,33 +287,31 @@ function Think(){
         endfound = true;
         }
     }
-    
+
     if (endfound == false){
         if (target !=null){
             targetPos = target.GetOrigin()+Vector(0,0,40);
-        } else { 
-            targetPos = self.GetOrigin()
+            local headPos = self.GetOrigin()
+            local Direction = (targetPos - headPos)
+            //speed *= 1.001
+            //smoothness *= 1.001
+            forward = self.GetForwardVector()
+            Direction.Norm()
+            self.SetForwardVector(forward + ( Direction - forward ) * smoothness)
+        } else {
+            target = TargetPlayer()
         }
     } else {
         targetPos = target.GetOrigin()+Vector(0,0,2048);
         EntFire("wd_head", "Kill",null,3.0,null)
         EntFire("wd_segment_*", "Kill",null,3.0,null)
     }
-    
-    
-    local headPos = self.GetOrigin()
-    local Direction = (targetPos - headPos)
-    //speed *= 1.001
-    //smoothness *= 1.001
-    forward = self.GetForwardVector()
-    Direction.Norm()
-    self.SetForwardVector(forward + ( Direction - forward ) * smoothness)
-   
+
     //-1 ticks every frame= p.GetOrigin()+Vector(0,0,40)
     return -1;
 };
 
-function ShootFireBullet(fspeed = 6){   
+function ShootFireBullet(fspeed = 6){
 	if (DEAD) return
     //create the particle prop_dynamic
 
@@ -329,7 +327,7 @@ function ShootFireBullet(fspeed = 6){
 	})
 	::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
     //set the initial position and direction of the particle
-	
+
 	EmitSoundEx({
 		sound_name = "ambient/fire/gascan_ignite1.mp3",
 		origin = self.GetOrigin()
@@ -338,7 +336,7 @@ function ShootFireBullet(fspeed = 6){
 		pitch = RandomFloat(97, 103)
 	});
 
-	local forward = self.GetForwardVector(); 
+	local forward = self.GetForwardVector();
     particle.SetForwardVector(forward);
 
     //set up the particle script variables and think-function
@@ -365,7 +363,7 @@ function ShootFireBullet(fspeed = 6){
 			if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
 			touchers[h] <- h;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
-			
+
 			local newhp = h.GetHealth() - damage;
 			if(newhp <= 0)
 				EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
@@ -374,14 +372,14 @@ function ShootFireBullet(fspeed = 6){
 				h.AcceptInput("IgniteLifetime", "1", null, null)
 			}
         }
-		
+
         if(TraceLine(self.GetOrigin(),(self.GetOrigin()+(self.GetForwardVector()*20)),self)<1.00)
         {
             EntFireByHandle(self,"Kill","",0,null,null);
         }
 
         local pos = self.GetOrigin();
-        local forward = self.GetForwardVector(); 
+        local forward = self.GetForwardVector();
 
 		pos += (forward * speed);
         self.SetOrigin(pos);
@@ -395,7 +393,7 @@ function ShootFireBullet(fspeed = 6){
 
 function SpawnSegments(){
     for (local i=0; i < WDTotalSegments; i++) {
-    
+
         local wd_spine = SpawnEntityFromTable("prop_dynamic",{
             model = "models/hob_cv/wd_spine.mdl",
             modelscale = 1,
@@ -427,7 +425,7 @@ function SpawnSegments(){
                 effect_name  = "dracula_fireproj"
                 parentname = self
                 start_active = true // set to false if you don't want particle to start initially
-            }) 
+            })
             ::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
             particle.ValidateScriptScope();
             particle.GetScriptScope().seg <- self;
@@ -454,13 +452,13 @@ function SpawnSegments(){
             if(newhp <= 0)EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
             else h.SetHealth(newhp);    //this doesn't seem to kill players if <= 0
             }
-        
+
             //-1 ticks every frame
             return -1;
         };
         AddThinkToEnt(wd_spine,"Think");
         segments[i] <- wd_spine;
-        
+
     }
     EntFireByHandle(self,"RunScriptCode"," SegmentMoveThink(); ",0.01,null,null);
 };
@@ -474,7 +472,7 @@ function SegmentMoveThink(){
     local chain_distance_first = 32;
     chain.push(self);
     foreach(p in segments){chain.push(p);}
-    
+
     for(local i=1;i<chain.len();i++) // Wormy worm
     {
         if(chain[0]==null||!chain[0].IsValid()||chain[i]==null||!chain[i].IsValid())continue;
@@ -483,15 +481,15 @@ function SegmentMoveThink(){
             chain[i].SetOrigin(chain[i-1].GetOrigin() - (chain[i-1].GetForwardVector()*chain_distance_first));
             continue;
         }
-        
+
         // local newpos = chain[i].GetOrigin();
         // chain[i].SetOrigin(newpos);
-        
+
         local dist = ::GetDistance(chain[i].GetOrigin(),chain[i-1].GetOrigin());
         local dir = chain[i].GetOrigin() - chain[i-1].GetOrigin();
         dir.Norm();
         if(dist > chain_distance)chain[i].SetOrigin(chain[i-1].GetOrigin() + (dir * chain_distance));
         chain[i].SetForwardVector(dir);
     }
- 
+
 };
