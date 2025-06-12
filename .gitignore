@@ -51,6 +51,7 @@ cstrike/addons/sourcemod/configs/*
 # Server Configs
 !cstrike/cfg
 cstrike/cfg/*
+!cstrike/cfg/vscript_convar_allowlist.txt
 
 # Config SourceMod
 !cstrike/cfg/sourcemod
