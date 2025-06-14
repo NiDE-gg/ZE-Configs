@@ -169,6 +169,7 @@ vscript_convar_allowlist
     violence_hblood                                                   allowed
     violence_hgibs                                                    allowed
     weapon_accuracy_model                                             allowed
+
     //SourceMod Convars
     zr_ambientsounds                                                  allowed
     zr_ambientsounds_file                                             allowed
