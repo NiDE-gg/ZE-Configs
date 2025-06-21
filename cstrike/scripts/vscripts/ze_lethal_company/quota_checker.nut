@@ -141,13 +141,8 @@ function UpdateCachedCTPlayers()
     {
         if (player != null && player.IsValid() && player.GetTeam() == 3)
         {
-            local team = player.GetTeam();
-            DebugPrint("Found player: " + player + " | Team: " + team);
-
-            if (team == 3)
-            {
-                ::CachedCTPlayers.append(player);
-            }
+            DebugPrint("Found player: " + player + " | Team: 3");
+            ::CachedCTPlayers.append(player);
         }
         else
         {
@@ -165,7 +160,7 @@ function UpdateCachedCTPlayers()
 function CalculateDynamicQuota()
 {
     local humanCount = ::CachedCTPlayers.len();
-    local baseQuota = humanCount * 20;
+    local baseQuota = humanCount * 13;
     local variation = baseQuota * 0.1;
     local randomizedQuota = baseQuota + RandomInt(-variation.tointeger(), variation.tointeger());
 
@@ -205,7 +200,7 @@ function SpawnRandomScrap()
     ShuffleArray(::ScrapSpawnQueue);
 
     // Limit max scrap spawn points
-    local numToSpawn = 100;
+    local numToSpawn = 140;
     if (::ScrapSpawnQueue.len() > numToSpawn)
     {
         ::ScrapSpawnQueue.resize(numToSpawn);
