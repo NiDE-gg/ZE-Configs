@@ -1,3 +1,7 @@
+// ====================================================================
+// VScript Patch intended for Stripper Config Alpha 2b - Iteration #2
+// ====================================================================
+
 base_script <- null
 base_script_entity <- null
 
@@ -69,6 +73,7 @@ function ItemUse(activator) {
 
 	proj_hitbox.AcceptInput("SetParent", "!activator", projectile, null)
 	proj_hitbox.SetSize(Vector(-32, -32, -32), Vector(32, 32, 32))
+	proj_hitbox.SetSolid(3)
 
 	projectile.SetMoveType(8, 0)
 	NetProps.SetPropBool(projectile, "m_bForcePurgeFixedupStrings", true)
