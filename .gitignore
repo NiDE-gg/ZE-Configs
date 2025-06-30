@@ -32,7 +32,6 @@ cstrike/addons/sourcemod/*
 cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/adminroom
 !cstrike/addons/sourcemod/configs/bosshp
-!cstrike/addons/sourcemod/configs/dev_zones
 !cstrike/addons/sourcemod/configs/entwatch
 !cstrike/addons/sourcemod/configs/movingnpc
 !cstrike/addons/sourcemod/configs/savelevel
@@ -75,7 +74,6 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a4.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a5.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_fiendlordkeep_v4_2.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_totally_new_wester.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_mako_reactor_v5_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
 
 # Henry
