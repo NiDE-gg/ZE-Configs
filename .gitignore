@@ -6,6 +6,9 @@
 // Servers configs
 //-----------------
 
+# Ignore tar.gz archives
+*.tar.gz
+
 # Git
 /*
 !.gitignore
