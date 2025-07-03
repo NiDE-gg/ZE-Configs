@@ -1,6 +1,6 @@
 holder <- null
 local radius = 1024
-local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
 
 PrecacheSound("hob_cv/hobcv_holywater.mp3");
 PrecacheSound("hob_cv/hobcv_dagger.mp3");
@@ -25,18 +25,18 @@ function CheckBelmontKnife()
         EntFire("belmont_model*", "SetAnimation", "throw", 0, null);
         EntFire("belmont_model*", "SetPlaybackRate", "3", 0, null);
     }
-    
+
     ThrowWater()
 
 }
 
 function ThrowWater(){
     local holywater = SpawnEntityFromTable("prop_physics_override",
-	{
-		model = "models/hob_cv/hobcv_water.mdl",
-		targetname = "i_dagger"
-		disableshadows = 1,
-		disablereceiveshadows = 1,
+    {
+        model = "models/hob_cv/hobcv_water.mdl",
+        targetname = "i_dagger"
+        disableshadows = 1,
+        disablereceiveshadows = 1,
         spawnflags = 52,
         PerformanceMode = 1,
         massScale = 0,
@@ -48,7 +48,7 @@ function ThrowWater(){
         overridescript = "damping,0,rotdamping,0,mass,1"
         "OnTakeDamage#1" : "!self,RunScriptCode,SpawnHolyFire(),0,-1"
         "OnTakeDamage#2" : "!self,Break,,0.02,-1"
-	})
+    })
     ::NetProps.SetPropBool(holywater,"m_bForcePurgeFixedupStrings",true);
 
     holywater.ValidateScriptScope();
@@ -77,7 +77,7 @@ function ThrowWater(){
             effect_name  = "hobcv_holywater"
             start_active = true // set to false if you don't want particle to start initially
         })
-        
+
         particle.ValidateScriptScope();
         particle.GetScriptScope().damage <- 20;
         particle.GetScriptScope().damage_range <- 38.00;
@@ -99,10 +99,10 @@ function ThrowWater(){
                 if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
                 touchers[h] <- h;
                 EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
-                
+
                 local newhp = h.GetHealth() - damage;
                 if(newhp <= 0)EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
-                else{ 
+                else{
                     h.TakeDamage(damage, 8, self);
                     h.AcceptInput("IgniteLifetime", "2", null, null)
                 }
@@ -110,14 +110,14 @@ function ThrowWater(){
 
 
             for(local n;n=Entities.FindByClassnameWithin(n,"func_physbox",checkpos,damage_range);){
-                if(n in touchers)continue; 
+                if(n in touchers)continue;
                 touchers[n] <- n;
                 EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,n,null);
                 n.TakeDamage(damage, 4, self);
             }
 
             return 0.1;
-        };	
+        };
 
         EmitSoundEx({
             sound_name = "hob_cv/hobcv_holywater.mp3",
@@ -125,7 +125,7 @@ function ThrowWater(){
             sound_level = soundlevel,
             volume = 1,
         });
-        
+
         AddThinkToEnt(particle,"Think")
         particle.AcceptInput("Start","",null,null)
         EntFireByHandle(particle,"Kill","",2,null,null);

@@ -6,6 +6,9 @@
 // Servers configs
 //-----------------
 
+# Ignore tar.gz archives
+*.tar.gz
+
 # Git
 /*
 !.gitignore
@@ -70,11 +73,8 @@ cstrike/cfg/sourcemod/zombiereloaded/zombiereloaded.cfg
 //------------------------
 
 # UNLOZE
-cstrike/addons/sourcemod/configs/stripper/maps/ze_rush_b_s1.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a4.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_moltentemple_a5.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_fiendlordkeep_v4_2.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_totally_new_wester.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffvii_mako_reactor_v5_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_sky_atheletic_adv_v9_12s.cfg
 
@@ -83,13 +83,6 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_light_retribution_v1s.cfg
 
 # George
 cstrike/addons/sourcemod/configs/stripper/maps/ze_eden_a3s.cfg
-
-# Rix - Ported maps from CSGO
-cstrike/addons/sourcemod/configs/stripper/maps/ze_cyberspace_v1_s.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_jerry_malaka_escape_v2fix_s2.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_lootus_v2_s.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_uyuni_v1_6_s2.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_xenovation_v3_5_s.cfg
 
 # Dakotec
 cstrike/addons/sourcemod/configs/stripper/maps/ze_ffxiv_pharos_sirius_css.cfg
@@ -103,4 +96,3 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_ocarina_of_time_v1_0.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v3_5.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v3_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v2_2fix.cfg
-cstrike/addons/sourcemod/configs/stripper/maps/ze_paranoid_rezurrection_v11_9.cfg

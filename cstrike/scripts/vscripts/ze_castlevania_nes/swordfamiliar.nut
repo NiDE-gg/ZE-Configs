@@ -16,45 +16,45 @@ function SpawnFamiliar(){
 
     local sworddummy = SpawnEntityFromTable("prop_dynamic",{
         model = "models/hob_cv/hobcv_sword_fly.mdl",
-		targetname = "sword_familiar_dummy"
+        targetname = "sword_familiar_dummy"
         angles = "90 0 0"
         modelscale = 1,
         disableshadows = 1,
-		rendermode = 1,
-		renderamt = 255,
+        rendermode = 1,
+        renderamt = 255,
         disablereceiveshadows = 1,
     });
 
     local sword = SpawnEntityFromTable("prop_dynamic",{
         model = "models/hob_cv/hobcv_sword_fly.mdl",
-		targetname = "sword_familiar"
+        targetname = "sword_familiar"
         modelscale = 1,
         disableshadows = 1,
-		rendermode = 1,
-		renderamt = 0,
+        rendermode = 1,
+        renderamt = 0,
         disablereceiveshadows = 1,
     });
 
     local particle = SpawnEntityFromTable("info_particle_system",
-	{
+    {
         targetname = "sword_trail"
         origin       = self.GetOrigin()
         angles       = QAngle(0, 0, 0)
         effect_name  = "dagger_trail"
         start_active = true // set to false if you don't want particle to start initially
-	})
+    })
 
     ::NetProps.SetPropBool(sword,"m_bForcePurgeFixedupStrings",true);
     ::NetProps.SetPropBool(sworddummy,"m_bForcePurgeFixedupStrings",true);
     ::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
 
-	sworddummy.AcceptInput("SetAnimation", "fly", null, null)
+    sworddummy.AcceptInput("SetAnimation", "fly", null, null)
 
     sworddummy.AcceptInput("SetParent", "!activator", sword, null)
 
     sword.SetOrigin(self.GetOrigin()+Vector(0,0,32));
     particle.SetOrigin(sworddummy.GetOrigin());
-	EntFireByHandle(particle, "SetParent", "!activator", 0.02, sworddummy, null);
+    EntFireByHandle(particle, "SetParent", "!activator", 0.02, sworddummy, null);
 
     local direction = self.GetForwardVector()
     sword.SetForwardVector(direction);

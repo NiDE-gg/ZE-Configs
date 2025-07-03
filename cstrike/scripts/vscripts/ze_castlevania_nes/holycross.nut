@@ -1,6 +1,6 @@
 holder <- null
 local radius = 1024
-local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
 ::active_proj <- 0
 
 PrecacheSound("hob_cv/hobcv_simon_cross.mp3");
@@ -11,7 +11,7 @@ function CheckBelmontKnife()
 {
     holder = self.GetMoveParent().GetMoveParent()
 
-    
+
     if(active_proj < 3){
         ThrowCross()
     } else {
@@ -23,7 +23,7 @@ function CheckBelmontKnife()
     local presser = activator;
     local presser_name = NetProps.GetPropString(presser, "m_iName")
     printl("| Presser Targetname |  = "+presser_name)
-    
+
     if(presser_name == "belmont_guy"){
 
         EntFire("belmont_model*", "SetAnimation", "throw", 0, null);
@@ -32,7 +32,7 @@ function CheckBelmontKnife()
         local random_snd = RandomInt(1, 3)
         if (random_snd == 3){
             local radius = 1024
-            local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+            local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
             EmitSoundEx({
                 sound_name = "hob_cv/hobcv_simon_cross.mp3",
                 origin = presser.GetOrigin(),
@@ -42,7 +42,7 @@ function CheckBelmontKnife()
         }
 
     }
-    
+
     EmitSoundEx({
         sound_name = "hob_cv/hobcv_dagger.mp3",
         origin = self.GetOrigin(),
@@ -57,32 +57,32 @@ function ThrowCross(){
     active_proj++
     local crossdummy = SpawnEntityFromTable("prop_dynamic",{
         model = "models/hob_cv/hobcv_cross.mdl",
-		targetname = "cross_dummy"
+        targetname = "cross_dummy"
         modelscale = 1,
         disableshadows = 1,
-		rendermode = 1,
-		renderamt = 255,
+        rendermode = 1,
+        renderamt = 255,
         disablereceiveshadows = 1,
     });
 
     local cross = SpawnEntityFromTable("prop_dynamic",{
         model = "models/hob_cv/hobcv_cross.mdl",
-		targetname = "cross"
+        targetname = "cross"
         modelscale = 1,
         disableshadows = 1,
-		rendermode = 1,
-		renderamt = 0,
+        rendermode = 1,
+        renderamt = 0,
         disablereceiveshadows = 1,
     });
 
     local particle = SpawnEntityFromTable("info_particle_system",
-	{
+    {
         targetname = "cross_trail"
         origin       = self.GetOrigin()
         angles       = QAngle(0, 0, 0)
         effect_name  = "hobcv_luff_dagger"
         start_active = true // set to false if you don't want particle to start initially
-	})
+    })
 
     ::NetProps.SetPropBool(cross,"m_bForcePurgeFixedupStrings",true);
     ::NetProps.SetPropBool(crossdummy,"m_bForcePurgeFixedupStrings",true);
@@ -126,8 +126,8 @@ function ThrowCross(){
 
         for(local h;h=Entities.FindByClassnameWithin(h,"player",checkpos,damage_range);){
             if(!h.IsAlive())continue;
-            if(h in touchers)continue; 
-            if(h.GetTeam()!=2)continue; 
+            if(h in touchers)continue;
+            if(h.GetTeam()!=2)continue;
 
             touchers[h] <- h;
             EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
@@ -150,7 +150,7 @@ function ThrowCross(){
         }
 
         for(local n;n=Entities.FindByClassnameWithin(n,"func_physbox",checkpos,damage_range);){
-            if(n in touchers)continue; 
+            if(n in touchers)continue;
             touchers[n] <- n;
             EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,n,null);
             n.TakeDamage(damage, 4, self);
@@ -165,7 +165,7 @@ function ThrowCross(){
         }
 
         local pos = self.GetOrigin();
-        local forward = self.GetForwardVector(); 
+        local forward = self.GetForwardVector();
         local angulos = self.GetAbsAngles();
         pos += (direction * speed);
         self.SetOrigin(pos);
@@ -190,29 +190,29 @@ function ThrowCross(){
 // Implementation
 function SetDestroyCallback(entity, callback)
 {
-	entity.ValidateScriptScope()
-	local scope = entity.GetScriptScope()
-	scope.setdelegate({}.setdelegate({
-			parent   = scope.getdelegate()
-			id       = entity.GetScriptId()
-			index    = entity.entindex()
-			callback = callback
-			_get = function(k)
-			{
-				return parent[k]
-			}
-			_delslot = function(k)
-			{
-				if (k == id)
-				{
-					entity = EntIndexToHScript(index)
-					local scope = entity.GetScriptScope()
-					scope.self <- entity
-					callback.pcall(scope)
-				}
-				delete parent[k]
-			}
-		})
-	)
+    entity.ValidateScriptScope()
+    local scope = entity.GetScriptScope()
+    scope.setdelegate({}.setdelegate({
+            parent   = scope.getdelegate()
+            id       = entity.GetScriptId()
+            index    = entity.entindex()
+            callback = callback
+            _get = function(k)
+            {
+                return parent[k]
+            }
+            _delslot = function(k)
+            {
+                if (k == id)
+                {
+                    entity = EntIndexToHScript(index)
+                    local scope = entity.GetScriptScope()
+                    scope.self <- entity
+                    callback.pcall(scope)
+                }
+                delete parent[k]
+            }
+        })
+    )
 }
 

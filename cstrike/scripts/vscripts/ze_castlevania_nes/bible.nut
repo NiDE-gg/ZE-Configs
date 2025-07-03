@@ -4,7 +4,7 @@ PrecacheSound("ze_tyranny2/bible.mp3");
 holder <- null
 
 local radius = 1024
-local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
 local smoothness = 0.15
 
 counter_uses <- 0
@@ -79,12 +79,12 @@ function SpawnBible(){
 
     local bible = SpawnEntityFromTable("prop_dynamic",{
         model = "models/saddong/cv_items/holybible.mdl",
-		targetname = "bible_model"
+        targetname = "bible_model"
         angles = "90 0 0"
         modelscale = 1,
         disableshadows = 1,
-		rendermode = 1,
-		renderamt = 255,
+        rendermode = 1,
+        renderamt = 255,
         disablereceiveshadows = 1,
     });
 
@@ -119,8 +119,8 @@ function SpawnBible(){
 
         for(local h;h=Entities.FindByClassnameWithin(h,"player",checkpos,damage_range);){
             if(!h.IsAlive())continue;
-            if(h in touchers)continue; 
-            if(h.GetTeam()!=2)continue; 
+            if(h in touchers)continue;
+            if(h.GetTeam()!=2)continue;
 
             touchers[h] <- h;
             EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
@@ -146,7 +146,7 @@ function SpawnBible(){
         }
 
         local pos = self.GetOrigin();
-        local forward = self.GetForwardVector(); 
+        local forward = self.GetForwardVector();
         pos += (forward * speed);
         self.SetOrigin(Vector(pos.x,pos.y,targetPos.z))
         forward = self.GetForwardVector()

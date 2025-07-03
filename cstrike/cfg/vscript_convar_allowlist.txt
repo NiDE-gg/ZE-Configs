@@ -117,6 +117,7 @@ vscript_convar_allowlist
     spec_freeze_traveltime                                            allowed
     suitvolume                                                        allowed
     sv_accelerate                                                     allowed
+    sv_airaccelerate                                                  allowed
     sv_allowminmodels                                                 allowed
     sv_autobunnyhopping                                               allowed
     sv_backspeed                                                      allowed
@@ -168,4 +169,50 @@ vscript_convar_allowlist
     violence_hblood                                                   allowed
     violence_hgibs                                                    allowed
     weapon_accuracy_model                                             allowed
+
+    // SourceMod ConVars
+    sm_force_shake                                                    allowed
+    sm_hitmarker_enable                                               allowed
+    sm_toggle_respawn                                                 allowed
+    sm_topdefenders_hat                                               allowed
+    sm_topinfectors_hat                                               allowed
+    mce_extend                                                        allowed
+
+    // Zombie:Reloaded ConVars
+    zr_ambientsounds                                                  allowed
+    zr_ambientsounds_file                                             allowed
+    zr_ambientsounds_volume                                           allowed
+    zr_ambientsounds_length                                           allowed
+    zr_roundend_overlay                                               allowed
+    zr_roundend_overlays_human                                        allowed
+    zr_roundend_overlays_zombie                                       allowed
+    zr_respawn                                                        allowed
+    zr_respawn_delay                                                  allowed
+    zr_zspawn                                                         allowed
+    zr_zspawn_timelimit                                               allowed
+    zr_zspawn_timelimit_time                                          allowed
+    zr_infect_mzombie_min                                             allowed
+    zr_infect_mzombie_max                                             allowed
+    zr_classes_change_timelimit                                       allowed
+    zr_infect_mzombie_ratio                                           allowed
+    zr_infect_mzombie_respawn                                         allowed
+    zr_infect_spawntime_min                                           allowed
+    zr_infect_spawntime_max                                           allowed
+    zr_seffects_path_scream                                           allowed
+    zr_ztele_zombie                                                   allowed
+    zr_ztele_human_before                                             allowed
+    zr_ztele_human_after                                              allowed
+    zr_ztele_delay_zombie                                             allowed
+    zr_ztele_delay_human                                              allowed
+    zr_ztele_max_zombie                                               allowed
+    zr_ztele_max_human                                                allowed
+    zr_ztele_random_spawn                                             allowed
+    zr_weapons_infect_removeknife                                     allowed
+    zr_infect_mzombie_mode                                            allowed
+    zr_weapons_zmarket                                                allowed
+    zr_weapons_zmarket_buyzone                                        allowed
+    zr_weapons_zmarket_norefill                                       allowed
+    zr_weapons_zmarket_rebuy                                          allowed
+    zr_weapons_zmarket_rebuy_auto                                     allowed
+    zr_weapons_zmarket_freespawn                                      allowed
 }

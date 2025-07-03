@@ -22,6 +22,7 @@ local rage = false;
 local secondphase = false;
 local endfound = false;
 local resumespeed = false;
+local once_max = false
 local smoothness = 0.035
 
 local radiusmain = 1024
@@ -34,13 +35,13 @@ for(local h;h=Entities.FindByClassname(h,"player");)
 }
 
 function OnPostSpawn(){
-	MODEL = self
-	HITBOX = MODEL.FirstMoveChild();
+    MODEL = self
+    HITBOX = MODEL.FirstMoveChild();
 
-	// printl("INITIAL HP "+500)
-	maxhealth = 500+(175*ctcount) // 500 start hp + 175 per player
+    // printl("INITIAL HP "+500)
+    maxhealth = 500+(225*ctcount) // 500 start hp + 175 per player
 
-	// printl("RESCALED HP "+maxhealth)
+    // printl("RESCALED HP "+maxhealth)
 
     MODEL.ValidateScriptScope();
     MODEL.GetScriptScope().segments <- {};
@@ -63,12 +64,12 @@ function OnPostSpawn(){
 
     MODEL.AcceptInput("SetDefaultAnimation", "idle", null, null)
 
-	MODEL.__KeyValueFromInt("movetype", 0); // Disable movement
-	MODEL.__KeyValueFromInt("collisiongroup", 10); // Don't block bullets
+    MODEL.__KeyValueFromInt("movetype", 0); // Disable movement
+    MODEL.__KeyValueFromInt("collisiongroup", 10); // Don't block bullets
     speed=8
-	EntFireByHandle(MODEL, "AddOutput", "movetype 4", FrameTime(), null, null); // Re-enable movement
+    EntFireByHandle(MODEL, "AddOutput", "movetype 4", FrameTime(), null, null); // Re-enable movement
 
-	Spawn();
+    Spawn();
 }
 
 function Spawn(){
@@ -127,7 +128,8 @@ function TargetPlayer() {
     if (!DEAD){
         local players = [];
         local arenacenter;
-        arenacenter = Vector(10112,-2944,-10648)
+        arenacenter = Vector(10112,-2944,-10648) // main map
+        // arenacenter = Vector(0,-2048,256) // test map
         for(local h;h=Entities.FindByClassname(h,"player");){if(h==null||!h.IsValid()||h.GetTeam()!=3||h.IsAlive()==false)continue;players.push(h)}
         if(players.len()>0){
             // ClientPrint(null, 3, "- TARGET FOUND -")
@@ -182,13 +184,13 @@ function StopHead() {
 function HeadRageSpeed () {
     resumespeed=true;
     rage=true;
-    ClientPrint(null, 3, "- BOSS IS ENRAGED -")
-    HITBOX.AcceptInput("SetDamageFilter", "filter_ct", null, null)
+    ClientPrint(null, 3, "- BONE DRAGON IS ENRAGED -")
+    HITBOX.AcceptInput("SetDamageFilter", "", null, null)
     speed=6;
 }
 
 function Death(){
-	//printl("[NPC] Death");
+    //printl("[NPC] Death");
     DEAD = true;
 
     local relay_end_boner = Entities.FindByName(null, "s1_after_bone_relay")
@@ -214,12 +216,21 @@ function Think(){
     if(headhp <= halfhp){
         if (resumespeed){
 
-            firecd *= 0.9995;
-            smoothness += 0.000005;
-            MODEL.AcceptInput("SetPlaybackRate", speed.tostring(), null, null)
-            if (firecd <= 0.1){
-                bulspeed = speed + 15
-                firecd = 0.1
+            if (firecd <= 0.2){
+                if (once_max == false) {
+                    once_max = true;
+                    bulspeed = speed + 10
+                    firecd = 0.2
+                    EntFireByHandle(MODEL, "SetAnimation", "rage", 0, null, null)
+                    damage = 10
+                    smoothness = 0.085
+                    ClientPrint(null, 3, "- BONE DRAGON IS FULLY ENRAGED -")
+                }
+            } else {
+                MODEL.AcceptInput("SetPlaybackRate", speed.tostring(), null, null)
+                firecd *= 0.9995;
+                smoothness += 0.000001;
+                speed *= 1.00005;
             }
         }else{
             speed*=0.98;
@@ -228,8 +239,9 @@ function Think(){
         if (Time() - last_bullet_time >= firecd) {
             if (!DEAD && rage){
                 //printl(firecd)
-
                 local cont = 0
+                local lastseg = WDTotalSegments-1
+                EntFire("wd_segment_"+lastseg, "RunScriptCode", "BackFire();",cont,null)
                 for (local i=WDTotalSegments; i >= 0; i--) {
                     EntFire("wd_segment_"+i, "RunScriptCode", "ShowFire();",cont,null)
                     cont+=0.1
@@ -312,31 +324,31 @@ function Think(){
 };
 
 function ShootFireBullet(fspeed = 6){
-	if (DEAD) return
+    if (DEAD) return
     //create the particle prop_dynamic
+    //printl("- LAST  segment -")
+    local bossorigin = self.GetOrigin()
 
-	local bossorigin = self.GetOrigin()
-
-	local particle = SpawnEntityFromTable("info_particle_system",
-	{
-		targetname = "boss_dracula_particle_bullet1"
-		origin       = bossorigin
-		angles       = QAngle(0, 0, 0)
-		effect_name  = "dracula_fireproj"
-		start_active = true // set to false if you don't want particle to start initially
-	})
-	::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
+    local particle = SpawnEntityFromTable("info_particle_system",
+    {
+        targetname = "boss_dracula_particle_bullet1"
+        origin       = bossorigin
+        angles       = QAngle(0, 0, 0)
+        effect_name  = "dracula_fireproj"
+        start_active = true // set to false if you don't want particle to start initially
+    })
+    ::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
     //set the initial position and direction of the particle
 
-	EmitSoundEx({
-		sound_name = "ambient/fire/gascan_ignite1.mp3",
-		origin = self.GetOrigin()
-		sound_level = soundlevelmain,
-		volume = 1,
-		pitch = RandomFloat(97, 103)
-	});
+    EmitSoundEx({
+        sound_name = "ambient/fire/gascan_ignite1.mp3",
+        origin = self.GetOrigin()
+        sound_level = soundlevelmain,
+        volume = 1,
+        pitch = RandomFloat(97, 103)
+    });
 
-	local forward = self.GetForwardVector();
+    local forward = self.GetForwardVector();
     particle.SetForwardVector(forward);
 
     //set up the particle script variables and think-function
@@ -346,7 +358,7 @@ function ShootFireBullet(fspeed = 6){
     particle.GetScriptScope().damage_cooldown <- 0.5;
     particle.GetScriptScope().touchers <- {};
     particle.GetScriptScope().speed <- fspeed;
-	particle.GetScriptScope().mainbase <- self;
+    particle.GetScriptScope().mainbase <- self;
 
     particle.GetScriptScope().ClearCD <- function(){
     if(activator==null||!activator.IsValid())return;
@@ -358,19 +370,19 @@ function ShootFireBullet(fspeed = 6){
         //fiddle damage
         local checkpos = self.GetOrigin()
         for(local h;h=Entities.FindByClassnameWithin(h,"player",checkpos,damage_range);){
-			if(!h.IsAlive())continue;
-					//if(h.GetTeam()!=2)continue;    //<---- ignore players by team, if you want
-			if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
-			touchers[h] <- h;
-			EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
+            if(!h.IsAlive())continue;
+                    //if(h.GetTeam()!=2)continue;    //<---- ignore players by team, if you want
+            if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
+            touchers[h] <- h;
+            EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
 
-			local newhp = h.GetHealth() - damage;
-			if(newhp <= 0)
-				EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
-			else{
-				h.TakeDamage(damage, 4, self);
-				h.AcceptInput("IgniteLifetime", "1", null, null)
-			}
+            local newhp = h.GetHealth() - damage;
+            if(newhp <= 0)
+                EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
+            else{
+                h.TakeDamage(damage, 4, self);
+                h.AcceptInput("IgniteLifetime", "1", null, null)
+            }
         }
 
         if(TraceLine(self.GetOrigin(),(self.GetOrigin()+(self.GetForwardVector()*20)),self)<1.00)
@@ -381,7 +393,7 @@ function ShootFireBullet(fspeed = 6){
         local pos = self.GetOrigin();
         local forward = self.GetForwardVector();
 
-		pos += (forward * speed);
+        pos += (forward * speed);
         self.SetOrigin(pos);
 
         return -1;
@@ -437,6 +449,84 @@ function SpawnSegments(){
             AddThinkToEnt(particle,"Think");
 
             EntFireByHandle(particle,"Kill","",0.1,null,null);
+        }
+
+        wd_spine.GetScriptScope().BackFire <- function(){
+            if (DEAD) return
+            //create the particle prop_dynamic
+            //printl("- First segment -")
+            local bossorigin = self.GetOrigin()
+
+            local particle = SpawnEntityFromTable("info_particle_system",
+            {
+                targetname = "boss_dracula_particle_bullet1"
+                origin       = bossorigin
+                angles       = QAngle(0, 0, 0)
+                effect_name  = "hobcv_brazier_fire"
+                start_active = true // set to false if you don't want particle to start initially
+            })
+            ::NetProps.SetPropBool(particle,"m_bForcePurgeFixedupStrings",true);
+            //set the initial position and direction of the particle
+
+            EmitSoundEx({
+                sound_name = "ambient/fire/gascan_ignite1.mp3",
+                origin = self.GetOrigin()
+                sound_level = soundlevelmain,
+                volume = 1,
+                pitch = RandomFloat(97, 103)
+            });
+
+            local dir = self.GetForwardVector()
+            local right = self.GetRightVector()
+            dir = dir * -1
+            dir += right * RandomFloat(-1, 1)
+            particle.SetForwardVector(dir);
+
+            //set up the particle script variables and think-function
+            particle.ValidateScriptScope();
+            particle.GetScriptScope().damage <- 1;
+            particle.GetScriptScope().damage_range <- 48.00;
+            particle.GetScriptScope().damage_cooldown <- 0.1;
+            particle.GetScriptScope().touchers <- {};
+            particle.GetScriptScope().speed <- 2;
+            particle.GetScriptScope().mainbase <- self;
+
+            particle.GetScriptScope().ClearCD <- function(){
+            if(activator==null||!activator.IsValid())return;
+            if(activator in touchers)
+                delete touchers[activator];
+            }
+
+            particle.GetScriptScope().Think <- function(){
+                //fiddle damage
+                local checkpos = self.GetOrigin()
+                for(local h;h=Entities.FindByClassnameWithin(h,"player",checkpos,damage_range);){
+                    if(!h.IsAlive())continue;
+                            //if(h.GetTeam()!=2)continue;    //<---- ignore players by team, if you want
+                    if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
+                    touchers[h] <- h;
+                    EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
+
+                    local newhp = h.GetHealth() - damage;
+                    if(newhp <= 0)
+                        EntFireByHandle(h,"SetHealth","-1",0.00,null,null);
+                    else{
+                        h.TakeDamage(damage, 4, self);
+                        h.AcceptInput("IgniteLifetime", "1", null, null)
+                    }
+                }
+
+                local pos = self.GetOrigin();
+                local forward = self.GetForwardVector();
+                forward = forward * -1
+                pos += (forward * speed);
+                self.SetOrigin(pos);
+                speed *= 0.985
+                return -1;
+            };
+
+            AddThinkToEnt(particle,"Think");
+            EntFireByHandle(particle,"Kill","",2,null,null);
         }
 
         wd_spine.GetScriptScope().Think <- function(){

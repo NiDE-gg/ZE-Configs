@@ -34,7 +34,7 @@ function SpawnMines()
     ShuffleArray(allMines);
 
     // Limit locations spawn amount
-    local maxMines = 30;
+    local maxMines = 26;
     local numToSpawn = (allMines.len() < maxMines) ? allMines.len() : maxMines;
 
     // Spawn a mine at each of the randomly selected locations

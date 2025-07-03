@@ -6,36 +6,36 @@ PrecacheSound("hob_cv/hobcv_medusa_scream.mp3");
 
 ::DirectionDifference <- function(start,target,dir)
 {
-	local target_dir = (target - start);
-	target_dir.Norm();
-	local ang = dir.Dot(target_dir);
-	ang *= 90;
-	ang += 90;
-	return (180.00 - ang);
+    local target_dir = (target - start);
+    target_dir.Norm();
+    local ang = dir.Dot(target_dir);
+    ang *= 90;
+    ang += 90;
+    return (180.00 - ang);
 }
 
 ::EyeTrace <- function(player,logic)
 {
-	if(player==null||!player.IsValid())return;
-	
-	local rot = player.EyeAngles()
-	local dir = ::AnglesToDir(rot);
-	logic.Run(player,dir,rot);
-	return;	
+    if(player==null||!player.IsValid())return;
+
+    local rot = player.EyeAngles()
+    local dir = ::AnglesToDir(rot);
+    logic.Run(player,dir,rot);
+    return;
 }
 
 ::DirToAngles<-function(dir){::manager.SetForwardVector(dir);return ::manager.GetAngles();}
 ::AnglesToDir<-function(angles)
 {
-	::manager.SetAngles(angles.x,angles.y,angles.z);
-	return ::manager.GetForwardVector();
+    ::manager.SetAngles(angles.x,angles.y,angles.z);
+    return ::manager.GetForwardVector();
 }
 ::manager <- Entities.FindByName(null,"main_script"); //::manager <- self;
 
 function PlayMedusaSound()
 {
     local radius = 5000
-    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
     EmitSoundEx({
         sound_name = "hob_cv/hobcv_medusa_scream.mp3",
         origin = MODEL.GetOrigin(),
@@ -63,21 +63,21 @@ for(local h;h=Entities.FindByClassname(h,"player");)
 }
 
 function OnPostSpawn(){
-	MODEL = self
-	HITBOX = MODEL.FirstMoveChild();
+    MODEL = self
+    HITBOX = MODEL.FirstMoveChild();
 
-	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(400*ctcount) // 1250 starting hp + 500/player
+    // printl("INITIAL HP "+HITBOX.GetHealth())
+    maxhealth = HITBOX.GetHealth()+(400*ctcount) // 1250 starting hp + 500/player
 
-	HITBOX.SetHealth(maxhealth)
-	// printl("RESCALED HP "+maxhealth)
+    HITBOX.SetHealth(maxhealth)
+    // printl("RESCALED HP "+maxhealth)
 
-	self.__KeyValueFromInt("movetype", 0); // Disable movement
-	self.__KeyValueFromInt("collisiongroup", 10); // Don't block bullets
+    self.__KeyValueFromInt("movetype", 0); // Disable movement
+    self.__KeyValueFromInt("collisiongroup", 10); // Don't block bullets
 
-	EntFireByHandle(self, "AddOutput", "movetype 4", FrameTime(), null, null); // Re-enable movement
+    EntFireByHandle(self, "AddOutput", "movetype 4", FrameTime(), null, null); // Re-enable movement
 
-	Spawn();
+    Spawn();
 }
 
 function Spawn(){
@@ -93,12 +93,12 @@ function Spawn(){
 }
 
 function Death(){
-	//printl("[NPC] Death");
+    //printl("[NPC] Death");
 
     DEAD <- true;
 
     EntFireByHandle(self, "AddOutput", "movetype 5", FrameTime(), null, null); // Re-enable movement
-	AddThinkToEnt(MODEL,null)
+    AddThinkToEnt(MODEL,null)
     EntFireByHandle(MODEL, "SetDefaultAnimation", "chargeloop",0.1,null,null)
     EntFireByHandle(MODEL, "SetPlaybackRate", "2",0.12,null,null)
     MODEL.AcceptInput("SetAnimation", "chargeloop", null, null)
@@ -107,7 +107,7 @@ function Death(){
     relay_end_medusa = Entities.FindByName(null, "s1_medusa_dead")
 
     local radius = 5000
-    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
     EmitSoundEx({
         sound_name = "hob_cv/hobcv_medusa_death.mp3",
         origin = self.GetOrigin(),
@@ -117,8 +117,8 @@ function Death(){
 
     EntFireByHandle(relay_end_medusa,"Trigger","",3.0,null,null);
     EntFireByHandle(self,"RunScriptCode","SpawnRockGibs()",1.45,null,null);
-	EntFireByHandle(self, "Kill", "", 1.5, null, null);
-	EntFireByHandle(MODEL, "Kill", "", 1.5, null, null);
+    EntFireByHandle(self, "Kill", "", 1.5, null, null);
+    EntFireByHandle(MODEL, "Kill", "", 1.5, null, null);
 
 }
 
@@ -130,7 +130,7 @@ function Hurt(){
     local perc = (HITBOX.GetHealth() * 100) / maxhealth;
     local mishp = 100 - perc;
     local bardamage = 0
-    
+
     bardamage = (fabs(16 * mishp/100));
     bardamage = bardamage.tointeger();
 
@@ -140,15 +140,15 @@ function Hurt(){
     for(local i=0; i < bars; i++){
         hpbar.append("▮");
     }
-    
+
     for(local i=0; i < bardamage; i++){
         hpbar.append("▯");
     }
-        
+
 
     //ClientPrint(activator, 4, "ENEMY : "+health+ " ( "+perc.tointeger()+"% )")
     ClientPrint(activator, 4, "ENEMY "+hpbar[0]+hpbar[1]+hpbar[2]+hpbar[3]+hpbar[4]+hpbar[5]+hpbar[6]+hpbar[7]+hpbar[8]+hpbar[9]+hpbar[10]+hpbar[11]+hpbar[12]+hpbar[13]+hpbar[14]+hpbar[15]+" "+health+"/"+maxhealth)
-        
+
 }
 
 function moveThink(){
@@ -169,12 +169,12 @@ function moveThink(){
     pos += (right * (sin(sine2) * wave_amplitude2));
     MODEL.SetOrigin(pos);
     local radius = 4096
-    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
 
     local randomatk = RandomInt(1,3)
 
     if (Time() - last_target_time >= 8.0) {
-        
+
         switch (randomatk) {
             case 1:
                 // printl("- ATTACK 1 -")
@@ -190,7 +190,7 @@ function moveThink(){
                     pitch = 200,
                     volume = 1,
                 });
-                wave_amplitude = 0 
+                wave_amplitude = 0
                 wave_amplitude2 = 0
                 EntFireByHandle(self,"RunScriptCode","StonePlayer()",2,null,null);
                 EntFireByHandle(self,"RunScriptCode","PlayMedusaSound()",2,null,null);
@@ -201,18 +201,18 @@ function moveThink(){
             case 3:
                 SpawnSnakes()
                 break;
-                
+
         }
 
-        last_target_time = Time();   
+        last_target_time = Time();
     }
 
-	return -1
+    return -1
 }
 
 function SpawnSnakes(){
     local radius = 4096
-    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
     EmitSoundEx({
         sound_name = "hob_cv/hobcv_medusa_ability.mp3",
         origin = MODEL.GetOrigin(),
@@ -226,24 +226,24 @@ function SpawnSnakes(){
 
 function StonePlayer(){
     // printl("- STONE PLAYER -")
-	local particle = SpawnEntityFromTable("info_particle_system",
-	{
-		targetname = "boss_medusa_rayparticle"
-		origin       = MODEL.GetOrigin()
-		angles       = QAngle(0, 0, 0)
-		effect_name  = "medusa_ray"
-		start_active = true // set to false if you don't want particle to start initially
-	})
+    local particle = SpawnEntityFromTable("info_particle_system",
+    {
+        targetname = "boss_medusa_rayparticle"
+        origin       = MODEL.GetOrigin()
+        angles       = QAngle(0, 0, 0)
+        effect_name  = "medusa_ray"
+        start_active = true // set to false if you don't want particle to start initially
+    })
     particle.AcceptInput("SetParent", "!activator", MODEL, null)
     EntFireByHandle(particle, "Kill", "", 1.5, null, null);
     wave_amplitude = 1
     wave_amplitude2 = 1
     MODEL.AcceptInput("SetAnimation", "idle", null, null)
     if (DEAD) return
-	for(local h;h=Entities.FindByClassnameWithin(h,"player",self.GetOrigin(),5000);)
-	{
-		if(h==null||!h.IsValid()||h.GetTeam()!=3||h.IsAlive()==false)continue;
-		::EyeTrace(h,{MODEL=self,function Run(player,dir,rot){
+    for(local h;h=Entities.FindByClassnameWithin(h,"player",self.GetOrigin(),5000);)
+    {
+        if(h==null||!h.IsValid()||h.GetTeam()!=3||h.IsAlive()==false)continue;
+        ::EyeTrace(h,{MODEL=self,function Run(player,dir,rot){
             local total = ::DirectionDifference(player.EyePosition(),MODEL.GetOrigin(),dir);
             if(total <= 40)
             {
@@ -251,7 +251,7 @@ function StonePlayer(){
                 player.ValidateScriptScope()
                 player.GetScriptScope().stonetime <- 0
                 player.GetScriptScope().stonetimedur <- 30
-    
+
                 player.GetScriptScope().LockCurrentWeps <- function () {
                     local held_weapon = ::NetProps.GetPropEntity(self,"m_hActiveWeapon");
                     local code = "::NetProps.SetPropFloat(self, `m_flNextPrimaryAttack`, 1e30)"
@@ -264,7 +264,7 @@ function StonePlayer(){
                     //::NetProps.SetPropFloat(held_weapon, "m_flNextPrimaryAttack", 1e30)
                     //::NetProps.SetPropFloat(held_weapon, "m_flNextSecondaryAttack", 1e30)
                 }
-    
+
                 player.GetScriptScope().UnlockCurrentWeps <- function () {
                     local held_weapon = ::NetProps.GetPropEntity(self,"m_hActiveWeapon");
                     local code = "::NetProps.SetPropFloat(self, `m_flNextPrimaryAttack`, "+Time()+")"
@@ -276,7 +276,7 @@ function StonePlayer(){
                 if(newhp <= 0){
                     EntFireByHandle(player,"SetHealth","-1",0.00,null,null);
                     local radius = 1024
-                    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+                    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
                     EmitSoundEx({
                         sound_name = "hob_cv/hobcv_stoneman.mp3",
                         origin = player.GetOrigin(),
@@ -313,12 +313,12 @@ function StonePlayer(){
 
                 } else {
 
-                    player.SetHealth(newhp);    //this doesn't seem to kill players if <= 0     
+                    player.SetHealth(newhp);    //this doesn't seem to kill players if <= 0
 
                     local perc = (newhp * 100) / player.GetMaxHealth();
                     local mishp = 100 - perc;
                     local bardamage = 0
-                    
+
                     bardamage = (fabs(255 * mishp/100));
                     bardamage = bardamage.tointeger();
 
@@ -330,13 +330,13 @@ function StonePlayer(){
                     for(local i = 0.00; i <= 3; i += 0.1){
                         EntFireByHandle(player,"RunScriptCode","LockCurrentWeps()",i,null,null);
                     }
-                    
-                    
+
+
                     EntFireByHandle(player, "AddOutput", "movetype 2", 3, null, null); // unfreeze
-                }  
+                }
             }
         }});
-	}
+    }
 }
 
 function InstakillPlayer() {
@@ -346,7 +346,7 @@ function InstakillPlayer() {
     if(toucher==null||!toucher.IsValid()||toucher.GetTeam()!=3||toucher.IsAlive()==false)return;
 
     local radius = 1024
-    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+    local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger();
     EmitSoundEx({
         sound_name = "hob_cv/hobcv_stoneman.mp3",
         origin = toucher.GetOrigin(),
@@ -354,7 +354,7 @@ function InstakillPlayer() {
         volume = 1,
     });
 
-    local boom = SpawnEntityFromTable("env_explosion", 
+    local boom = SpawnEntityFromTable("env_explosion",
                     {
                         spawnflags   = 1
                         origin       = toucherPos
@@ -401,12 +401,12 @@ function InstakillPlayer() {
     ::NetProps.SetPropBool(rocks,"m_bForcePurgeFixedupStrings",true);
 
     EntFireByHandle(rocks, "Break", "", 2, null, null);
-	EntFireByHandle(stoneplayer, "Kill", "", 2, null, null);
-    
+    EntFireByHandle(stoneplayer, "Kill", "", 2, null, null);
+
 }
 
 function SpawnRockGibs(){
-    
+
     for (local i=0; i < 3; i++) {
         local rocks = SpawnEntityFromTable("prop_physics_multiplayer",{
             model = "models/luff_cv/gibrock.mdl",
