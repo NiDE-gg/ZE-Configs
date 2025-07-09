@@ -45,7 +45,7 @@ cstrike/addons/sourcemod/configs/*
 !cstrike/addons/sourcemod/configs/mapchooser_extended.cfg
 
 # PointServerCommandFilter
-!cstrike/addons/sourcemod/configs/PointServerCommandFilter.cfg
+!cstrike/addons/sourcemod/configs/ServerCommandFilter.cfg
 
 ## Strippers
 !cstrike/addons/sourcemod/configs/stripper
