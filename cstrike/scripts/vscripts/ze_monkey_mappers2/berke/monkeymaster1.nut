@@ -87,15 +87,21 @@ function OnTakeDamage(tData)
 	if (!self.IsValid())
 		return;
 
-	local hVictim = tData.const_entity;
+	local hVictim = tData.const_entity,
+	bIsPlayerVictim = hVictim == hPlayer;
 
-	if ((hVictim != self || !bHumanNoPlayerDamage) && hVictim != hPlayer)
+	if ((hVictim != self || !bNoPlayerDamage && !bHumanNoPlayerDamage) && !bIsPlayerVictim)
 		return;
 
-	local hAttacker = tData.attacker;
+	local iDamageTypes = tData.damage_type;
 
-	if (!hAttacker || !hAttacker.IsPlayer() || !(tData.damage_type & 4096))
-		return;
+	if (!bIsPlayerVictim || !(iDamageTypes & 32))
+	{
+		local hAttacker = tData.attacker;
+
+		if (!hAttacker || !hAttacker.IsPlayer() || !(iDamageTypes & 4096))
+			return;
+	}
 
 	tData.early_out = true,
 	tData.damage = 0.0;
@@ -293,10 +299,10 @@ function DisplayAbilities()
 
 	local hText = SpawnEntityFromTable("game_text",
 	{
-		message = strText
+		message = strText,
 		channel = 3,
 		x = 0.1,
-		y = 0.5,
+		y = -1,
 		color = Vector(0, 255, 255),
 		holdtime = flTextDuration
 	});
@@ -309,6 +315,7 @@ function AbilityGravityEnd()
 {
 	bIsForcedLoopedAnimationPlaying = false;
 
+	hProp.AcceptInput("SetAnimation", strAnimationReset, null, null);
 	hProp.AcceptInput("SetAnimation", strDefaultAnimation, null, null);
 	hProp.AcceptInput("SetDefaultAnimation", strDefaultAnimation, null, null);
 }
@@ -400,7 +407,7 @@ function OnDeath()
 {
 	local hText = SpawnEntityFromTable("game_text",
 	{
-		channel = 2,
+		channel = 2
 	});
 	MarkForPurge(hText);
 	hText.AcceptInput("Display", "", hPlayer, null);
@@ -416,6 +423,6 @@ function OnDeath()
 
 	local iArmor = NetProps.GetPropInt(hPlayer, "m_ArmorValue");
 	NetProps.SetPropInt(hPlayer, "m_ArmorValue", 0);
-	hPlayer.TakeDamageEx(self.IsValid() ? self : hWorldSpawn, null, null, Vector(), Vector(0, 0, 1), hPlayer.GetHealth(), 0);
+	hPlayer.TakeDamageEx(self.IsValid() ? self : hWorldSpawn, null, null, Vector(0, 0, 1), Vector(), hPlayer.GetHealth(), 0);
 	NetProps.SetPropInt(hPlayer, "m_ArmorValue", iArmor);
 }

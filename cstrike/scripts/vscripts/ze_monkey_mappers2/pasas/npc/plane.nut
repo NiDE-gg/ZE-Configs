@@ -120,7 +120,7 @@ function Explode() {
 
 	for (local ent; ent = Entities.FindByClassnameWithin(ent, "player", self.GetOrigin() - Vector(0, 0, 224), 512);) {
 		local distance = GetDistance(self.GetOrigin(), ent.GetOrigin())
-		ent.TakeDamage(150 * (1 - (distance / 512)) 0, null)
+		ent.TakeDamage(10 * (1 - (distance / 512)) 0, null)
 
 		local t1 = self.GetOrigin()
 		local t2 = ent.GetOrigin()

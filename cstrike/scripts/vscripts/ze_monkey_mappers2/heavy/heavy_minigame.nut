@@ -5,33 +5,34 @@
 //Im still not a programmer so stop harassing -heavy / yea i used chatgpt cause the timelimit nerd the code still has a LOT OF issues
 //::STAGE <- 0 //HOBB NIGA
 
-PrecacheSound("ze_monkey_mappers2/edited/heavy_music.mp3");
+PrecacheSound("#ze_monkey_mappers2/edited/heavy_music.mp3");
 PrecacheSound("ze_monkey_mappers2/edited/heavy_soundeffect.mp3");
 
 //START +  + SKYBOX
-game_damage <- true
-game_started <- false
+bIsGameActive <-
+bArePerksGiven <- false,
 start_text <- SpawnEntityFromTable("game_text", {targetname = "heavy_start_text", x = -1, y = -1, spawnflags = 1, channel = 1, holdtime = 2.5, fadein = 0.02, fadeout = 0.5, color = "255 255 255"});
 
-random_gift_event <- [
-	{index = 0,  random_gift_event_name = "NORMAL MODE"		  },
-	{index = 1,  random_gift_event_name = "GRAVITY MODE"		 },
-	{index = 2,  random_gift_event_name = "SPEED MODE"		   },
-	{index = 3,  random_gift_event_name = "ICE SKATE MODE"	   },
-	{index = 4,  random_gift_event_name = "HIGH FOV MODE"		},
-	{index = 5,  random_gift_event_name = "FREEZE CYCLE MODE"	}
-]
-chosen_event_index <- 0
-rolling_index <- 0;
+random_gift_event <-
+[
+	{index = 0, random_gift_event_name = "NORMAL MODE"},
+	{index = 1, random_gift_event_name = "GRAVITY MODE"},
+	{index = 2, random_gift_event_name = "SPEED MODE"},
+	{index = 3, random_gift_event_name = "ICE SKATE MODE"},
+	{index = 4, random_gift_event_name = "HIGH FOV MODE"},
+	{index = 5, random_gift_event_name = "FREEZE CYCLE MODE"}
+],
+chosen_event_index <- 0,
+rolling_index <- 0,
 gift_event_picked <- false;
 
 function StartHeavyScript()
 {
-	game_started = true;
+	bIsGameActive = true;
 
-	EntFireByHandle(self,"RunScriptCode", "game_damage = false;", 0, null, null);
-	EntFireByHandle(self,"RunScriptCode", "gift_event_picked = true;", 3, null, null);
-	EntFireByHandle(self,"CallScriptFunction", "SPAWNING_GIFTS", 5.5, null, null);
+	EntFire("map1manager1", "CallScriptFunction", "DisablePlayerDamage");
+	EntFireByHandle(self, "RunScriptCode", "gift_event_picked = true;", 3, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "SPAWNING_GIFTS", 5.5, null, null);
 
 	EntFire("PrecacheMusic", "RunScriptCode", "PlayMusic(`HeavyMusic`)", 5.5);
 
@@ -42,24 +43,25 @@ function StartHeavyScript()
 	EntFire("plane_hitbox*", "Break", "", 5);
 	EntFire("steve_hitbox*", "Break", "", 5);
 	EntFire("herta_hitbox*", "Break", "", 5);
-	EntFire("monkey_ghost_hitbox1*", "Break", "", 5);
 	EntFire("monkey_ghost_hitbox*", "Break", "", 5);
 	EntFire("retarded_dragon_hitbox*", "Break", "", 5);
 
-	EntFire("teleport_human_heavy", "Enable", "", 112);
-	EntFire("teleport_zombie_heavy", "Enable", "", 120);
-	EntFire("random_npc_spawner_timer", "Enable", "", 112);
-	EntFire("map1manager1", "CallScriptFunction", "StopEnding", 112);
+	EntFire("dynamic_music", "Volume", "0", 57);
+	EntFire("teleport_human_heavy", "Enable", "", 57);
+	EntFire("teleport_zombie_heavy", "Enable", "", 65);
+	EntFire("random_npc_spawner_timer", "Enable", "", 57);
+	EntFire("map1manager1", "CallScriptFunction", "StopEnding", 57);
+	EntFire("map1manager1", "CallScriptFunction", "EnablePlayerDamage", 57);
 
-	EntFireByHandle(self,"RunScriptCode", "game_damage = true;", 114, null, null);
-	EntFireByHandle(self,"CallScriptFunction", "HUD", 5.5, null, null);
+	EntFireByHandle(self, "RunScriptCode", "bIsGameActive = false;", 57, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "HUD", 5.5, null, null);
 	ClientPrint(null, 3, "\x01>>> Collect together by \x070230faH\x07024cfae\x07027efaa\x0702a3fav\x0702c0fay \x01<<<");
 
 	//ROLLING RANDOM GIFT EVENT
-	EntFireByHandle(self, "CallScriptFunction", "ROLL_RANDOM_GIFT_EVENT", 0.0, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "ROLL_RANDOM_GIFT_EVENT", 0, null, null);
 	EntFireByHandle(self, "CallScriptFunction", "CHOOSED_RANDOM_GIFT_EVENT", 5.5, null, null);
-	EntFire("heavy_start_text", "Kill", "", 5.5, null);
-	EntFire("heavy_*", "Kill", "", 240, null); //TIME VALUE NEEDS TO BE BIGGER THAN ALL EVENTS TIME OTHERWISE THE RESTART FUNCTION WILL NOT WORK BECAUSE THE RELAY GETS KILLED
+	EntFire("heavy_start_text", "Kill", "", 5.5);
+	EntFire("heavy_*", "Kill", "", 185); //TIME VALUE NEEDS TO BE BIGGER THAN ALL EVENTS TIME OTHERWISE THE RESTART FUNCTION WILL NOT WORK BECAUSE THE RELAY GETS KILLED
 	Entities.FindByName(null, "script_heavy_relay").TerminateScriptScope();
 }
 
@@ -125,15 +127,23 @@ PLAYER_VOTE2 <- 0;
 PLAYER_VOTE3 <- 0;
 team <- 0
 
-if ("MyEvenets" in this)
-	MyEvenets.clear();
-::MyEvenets <- {
-	OnGameEvent_player_spawn = function(params) {
-		local player = GetPlayerFromUserID(params.userid);
-		player.ValidateScriptScope();
-		player.GetScriptScope().player_cant_vote <- false;
-	//PLAYER SPRITE TRAIL (NOT WORKING RN CAUSE IT'S ONLY SPAWNS ONE AT ROUND START AND SOMEWHY IT'S NEVERS SPAWNS DOWN AGAIN)	 
-		/*local steamid = NetProps.GetPropString(player,"m_szNetworkIDString");
+if ("aEvents" in this)
+	aEvents.clear();
+::aEvents <-
+{
+	OnGameEvent_player_spawn = function(tData)
+	{
+		local hPlayer = GetPlayerFromUserID(tData.userid),
+		iTeam = hPlayer.GetTeam();
+
+		if (!iTeam)
+			return;
+
+		hPlayer.ValidateScriptScope();
+		hPlayer.GetScriptScope().player_cant_vote <- false;
+
+		//PLAYER SPRITE TRAIL (NOT WORKING RN CAUSE IT'S ONLY SPAWNS ONE AT ROUND START AND SOMEWHY IT'S NEVERS SPAWNS DOWN AGAIN)	 
+		/*local steamid = NetProps.GetPropString(hPlayer,"m_szNetworkIDString");
 		if (steamid == "[U:1:1023819726]") {
 			local my_trail = SpawnEntityFromTable("env_spritetrail", {
 				targetname = "heavy_trail",
@@ -145,9 +155,9 @@ if ("MyEvenets" in this)
 				renderamt = 255,
 				rendercolor = "255 0 0"
 			});
-			my_trail.SetOrigin(player.GetOrigin())
-			DoEntFire("heavy_trail", "SetParent", "!activator", 2, player, player);
-			local scope = player.GetScriptScope();
+			my_trail.SetOrigin(hPlayer.GetOrigin())
+			DoEntFire("heavy_trail", "SetParent", "!activator", 2, hPlayer, hPlayer);
+			local scope = hPlayer.GetScriptScope();
 			scope.trail <- my_trail;
 			scope.rainbow_colors <- [
 				"255 0 0",	 // Red
@@ -163,54 +173,47 @@ if ("MyEvenets" in this)
 				local color = this.rainbow_colors[this.current_color_index];
 				this.trail.__KeyValueFromString("rendercolor", color);
 				this.current_color_index = (this.current_color_index + 1) % this.rainbow_colors.len();
-				DoEntFire("!self", "CallScriptFunction", "UpdateTrailColor", 0.2, null, player);
+				DoEntFire("!self", "CallScriptFunction", "UpdateTrailColor", 0.2, null, hPlayer);
 			};
 			scope.UpdateTrailColor();
 		}*/
 	}
-	OnGameEvent_player_say = function(params) {
-		local player = GetPlayerFromUserID(params.userid);
+	OnGameEvent_player_say = function(tData)
+	{
+		if (!bIsGameActive)
+			return;
+
+		local player = GetPlayerFromUserID(tData.userid);
+		local txt = tData.text;
+		if (player.GetTeam() != team)
+			return;
+
 		player.ValidateScriptScope();
-		local txt = params.text;
-		if (player.GetTeam() == team) {
-			if (txt == "1" && !player.GetScriptScope().player_cant_vote) {
-				player.GetScriptScope().player_cant_vote = true;
-				PLAYER_VOTE1 += 1
-			}
-			else if (txt == "2" && !player.GetScriptScope().player_cant_vote) {
-				player.GetScriptScope().player_cant_vote = true;
-				PLAYER_VOTE2 += 1
-			}
-			else if (txt == "3" && !player.GetScriptScope().player_cant_vote) {
-				player.GetScriptScope().player_cant_vote = true;
-				PLAYER_VOTE3 += 1
-			}
-		}
+
+		if (txt == "1" && !player.GetScriptScope().player_cant_vote)
+			player.GetScriptScope().player_cant_vote = true,
+			PLAYER_VOTE1 += 1
+
+		else if (txt == "2" && !player.GetScriptScope().player_cant_vote)
+			player.GetScriptScope().player_cant_vote = true,
+			PLAYER_VOTE2 += 1
+
+		else if (txt == "3" && !player.GetScriptScope().player_cant_vote)
+			player.GetScriptScope().player_cant_vote = true,
+			PLAYER_VOTE3 += 1
 	}
-	OnScriptHook_OnTakeDamage = function(params)
+	OnGameEvent_round_end = function(tData)
 	{
-		if(!game_damage)
-			{
-				local victim = params.const_entity;
-				local attacker = params.attacker;
-				if (victim.IsPlayer() && attacker.IsPlayer())
-					{
-						if (victim.GetTeam() != attacker.GetTeam())
-							{
-								params.damage = 0;
-							}
-						}
-					}
-				}
-	OnGameEvent_cs_win_panel_round = function(params)
-	{
-		game_damage = true
-		Entities.FindByName(null, "script_heavy_relay").AcceptInput("RunScriptCode", "reset_player(2)", null, null);
-		Entities.FindByName(null, "script_heavy_relay").AcceptInput("RunScriptCode", "reset_player(3)", null, null);
+		if (!bArePerksGiven)
+			return;
+
+		local hScriptRelay = Entities.FindByName(null, "script_heavy_relay");
+		hScriptRelay.AcceptInput("RunScriptCode", "reset_player(2)", null, null);
+		hScriptRelay.AcceptInput("RunScriptCode", "reset_player(3)", null, null);
 		EntFire("heavy_*", "Kill", "", 1, null)
 	}
 }
-__CollectGameEventCallbacks(MyEvenets)
+__CollectGameEventCallbacks(aEvents)
 
 //MAIN HUD SETTINGS
 
@@ -279,8 +282,8 @@ function AddGift(team) {
 	}
 }
 
-countdown_time <- 75; //HUNTING TIME
-countdown_time2 <- 20; //VOTE TIME
+countdown_time <- 30; //HUNTING TIME
+countdown_time2 <- 10; //VOTE TIME
 ctdollar <- 0;
 tdollar <- 0;
 printed_vote_message <- false;
@@ -403,7 +406,7 @@ function HUD()
 	} else if (TIMER2) {
 		vote_text.AcceptInput("Display", "", null, null);
 	}
-	EntFireByHandle(self, "RunScriptCode", "HUD()", 1.00, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "HUD", 1, null, null);
 }
 
 //EVENTS
@@ -429,30 +432,46 @@ function reset_player(team)
 	for (local player; player = Entities.FindByClassname(player, "player");)
 		if (player.GetTeam() == team)
 		{
-			player.SetGravity(1.0);
-			NetProps.SetPropFloat(player, "m_flLaggedMovementValue", 1.0);
-			player.SetModelScale(1.0, 3)
+			player.SetGravity(1);
+			NetProps.SetPropFloat(player, "m_flLaggedMovementValue", 1);
+			player.SetModelScale(1, 3)
 			player.SetFriction(5.5)
-			SetPlayerFOV(player, 0, 1);
+			ResetPlayerFOV(player);
 		}
 }
 
 //KILL PLAYERS
-function KillRandomPlayers(count = 5, teamFilter = null) {
-	local all_players = [];
-	for (local p; p = Entities.FindByClassname(p, "player");) {
-		if (!p.IsAlive()) continue;
-		if (teamFilter != null && p.GetTeam() != teamFilter) continue;
-		all_players.append(p);
+function KillRandomPlayers(iCount, iTeam)
+{
+	local aPossibleVictims = array(0);
+
+	for (local hPlayer; hPlayer = Entities.FindByClassname(hPlayer, "player");)
+	{
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != iTeam || PlayerHasItem(hPlayer))
+			continue;
+
+		aPossibleVictims.push(hPlayer);
 	}
-	for (local i = all_players.len() - 1; i > 0; i--) {
-		local j = RandomInt(0, i);
-		local temp = all_players[i];
-		all_players[i] = all_players[j];
-		all_players[j] = temp;
-	}
-	for (local i = 0; i < ((count < all_players.len()) ? count : all_players.len()); i++) {
-		all_players[i].TakeDamage(200000, 0, null);
+
+	for (local iSelectNumber = 0; iSelectNumber < iCount && aPossibleVictims.len(); iSelectNumber++)
+	{
+		local iPossibleVictimCount = aPossibleVictims.len(),
+		hPlayer = aPossibleVictims.remove(RandomInt(0, iPossibleVictimCount - 1));
+
+		if (iTeam == 3)
+		{
+			local iArmor = NetProps.GetPropInt(hPlayer, "m_ArmorValue");
+			NetProps.SetPropInt(hPlayer, "m_ArmorValue", 0);
+			hPlayer.TakeDamageEx(Entities.First(), null, null, Vector(0, 0, 1), Vector(), hPlayer.GetHealth(), 0);
+			NetProps.SetPropInt(hPlayer, "m_ArmorValue", iArmor);
+	
+			continue;
+		}
+
+		if (iPossibleVictimCount == 1)
+			break;
+
+		hPlayer.TakeDamageEx(Entities.First(), null, null, Vector(0, 0, 1), Vector(), hPlayer.GetHealth(), 0);
 	}
 }
 
@@ -465,9 +484,11 @@ const IN_RIGHT = 256
 const IN_MOVELEFT = 512
 const IN_MOVERIGHT = 1024
 
-function CHOOSED_EVENT(event_index, team) {
+function CHOOSED_EVENT(event_index, team)
+{
+	bArePerksGiven = true;
 //CT
-	//"Kill 15 random zombies"
+	//"Kill 10 random zombies"
 	if (team == 3 && event_index == 1) {
 		for (local player; player = Entities.FindByClassname(player, "player");) {
 			if (player.IsAlive() && player.GetTeam() == 2) {
@@ -519,7 +540,6 @@ function CHOOSED_EVENT(event_index, team) {
 					if ((buttons & IN_FORWARD) != 0) {
 						buttons = buttons & ~IN_FORWARD;
 						NetProps.SetPropInt(self, "m_nButtons", buttons);
-						printl(buttons);
 					}
 					return -1
 				}
@@ -537,7 +557,7 @@ function CHOOSED_EVENT(event_index, team) {
 			}
 		}
 	}
-	//Roate zombies view to a random value between 0-360 for 1 minute 30s
+	//Rotate zombies view to a random value between 0-360 for 1 minute 30s
 	if (team == 3 && event_index == 8) {
 		for (local player; player = Entities.FindByClassname(player, "player");) {
 			if (player.IsAlive() && player.GetTeam() == 2) {
@@ -644,7 +664,7 @@ function CHOOSED_EVENT(event_index, team) {
 			}
 		}
 	}
-		//Roate humans view to a random value between 0-360 for 1 minute 30s
+	//Roate humans view to a random value between 0-360 for 1 minute 30s
 	if (team == 2 && event_index == 10) {
 		for (local player; player = Entities.FindByClassname(player, "player");) {
 			if (player.IsAlive() && player.GetTeam() == 3) {
@@ -674,22 +694,14 @@ function CHOOSED_EVENT(event_index, team) {
 	}
 }
 
-//GIFT SYSTEM + MUSIC
+//GIFT SYSTEM
 
-music <- false
 gift_alive <- 0;
 max_gifts <- 100;
 spawn_radius <- 1425;
 center <- Entities.FindByName(null, "script_heavy_relay").GetOrigin();
-function SPAWNING_GIFTS() {
-	if (!music) {
-		music = true
-		EmitSoundEx({
-			sound_name = "ze_monkey_mappers2/edited/heavy_music.mp3",
-			origin = center
-			filter_type = 5
-		});
-	}
+function SPAWNING_GIFTS()
+{
 	EntFireByHandle(self, "CallScriptFunction", "SPAWNING_GIFTS", RandomFloat(0.25, 0.5), null, null);
 	if (gift_alive >= max_gifts) {
 		return;
@@ -769,4 +781,9 @@ function SetPlayerFOV(hPlayer, flFOV, flTime = 0)
 	}
 
 	NetProps.SetPropInt(hPlayer, "m_iFOV", flFOV);
+}
+
+function ResetPlayerFOV(hPlayer)
+{
+	SetPlayerFOV(hPlayer, 0);
 }

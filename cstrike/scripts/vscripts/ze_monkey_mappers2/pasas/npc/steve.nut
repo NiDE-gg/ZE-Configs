@@ -8,7 +8,7 @@ function GetPlayerName(p) {
 	return NetProps.GetPropString(p,"m_szNetname");
 }
 
-hp_per_human <- 100
+hp_per_human <- 10
 ticking <- true
 dead <- false
 physbox <- null
