@@ -29,30 +29,31 @@ if (!("initialWinners" in getroottable())) {
         "[U:1:53708791]" : 12,      // Hobbitten
         "[U:1:229842349]" : 12,     // Koen
         "[U:1:461991323]" : 12,     // Rognus
-        "[U:1:39005920]"  : 12,      // Moltard
+        "[U:1:39005920]"  : 12,     // Moltard
         "[U:1:950343260]" : 8,      // Anwar
-        "[U:1:160817921]" : 12,      // Vndrew
+        "[U:1:160817921]" : 12,     // Vndrew
         "[U:1:12647]"     : 8,      // StickyClicker
         "[U:1:869937057]" : 8,      // Zeldre
         "[U:1:229892849]" : 8,      // Warrior
         "[U:1:418960528]" : 8,      // Fius
-        "[U:1:1067775748]": 12     // Deepn
+        "[U:1:1067775748]": 12      // Deepn
         "[U:1:43640319]"  : 8,      // Batata
         "[U:1:1605719263]": 12,     // Rushaway
-        "[U:1:1255147342]": 12,    // Pearl
+        "[U:1:1255147342]": 12,     // Pearl
         "[U:1:38050520]": 8,        // Harraga
         "[U:1:198972690]": 8,       // Hobgoblin
         "[U:1:342811156]": 8,       // Midknight
         "[U:1:190285622]": 8,       // Berke / Skull in game
         "[U:1:73410022]": 8,        // zaCade
         "[U:1:56291]": 8,           // JenZ
+        "[U:1:30527964]": 1         // Metroid Skittles
         "[U:1:1453332]": 8,         // Luffaren
         "[U:1:252742160]": 1,       // atom.ic
-        "[U:1:1044875192]": 1,      //Luz Noceda
-        "[U:1:118380909]": 1,       //Momo-ayo
-        "[U:1:325883778]": 1,       //MYASS
-        "[U:1:161678896": 1,        //RykadeR_CruiseR
-
+        "[U:1:1044875192]": 1,      // Luz Noceda
+        "[U:1:118380909]": 1,       // Momo-ayo
+        "[U:1:325883778]": 1,       // MYASS
+        "[U:1:161678896": 1,        // RykadeR_CruiseR
+        "[U:1:107170794]": 1,       // Imma
     };
 }
 if (!("winnerLevelDelta" in getroottable())) {
