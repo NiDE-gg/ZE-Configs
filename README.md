@@ -296,52 +296,9 @@ The SaveLevel plugin stores player information and restores such information if 
 
 ### Moving NPC Configs
 
-The Moving NPC plugin allows for maps to rely on an external plugin for moving boss/NPC support without using traditional entities. Find sample configs [here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/movingnpc).
+~~The Moving NPC plugin allows for maps to rely on an external plugin for moving boss/NPC support without using traditional entities. Find sample configs [here](https://github.com/NiDE-gg/ZE-Configs/tree/master/cstrike/addons/sourcemod/configs/movingnpc).~~
 
-```text
-"npc"
-{
-    "0"
-    {
-        "tickrate"          ""                     // Tickrate in seconds, e.g 0.1 = min(10, server tickrate) ticks per second. Default 0.1
-        "distance"          ""                     // Max target search distance. Default 5000.0
-        "retarget"          ""                     // Retarget time in seconds(depends on npc`s tickrate). Default 7.5
-        "forward_factor"    ""                     // Forward factor. Default 1.0
-        "turning_factor"    ""                     // Turning factor. Default 0.5
-        "lifetime"          ""                     // Lifetime. If 0.0 npc will exists until you kill it on the map. Default 0.0
-
-        "attachment"        ""
-        "thruster_side"     ""
-        "thruster_forward"  ""
-        "template"          ""
-    }
-}
-```
-
-<details>
-  <summary>Template</summary>
-
-  ```text
-    "npc"
-    {
-        "0"
-        {
-            "tickrate"          ""
-            "distance"          ""
-            "retarget"          ""
-            "forward_factor"    ""
-            "turning_factor"    ""
-            "lifetime"          ""
-
-            "attachment"        ""
-            "thruster_side"     ""
-            "thruster_forward"  ""
-            "template"          ""
-        }
-    }
-  ```
-
-</details>
+This plugin was deprecated. Moving NPC can be done via VScript. [See this example](https://github.com/NiDE-gg/ZE-Configs/blob/master/cstrike/scripts/vscripts/ze_jerry_malaka_escape/moving_npc.nut)
 
 ## Contact Us
 
