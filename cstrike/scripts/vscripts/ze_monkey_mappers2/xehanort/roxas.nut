@@ -66,89 +66,22 @@
     return Min(b, Max(a, x));
 }
 
-// Function to change the volume of the currently playing sound
-::ChangeVolume <- function(soundName, newVolume)
-{
-    // Ensure the new volume is within the 0.0 - 1.0 range using the Clamp function
-    local clampedVolume = Clamp(newVolume, 0.0, 1.0);
-
-    // Emit the sound with the new volume
-    EmitSoundEx({
-        sound_name = soundName,  // The name of the sound to change volume
-        volume = clampedVolume,  // New volume level to set
-        flags = 1                //SND_CHANGE_VOL
-    });
-}
-
-// Function to fade in the current sound over a given duration
-::FadeInSound <- function(soundName, fadeDuration)
-{
-    if (soundName == "")
-        return
-    
-    EmitSoundEx({
-        sound_name = soundName,
-        filter = Constants.EScriptRecipientFilter.RECIPIENT_FILTER_GLOBAL
-        soundlevel = 0
-        flags = 1                //SND_CHANGE_VOL
-        volume = 0
-    });
-
-    local minStepTime = 0.1;  // Minimum time per step to ensure smooth fading
-    local fadeSteps = Max(1, fadeDuration / minStepTime);  // Calculate steps based on fadeDuration and minStepTime
-    local fadeStepTime = fadeDuration / fadeSteps;  // Duration of each step
-    local fadeVolumeStep = 1.0 / fadeSteps;  // Each step increases volume by this much
-    local currentVolume = 0.0;  // Starting at zero volume
-
-    // Loop to gradually increase the volume
-    for (local i = 1; i <= fadeSteps; i++)
-    {
-        local volumeForStep = Clamp((i * fadeVolumeStep), 0.0, 1.0);
-        // Scheduling a future volume change
-        EntFireByHandle(self, "RunScriptCode", "ChangeVolume(\"" + soundName + "\", " + volumeForStep + ")", i * fadeStepTime, null, null);
-    }
-}
-
-// Function to fade out the current sound over a given duration
-::FadeOutSound <- function(soundName, fadeDuration)
-{
-    if (soundName == "")
-        return
-    
-    local minStepTime = 0.1;  // Minimum time per step to ensure smooth fading
-    local fadeSteps = Max(1, fadeDuration / minStepTime);  // Calculate steps based on fadeDuration and minStepTime
-    local fadeStepTime = fadeDuration / fadeSteps;  // Duration of each step
-    local fadeVolumeStep = 1.0 / fadeSteps;  // Each step reduces volume by this much
-    local currentVolume = 1.0;  // Starting at full volume
-
-    // Loop to gradually reduce the volume
-    for (local i = 1; i <= fadeSteps; i++)
-    {
-        local volumeForStep = Clamp(currentVolume - (i * fadeVolumeStep), 0.0, 1.0);
-        // Scheduling a future volume change
-        EntFireByHandle(self, "RunScriptCode", "ChangeVolume(\"" + soundName + "\", " + volumeForStep + ")", i * fadeStepTime, null, null);
-    }
-
-    // Schedule the sound to stop after the fade out duration
-    EntFireByHandle(self, "RunScriptCode", format("StopMusic(`%s`)", soundName) , fadeDuration + 0.1, null, null);
-}
-
 // Function to stop the current sound
 ::StopMusic <- function(songname)
 {
 
-        EmitSoundEx({
-            sound_name = songname,
-            filter = 5,
-            flags = 4 //SND_STOP
-        });
+	EmitSoundEx({
+		sound_name = songname,
+		filter = 5,
+		flags = 4 //SND_STOP
+	});
 }
 
-PrecacheSound("kh2/spawn.mp3");
-PrecacheSound("kh2/dash.mp3");
-PrecacheSound("kh2/lightpillar.mp3");
-PrecacheSound("kh2/dm1.mp3");
-PrecacheSound("kh2/homing.mp3");
+PrecacheSound("kh2/spawn.mp3");//
+PrecacheSound("kh2/dash.mp3"); //
+PrecacheSound("kh2/lightpillar.mp3");//
+PrecacheSound("kh2/dm1.mp3");//
+PrecacheSound("kh2/homing.mp3");//
 PrecacheSound("kh2/aspindown.mp3");
 PrecacheSound("kh2/chargeready.mp3");
 PrecacheSound("kh2/whirlwindrelease.mp3");
@@ -165,8 +98,6 @@ PrecacheSound("kh2/cswing2.mp3");
 PrecacheSound("kh2/cswing3.mp3");
 PrecacheSound("kh2/cswing4.mp3");
 
-PrecacheSound("ze_monkey_mappers2/edited/mog_loop.mp3");
-
 PrecacheSound("kh2/defeated.mp3");
 
 // handles
@@ -179,14 +110,15 @@ ENEMY_POS <- Vector(null);
 ENEMY <- null;
 ATTACKING <- false;
 ::CAUGHTUP <- false;
-::GOLIGHT <- false;
+::GOLIGHT <- false; 
 DASHING<-false
 DEAD <- false;
 STUNNED <- false;
 SPAWNING <- true;
-DONTLOOP <- false
 ENEMY_LAST_POSITION <- null;
 LOS_COUNT <- 0;
+
+zmtarget <- null
 
 AGGRO_RANGE <- 450;
 AGGRO_RANGE_SQR <- AGGRO_RANGE * AGGRO_RANGE;
@@ -220,14 +152,17 @@ local last_target_time = 0.0;
 
 local last_attack_time = 0.0;
 local last_dash_time = 0.0;
+local last_laser_time = 0.0;
+local last_zmlaser_time = 0.0;
 local last_target_time = 0.0;
 local sides_alternator = false;
-attack_cd <- 3;
+attack_cd <- 4;
 
-local predictoffset = 1.0
+local predictoffset = 1
 local predictopposite = false
 
 times_stunned <- 0;
+neworigin <- Vector(0,0,0)
 
 invul <- ""
 star <- "★"
@@ -247,8 +182,7 @@ function OnPostSpawn(){
 	HURT = HITBOX.FirstMoveChild();
 
 	//printl("INITIAL HP "+HITBOX.GetHealth())
-	// BOSS HP ADJUSTMENT HERE!
-	maxhealth = HITBOX.GetHealth()+(1600*ctcount) // 300 starting hp + 200/per player
+	maxhealth = HITBOX.GetHealth()+(1750*ctcount) // 300 starting hp + 200/per player
 
 	HITBOX.SetHealth(maxhealth)
 	//printl("RESCALED HP "+maxhealth)
@@ -285,7 +219,7 @@ function OnPostSpawn(){
 					//printl("touched target")
 					EntFireByHandle(self, "SetDefaultAnimation", "idle", 0.02, null, null);
 					dashtotarget=false
-					EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "CAUGHTUP <- true;", 0, null, null);
+					EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "CAUGHTUP<-true", 0, null, null);
 					EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "self.SetVelocity(Vector(0,0,-16));", 0, null, null);
 					
 				}
@@ -297,14 +231,14 @@ function OnPostSpawn(){
 				if(oncenter==false){
 					for(local j;j=Entities.FindByNameWithin(j,"mog_arenacenter",self.GetOrigin(),64);){
 						oncenter=true
-						EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "self.SetVelocity(Vector(0, 0, -16));", 0.05, null, null);
-						EntFireByHandle(self.GetMoveParent(), "CallScriptFunction", "LightRelease", 0.05, null, null);
+						EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "self.SetVelocity(Vector(0,0,-16));", 0.05, null, null);
+						EntFireByHandle(self.GetMoveParent(), "RunScriptCode", "LightRelease()", 0.05, null, null);
 					}
 				}
 			}
 		}
 
-        return 0.1;
+        return -1;
     };	
 
     AddThinkToEnt(MODEL,"Think");
@@ -319,8 +253,6 @@ function Spawn(){
 	// 	targetname = "rxs_client"
 	// 	origin       = self.GetOrigin()
 	// })
-
-	EntFireByHandle(self,"CallScriptFunction","MusicLoop",46.5,null,null);
 
 	EmitSoundEx({
 		sound_name = "kh2/spawn.mp3",
@@ -347,59 +279,47 @@ function Spawn(){
 	EntFireByHandle(MODEL, "Enable", "", 2, null, null); // Re-enable movement
 	DispatchParticleEffect("rxs_spawn", self.GetOrigin(), QAngle(0, 0, 0).Forward())
 	EntFire("Console","Command","sv_accelerate 10",10.00,null);
-	EntFireByHandle(self, "RunScriptCode", "SPAWNING <- false;", 10, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "SPAWNING<-false", 10, null, null); 
 	EntFireByHandle(HITBOX,"SetDamageFilter","",10,null,null);
-	EntFireByHandle(self,"CallScriptFunction","ShowHP",10,null,null);
-	EntFireByHandle(self,"CallScriptFunction","AnimStarOn",1,null,null);
-	//EntFireByHandle(self,"CallScriptFunction","player_hdr",1.5,null,null);
-}
-
-function MusicLoop(){
-    if (DONTLOOP) 
-    return
-
-    EmitSoundEx({
-        sound_name = "ze_monkey_mappers2/edited/mog_loop.mp3",
-        origin = self.GetOrigin(),
-        sound_level = 0,
-        volume = 1,
-    });
-    EntFireByHandle(self,"CallScriptFunction","MusicLoop",54,null,null);
+	EntFireByHandle(self,"RunScriptCode","ShowHP()",10,null,null);
+	EntFireByHandle(self,"RunScriptCode","AnimStarOn()",1,null,null);
+	//EntFireByHandle(self,"RunScriptCode","player_hdr()",1.5,null,null);
 }
 
 function AnimStarOn(){
 	star <- "★"
-	EntFireByHandle(self,"CallScriptFunction","AnimStarOff",0.25,null,null);
+	EntFireByHandle(self,"RunScriptCode","AnimStarOff()",0.25,null,null);
 }
 
 function AnimStarOff(){
 	star <- "☆"
-	EntFireByHandle(self,"CallScriptFunction","AnimStarOn",0.25,null,null);
+	EntFireByHandle(self,"RunScriptCode","AnimStarOn()",0.25,null,null);
 }
 
 function Hurt(){
 	if (DEAD) return
-
 }
 
 function ShowHP(){
 	if (DEAD) return
-	local health = HITBOX.GetHealth()
-	local perc = (HITBOX.GetHealth() * 100) / maxhealth;
-	local mishp = 100 - perc;
-	local bardamage = 0
-	bardamage = (fabs(20 * mishp/100));
-	bardamage = bardamage.tointeger();
-	local bars = 20 - bardamage
-	local hpbar = [];
-	for(local i=0; i < bars; i++){
-		hpbar.append("▰");
+	if(HITBOX.IsValid()){
+		local health = HITBOX.GetHealth()
+		local perc = (HITBOX.GetHealth() * 100) / maxhealth;
+		local mishp = 100 - perc;
+		local bardamage = 0
+		bardamage = (fabs(20 * mishp/100));
+		bardamage = bardamage.tointeger();
+		local bars = 20 - bardamage
+		local hpbar = [];
+		for(local i=0; i < bars; i++){
+			hpbar.append("▰");
+		}
+		for(local i=0; i < bardamage; i++){
+			hpbar.append("▱");
+		}
+		ClientPrint(null, 4, ""+hpbar[0]+hpbar[1]+hpbar[2]+hpbar[3]+hpbar[4]+hpbar[5]+hpbar[6]+hpbar[7]+hpbar[8]+hpbar[9]+hpbar[10]+hpbar[11]+hpbar[12]+hpbar[13]+hpbar[14]+hpbar[15]+hpbar[16]+hpbar[17]+hpbar[18]+hpbar[19]+"\n HP  "+health+"                  "+invul)
+		EntFireByHandle(self,"RunScriptCode","ShowHP()",0.1,null,null);
 	}
-	for(local i=0; i < bardamage; i++){
-		hpbar.append("▱");
-	}
-	ClientPrint(null, 4, ""+hpbar[0]+hpbar[1]+hpbar[2]+hpbar[3]+hpbar[4]+hpbar[5]+hpbar[6]+hpbar[7]+hpbar[8]+hpbar[9]+hpbar[10]+hpbar[11]+hpbar[12]+hpbar[13]+hpbar[14]+hpbar[15]+hpbar[16]+hpbar[17]+hpbar[18]+hpbar[19]+"\n HP  "+health+"                  "+invul)
-	EntFireByHandle(self,"CallScriptFunction","ShowHP",0.1,null,null);
 }
 
 function Death(){
@@ -414,6 +334,13 @@ function Death(){
 	}
 
     EmitSoundEx({
+        sound_name = "kh2/defeated.mp3",
+        origin = self.GetOrigin(),
+        sound_level = 0,
+        volume = 1,
+    });
+
+	EmitSoundEx({
         sound_name = "kh2/defeated.mp3",
         origin = self.GetOrigin(),
         sound_level = 0,
@@ -445,11 +372,10 @@ function Death(){
 	EntFireByHandle(MODEL, "SetDefaultAnimation", "", 0.1, null, null);
 	EntFireByHandle(MODEL, "ClearParent", "", 0, null, null);
 	EntFireByHandle(self, "Kill", "",12, null, null);
-	EntFireByHandle(self,"CallScriptFunction","DelayedFade",8.9,null,null);
-	EntFireByHandle(self,"CallScriptFunction","LongFade",6,null,null);
-	EntFireByHandle(self, "RunScriptCode", "DONTLOOP <- true;", 6.02, null, null); 
+	EntFireByHandle(self,"RunScriptCode","DelayedFade()",8.9,null,null);
+	EntFireByHandle(self,"RunScriptCode","LongFade()",6,null,null);
 	EntFireByHandle(particle, "Kill", "",9, null, null);
-	EntFireByHandle(self,"CallScriptFunction","LongFadeIn",10.8,null,null);
+	EntFireByHandle(self,"RunScriptCode","LongFadeIn()",10.8,null,null);
 	EntFireByHandle(relay_end_roxas,"Trigger","",12,null,null);
 }
 
@@ -463,7 +389,9 @@ function LongFade(){
 		if(h==null||!h.IsValid()||h.IsAlive()==false)continue;
 		ScreenFade(h, 255, 255, 255, 255, 3, 2, 2);
 	}
-	FadeOutSound("ze_monkey_mappers2/edited/mog_loop.mp3", 5.0)
+	local mogmusic = Entities.FindByName(null, "mog_bossmusic")
+	EntFireByHandle(mogmusic,"FadeOut","5",0,null,null);
+	//FadeOutSound("#kh2/mog_loop.mp3", 5.0)
 }
 
 function LongFadeIn(){
@@ -478,13 +406,40 @@ function LongFadeIn(){
 function Think(){
 	if (SPAWNING) return;
 
+	if(finished_dm==true){
+		local zmlaser_cd = RandomFloat(5.0,6.0)
+		if(Time() - last_zmlaser_time >= zmlaser_cd){
+			local laseramt = RandomInt(4,6)
+
+			local arena_center = Entities.FindByName(null, "mog_arenacenter")
+			local arena_origin = arena_center.GetOrigin()+Vector(0,0,40)
+			
+			local randomx = RandomFloat(-512,512)
+			local randomy = RandomFloat(-512,512)
+			neworigin = Vector(arena_origin.x+randomx,arena_origin.y+randomy, arena_origin.z)
+
+			local zms = [];
+			for(local h;h=Entities.FindByClassname(h,"player");){if(h==null||!h.IsValid()||h.GetTeam()!=2||h.IsAlive()==false)continue;zms.push(h)}
+			if(zms.len()>0){
+				// ClientPrint(null, 3, "- TARGET FOUND -")
+				zmtarget = zms[RandomInt(0,zms.len()-1)];
+				neworigin = Vector(zmtarget.GetOrigin().x, zmtarget.GetOrigin().y, arena_origin.z)
+			} 
+
+			for (local i=0; i < laseramt; i++) {
+				EntFireByHandle(self, "RunScriptCode", "ShootBullet("+RandomInt(0, 36)+",2,false,false,true,0,false,0,false,false,true)", 0, null, null); 
+			}
+			last_zmlaser_time = Time();
+		}
+	}
+
 	if (ATTACKING) return
 
 	if (STUNNED) return
 
 	if (DEAD) return 60 
 	
-	local dash_cd = RandomFloat(0.25,0.25)
+	local dash_cd = RandomFloat(0.1,0.1)
 
 	if(once_dm==true){
 		if(CAUGHTUP == false && finished_dm == false && Time() - last_dash_time >= dash_cd){
@@ -505,7 +460,6 @@ function Think(){
 		halfhp_bool = true;
 	}
 
-
 	if (Time() - last_target_time >= 6.0) {
 		ENEMY = LookForEnemy()
 		last_target_time = Time();   
@@ -519,7 +473,7 @@ function Think(){
 			return
 		}
 
-		dash_cd = RandomFloat(0.5,0.5)
+		dash_cd = RandomFloat(0.1,0.1)
 
 		if(CAUGHTUP == false && Time() - last_dash_time >= dash_cd){
 			//printl("normal dash")
@@ -541,7 +495,7 @@ function Think(){
 		}
 	}
 
-	return 0.1 // Think every 1 second
+	return -1 // Think every 1 second
 }
 
 function Dash(){
@@ -572,7 +526,11 @@ function Dash(){
 	if(halfhp_bool==true){
 		
 		if(finished_dm==true){
-			EntFireByHandle(self,"RunScriptCode","ShootBullet("+RandomFloat(-0.2,0.2)+", 8, false, false, false)",0.25,null,null);
+			local laser_cd = 0.25
+			if(Time() - last_laser_time >= laser_cd){
+				EntFireByHandle(self,"RunScriptCode","ShootBullet("+RandomFloat(-0.5,0.5)+",8,false,false,false)",0.25,null,null);
+				last_laser_time = Time();
+			}
 		}
 		
 		if(finished_dm==false){
@@ -585,12 +543,12 @@ function Dash(){
 		}
 	}
 
-	EntFireByHandle(self,"CallScriptFunction","MonsterLookat",0,null,null);
+	EntFireByHandle(self,"RunScriptCode","MonsterLookat()",0,null,null);
 	EntFireByHandle(MODEL, "SetAnimation", "dash", 0, null, null);
 	EntFireByHandle(MODEL, "SetDefaultAnimation", "", 0.02, null, null);
-	EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(2000, 2000, 0, true)", 0, null, null);
-	EntFireByHandle(MODEL, "RunScriptCode", "dashtotarget <- true;", 0, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "DASHING <- false;", 0.5, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(2000,2000,0,true)", 0, null, null);
+	EntFireByHandle(MODEL, "RunScriptCode", "dashtotarget<-true", 0, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "DASHING<-false", 0.5, null, null); 
 	EntFireByHandle(particle, "Kill", "", 1, null, null); 
 }
 
@@ -641,49 +599,50 @@ function Attack(){
 			EntFireByHandle(self, "RunScriptCode", "SayLine(11)", 1.25, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(3)", 1.9, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(12)", 1.9, null, null);
-			EntFireByHandle(self, "CallScriptFunction", "SpawnWhirlwind", 2.0, null, null);
-			EntFireByHandle(self, "RunScriptCode", "ATTACKING <- false;", 3.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "SpawnWhirlwind()", 2.0, null, null);
+			EntFireByHandle(self, "RunScriptCode", "ATTACKING<-false", 3.5, null, null); 
 			break;
 		case 2:
+			EntFireByHandle(self,"RunScriptCode","MonsterLookat()",0,null,null);
 			EntFireByHandle(MODEL, "SetAnimation", "cswing", 0, null, null);
 			EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 0.02, null, null);
-			for(local i =0.9; i <= 4.5; i += 0.1){
-				EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
+			for(local i =0.6; i <= 4.5; i += 0.1){
+				EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
 			}
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(1500, 1500, 0)", 0.6, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(1500,1500,0)", 0.6, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(6)", 0.5, null, null);
 			EntFireByHandle(HURT, "Enable", "", 0.6, null, null);
 			EntFireByHandle(HURT, "Disable", "", 0.75, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500, 500, 0)", 1.25, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500,500,0)", 1.25, null, null);
 			EntFireByHandle(HURT, "Enable", "", 1.25, null, null);
 			EntFireByHandle(HURT, "Disable", "", 1.4, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500, 500, 0)", 1.75, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500,500,0)", 1.75, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(7)", 1.6, null, null);
 			EntFireByHandle(HURT, "Enable", "", 1.75, null, null);
 			EntFireByHandle(HURT, "Disable", "", 1.9, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500, 500, 0)", 2.25, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500,500,0)", 2.25, null, null);
 			EntFireByHandle(HURT, "Enable", "", 2.25, null, null);
 			EntFireByHandle(HURT, "Disable", "", 2.4, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500, 500, 0)", 2.75, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(500,500,0)", 2.75, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(8)", 2.6, null, null);
 			EntFireByHandle(HURT, "Enable", "", 2.75, null, null);
 			EntFireByHandle(HURT, "Disable", "", 2.9, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(-1000, -1000, 0)", 3.25, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(-1000,-1000,0)", 3.25, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(11)", 3.8, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(9)", 4.4, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(12)", 4.4, null, null);
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(3500, 3500, 0)", 4.5, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(3500,3500,0)", 4.5, null, null);
 			EntFireByHandle(self, "RunScriptCode", "EnableParry(0.5)", 4.5, null, null);
-			EntFireByHandle(self, "CallScriptFunction", "SpawnShockwave", 4.5, null, null);
+			EntFireByHandle(self, "RunScriptCode", "SpawnShockwave()", 4.5, null, null);
 			EntFireByHandle(HURT, "Enable", "", 4.5, null, null);
 			EntFireByHandle(HURT, "Disable", "", 5, null, null);
 
-			EntFireByHandle(self, "RunScriptCode", "ATTACKING <- false;", 6, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ATTACKING<-false", 6, null, null); 
 			break;
 		case 3:
 			EntFireByHandle(MODEL, "SetDefaultAnimation", "", 0.02, null, null);
@@ -691,25 +650,25 @@ function Attack(){
 			EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 0.02, null, null);
 
 			for(local i =0.25; i <= 1.8; i += 0.1){
-				EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
+				EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
 			}
 
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(0, 0, 1000)", 0.25, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(0,0,1000)", 0.25, null, null);
 
 			EntFireByHandle(self, "AddOutput", "movetype 0", 0.75, null, null); // Re-enable movement
 			EntFireByHandle(self, "AddOutput", "movetype 3", 1.7, null, null); // Re-enable movement
 			EntFireByHandle(MODEL, "SetAnimation", "aspin2", 1, null, null);
-			EntFireByHandle(self, "CallScriptFunction", "SpawnAspin", 1.5, null, null);
+			EntFireByHandle(self, "RunScriptCode", "SpawnAspin()", 1.5, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(10)", 1.5, null, null);
 			EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 1.27, null, null);
 			EntFireByHandle(self, "RunScriptCode", "SayLine(1)", 1.7, null, null);
-			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(1500, 1500, -1000)", 1.75, null, null);
+			EntFireByHandle(self, "RunScriptCode", "MoveToEnemy(1500,1500,-1000)", 1.75, null, null);
 			EntFireByHandle(HURT, "Enable", "", 1.75, null, null);
 			EntFireByHandle(HURT, "Disable", "", 2.4, null, null);
 			EntFireByHandle(MODEL, "SetAnimation", "aspin3", 2.25, null, null);
 			EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 2.27, null, null);
 			EntFireByHandle(MODEL, "SetDefaultAnimation", "idle", 2.3, null, null);
-			EntFireByHandle(self, "RunScriptCode", "ATTACKING <- false;", 3.8, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ATTACKING<-false", 3.8, null, null); 
 			break;
 	}
 }
@@ -785,19 +744,19 @@ function EnableParry(dur){
 						break;
 				}
 
-				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "MoveToEnemy(-500, -500, 0)", 0, null, null);
+				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "MoveToEnemy(-500,-500,0)", 0, null, null);
 				
 				for(local i = 0; i <= stun_dur+1; i += 0.1){
-					EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "invul <- star;", i, null, null);
+					EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "invul<-star", i, null, null);
 				}
 
-				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "STUNNED <- true;", 0, null, null);
+				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "STUNNED<-true", 0, null, null);
 				EntFireByHandle(themodel, "SetAnimation", "stagger", 0, null, null);
 				EntFireByHandle(themodel, "SetPlaybackRate", "0.01", 1, null, null);
 				EntFireByHandle(themodel, "SetPlaybackRate", "1", stun_dur+0.02, null, null);
-				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "STUNNED <- false;", stun_dur+1, null, null);
-				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "times_stunned++;", stun_dur+1, null, null);
-				EntFireByHandle(themodel.GetMoveParent(), "CallScriptFunction", "RemoveShield", stun_dur+1, null, null);
+				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "STUNNED<-false", stun_dur+1, null, null);
+				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "times_stunned++", stun_dur+1, null, null);
+				EntFireByHandle(themodel.GetMoveParent(), "RunScriptCode", "RemoveShield()", stun_dur+1, null, null);
 
 				EntFireByHandle(thehurt, "Disable", "", 0, null, null);
 			}
@@ -929,31 +888,34 @@ function AttackLight(pattern){
 	switch (pattern) {
 		case 1:
 			local randomrot = RandomFloat(4,6)
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(0,8, false, true, true, "+randomrot+")", 0, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(100, 8, false, true, true, "+randomrot+")", 0, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(51, 8, false, true, true, "+randomrot+")", 0, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-51, 8, false, true, true, "+randomrot+")", 0, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(52, 8, false, true, true, "+randomrot+")", 0, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-52, 8, false, true, true, "+randomrot+")", 0, null, null); 
+			// 6-way rotating laser
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(0,8,false,true,true,"+randomrot+")", 0, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(100,8,false,true,true,"+randomrot+")", 0, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(51,8,false,true,true,"+randomrot+")", 0, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-51,8,false,true,true,"+randomrot+")", 0, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(52,8,false,true,true,"+randomrot+")", 0, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-52,8,false,true,true,"+randomrot+")", 0, null, null); 
 			break;
 		case 2:
+			// continuous combo laser
 			for(local i = 0.5; i <= 3; i += 0.25){
 				EntFireByHandle(self,"RunScriptCode","ShootBullet("+RandomFloat(-0.2,0.2)+",8,false,false,false,0,true)",i,null,null);
 			}
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49, 8, false)", 4.5, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49, 8, false)", 4.5, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49, 8, false)", 4.6, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49, 8, false)", 4.6, null, null); 	
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49, 8, false)", 4.8, null, null); 
-			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49, 8, false)", 4.8, null, null); 	
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49,8,false)", 4.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49,8,false)", 4.5, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49,8,false)", 4.6, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49,8,false)", 4.6, null, null); 	
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(49,8,false)", 4.8, null, null); 
+			EntFireByHandle(self, "RunScriptCode", "ShootBullet(-49,8,false)", 4.8, null, null); 	
 			break;
 		case 3:
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, 64, true)",1.5,null,null);
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, 128, true)",1.5,null,null);
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, 192, true)",1.5,null,null);
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, -64, true)",1.5,null,null);
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, -128, true)",1.5,null,null);
-			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8, false, false, false, 0, true, -192, true)",1.5,null,null);
+			// 6-way forward laser
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,64,true)",1.5,null,null);
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,128,true)",1.5,null,null);
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,192,true)",1.5,null,null);
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,-64,true)",1.5,null,null);
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,-128,true)",1.5,null,null);
+			EntFireByHandle(self,"RunScriptCode","ShootBullet(0,8,false,false,false,0,true,-192,true)",1.5,null,null);
 			break;
 	}
 }
@@ -985,7 +947,7 @@ function LookForEnemy(){
     if(players.len()>0){
         //ClientPrint(null, 3, "- TARGET FOUND -")
         local playertarget = players[RandomInt(0,players.len()-1)];
-		EntFireByHandle(MODEL, "RunScriptCode", "enemigo <- activator;", 0, playertarget, null); 
+		EntFireByHandle(MODEL, "RunScriptCode", "enemigo<-activator", 0, playertarget, null); 
         ENEMY = playertarget;
         return
     }
@@ -1005,38 +967,12 @@ function MoveToEnemy(x=1,y=1,z=1,predict=false){
 		//velocity += right * RandomFloat(-0.5,0.5) 
 
 		if(!predictopposite){
-			switch (RandomInt(1,4)) {
-				case 1:
-					predictoffset -= 0.1
-					break;
-				case 2:
-					predictoffset -= 0.2
-					break;
-				case 3:
-					predictoffset -= 0.5
-					break;
-				case 4:
-					predictoffset -= 1.0
-					break;
-			}
+			predictoffset -= 0.1
 			if (predictoffset < 0){
 				predictoffset = 0
 			}
 		} else {
-			switch (RandomInt(1,4)) {
-				case 1:
-					predictoffset += 0.1
-					break;
-				case 2:
-					predictoffset += 0.2
-					break;
-				case 3:
-					predictoffset += 0.5
-					break;
-				case 4:
-					predictoffset += 1.0
-					break;
-			}
+			predictoffset += 0.1
 			if (predictoffset > 0){
 				predictoffset = 0
 			}
@@ -1397,7 +1333,7 @@ function SpawnTurret(dist=0){
             local newhp = h.GetHealth() - damage;
 
             if(newhp <= 0){
-                EntFireByHandle(h,"SetHealth","0",0.00,null,null)
+                EntFireByHandle(h,"SetHealth","-1",0.00,null,null)
             }
             else{
                 h.TakeDamage(damage, 4, self);
@@ -1453,7 +1389,9 @@ function LightRelease(){
 	
 	ATTACKING<-true
 	local arena_center = Entities.FindByName(null, "mog_arenacenter")
+	self.__KeyValueFromInt("movetype", 0); // Disable movement
 	self.SetOrigin(arena_center.GetOrigin())
+	EntFireByHandle(self, "RunScriptCode", "self.SetForwardVector(Vector(1, 1, 0))", 0.1,null, null);
 
 	EmitSoundEx({
 		sound_name = "kh2/dm1.mp3",
@@ -1466,21 +1404,21 @@ function LightRelease(){
 	EntFireByHandle(HITBOX,"SetDamageFilter","filter_invulnerable",0,null,null);
 	EntFireByHandle(MODEL, "SetAnimation", "dm1", 0.5, null, null);
 	EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 0.52, null, null);
-	EntFireByHandle(self, "CallScriptFunction", "SpawnWhirlwindLinger", 2.25, null, null);
-	EntFireByHandle(self, "CallScriptFunction", "SpawnBright", 2, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "SpawnWhirlwindLinger()", 2.25, null, null);
+	EntFireByHandle(self, "RunScriptCode", "SpawnBright()", 2, null, null); 
 	EntFireByHandle(self, "RunScriptCode", "SayLine(4)", 5,null, null);
-	
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(0, 8, false, false, true, 0, false, 0, false, true)", 0.5, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(100, 8, false, false, true, 0, false, 0, false, true)", 0.75, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(50, 8, false, false, true, 0, false, 0, false, true)", 1, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-50, 8, false, false, true, 0, false, 0, false, true)", 1.25, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(1, 8, false, false, true, 0, false, 0, false, true)", 1.5, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-1, 8, false, false, true, 0, false, 0, false, true)", 1.75, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(20, 8, false, false, true, 0, false, 0, false, true)", 2, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-20, 8, false, false, true, 0, false, 0, false, true)", 2.25, null, null); 
+	// 8-way laser
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(0,8,false,false,true,0,false,0,false,true)", 0.5, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(100,8,false,false,true,0,false,0,false,true)", 0.75, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(50,8,false,false,true,0,false,0,false,true)", 1, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-50,8,false,false,true,0,false,0,false,true)", 1.25, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(1,8,false,false,true,0,false,0,false,true)", 1.5, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-1,8,false,false,true,0,false,0,false,true)", 1.75, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(20,8,false,false,true,0,false,0,false,true)", 2, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ShootBullet(-20,8,false,false,true,0,false,0,false,true)", 2.25, null, null); 
 	EntFireByHandle(self, "AddOutput", "movetype 0", 6.4, null, null); // Re-enable movement
 
-	EntFireByHandle(self, "CallScriptFunction", "LRmoveup", 7, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "LRmoveup()", 7, null, null); 
 	EntFireByHandle(MODEL, "SetAnimation", "dm2", 7, null, null);
 	EntFireByHandle(self, "RunScriptCode", "SayLine(5)", 8,null, null);	
 	EntFireByHandle(self, "RunScriptCode", "SpawnTurret(128)", 8, null, null); 
@@ -1492,17 +1430,17 @@ function LightRelease(){
 	EntFireByHandle(self, "AddOutput", "movetype 3", 14.5, null, null); // Re-enable movement
 	EntFireByHandle(MODEL, "SetPlaybackRate", "1.5", 14.02, null, null);
 
-	EntFireByHandle(self, "RunScriptCode", "self.SetVelocity(Vector(0, 0, -64));", 14.52, null, null);
+	EntFireByHandle(self, "RunScriptCode", "self.SetVelocity(Vector(0,0,-64));", 14.52, null, null);
 
 	EntFireByHandle(MODEL, "SetDefaultAnimation", "idle", 14.04, null, null);
-	EntFireByHandle(self, "RunScriptCode", "ATTACKING <- false;", 17, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "once_dm <- false;", 17, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "CAUGHTUP <- false;", 17, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "finished_dm <- true;", 17, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "GOLIGHT = false;", 17, null, null); 
-	EntFireByHandle(self, "RunScriptCode", "ENEMY <- null;", 16.9, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ATTACKING<-false", 17, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "once_dm<-false", 17, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "CAUGHTUP<-false", 17, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "finished_dm<-true", 17, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "GOLIGHT=false", 17, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "ENEMY<-null", 16.9, null, null); 
 	EntFireByHandle(HITBOX,"SetDamageFilter","",15,null,null);
-	EntFireByHandle(self, "CallScriptFunction", "RemoveShield", 15, null, null); 
+	EntFireByHandle(self, "RunScriptCode", "RemoveShield()", 15, null, null); 
 }
 
 function RemoveShield(){
@@ -1513,12 +1451,12 @@ function LRmoveup(){
 	self.KeyValueFromVector("origin", self.GetOrigin()+Vector(0,0,164))
 }
 
-function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrandom=1,sides=false,distance=0,midair=false,dm=false){     
+function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrandom=1,sides=false,distance=0,midair=false,dm=false,zmspawned=false){     
     //create the particle prop_dynamic
 	if (DEAD) return
 	if (STUNNED) return
 	local piv = self.GetOrigin()
-	local spawnpos = self.GetOrigin()+Vector(0,0,32)
+	local spawnpos = self.GetOrigin()+Vector(0,0,40)
 
 	if(midair==true){
 		spawnpos += Vector(0,0,-403)
@@ -1546,44 +1484,58 @@ function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrando
 	local right = self.GetRightVector()
 	local randomrot = flrandom
 
-	switch (angle) {
-		case 100:
-			direction = direction * -1 // backwards
-			break;
-		case -50:
-			direction = direction * -1 // diagonal backwards
-			direction += right * -1
-			direction.Norm()
-			break;
-		case 50:
-			direction = direction * -1 // diagonal backwards
-			direction += right * 1
-			direction.Norm()
-			break;
-		case -51:
-			direction = direction * -1 // 60° backwards
-			direction += right * -1.75
-			direction.Norm()
-			break;
-		case 51:
-			direction = direction * -1  // 60° backwards
-			direction += right * 1.75
-			direction.Norm()
-			break;
-		case -52:
-			direction += right * -1.75 // 60° 
-			direction.Norm()
-			break;
-		case 52:
-			direction += right * 1.75 // 60° 
-			direction.Norm()
-			break;
-		default:
-			direction += right * angle
-			direction.Norm()
-			break;
+	if(!zmspawned){
+		switch (angle) {
+			case 100:
+				direction = direction * -1 // backwards
+				break;
+			case -50:
+				direction = direction * -1 // diagonal backwards
+				direction += right * -1
+				direction.Norm()
+				break;
+			case 50:
+				direction = direction * -1 // diagonal backwards
+				direction += right * 1
+				direction.Norm()
+				break;
+			case -51:
+				direction = direction * -1 // 60° backwards
+				direction += right * -1.75
+				direction.Norm()
+				break;
+			case 51:
+				direction = direction * -1  // 60° backwards 
+				direction += right * 1.75
+				direction.Norm()
+				break;
+			case -52:
+				direction += right * -1.75 // 60° 
+				direction.Norm()
+				break;
+			case 52:
+				direction += right * 1.75 // 60° 
+				direction.Norm()
+				break;
+			default:
+				direction += right * angle
+				direction.Norm()
+				break;
+		}
 	}
-	particle.SetForwardVector(direction);
+
+	if(zmspawned){
+		local angles_for = VectorAngles(direction)
+		direction = AnglesToVector(QAngle(angles_for.x,angles_for.y+(angle*10),angles_for.z))
+		direction.Norm()
+		particle.SetForwardVector(direction);
+	} else{
+		particle.SetForwardVector(direction);
+	}
+
+	if(zmspawned==true){
+		particle.SetOrigin(neworigin+particle.GetForwardVector()*-192)
+	}
 	
 	if(rot==true){
 		particle.SetOrigin((particle.GetOrigin()+(particle.GetForwardVector()*48)))
@@ -1618,6 +1570,7 @@ function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrando
 	particle.GetScriptScope().rotate <- rot;
 	particle.GetScriptScope().starttracing <- false;
 	particle.GetScriptScope().dmrot <- false;
+	particle.GetScriptScope().active <- false;
 
     particle.GetScriptScope().ClearCD <- function(){
 		if(activator==null||!activator.IsValid())return;
@@ -1633,13 +1586,20 @@ function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrando
 		speed=16
     }
 
+	particle.GetScriptScope().StartMove3 <- function(){
+		speed=1
+    }
+
     particle.GetScriptScope().Think <- function(){
         //fiddle damage
         local checkpos = self.GetOrigin()-Vector(0,0,16)
+		//DebugDrawCircle(checkpos, Vector(255,250,255) 255, damage_range, true, 0.0)
         for(local h;h=Entities.FindByClassnameWithin(h,"player",checkpos,damage_range);){
 			if(!h.IsAlive())continue;
 					//if(h.GetTeam()!=2)continue;    //<---- ignore players by team, if you want
 			if(h in touchers)continue;    //touching player is in damage-cooldown, ignore for now
+			if(!active) continue;
+
 			touchers[h] <- h;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
 			
@@ -1705,23 +1665,32 @@ function ShootBullet(angle,fspeed = 1,accel=true,rot=false,reverse=false,flrando
 	});
 
     AddThinkToEnt(particle,"Think");
-	EntFireByHandle(particle,"RunScriptCode","damage <- 40;",0.25,null,null);
+	EntFireByHandle(particle,"RunScriptCode","damage<-40",0.25,null,null);
 	if(rot==false){
 		if(dm==true){
-			EntFire("bulletrot", "RunScriptCode", "dmrot <- true;", 2.25, null)
+			EntFire("bulletrot", "RunScriptCode", "dmrot<-true", 2.25, null)
 			EntFire("bulletrot", "CallScriptFunction", "StartMove", 13, null)
-			EntFire("bulletrot", "RunScriptCode", "starttracing <- true;",13, null)
+			EntFire("bulletrot", "RunScriptCode", "starttracing<-true",13, null)
 			EntFire("bulletrot", "Kill", "", 14, null)
 		} else {
-			EntFireByHandle(particle,"CallScriptFunction","StartMove",0.3,null,null);
-			EntFireByHandle(particle,"RunScriptCode","starttracing <- true;",0.3,null,null);
-			EntFireByHandle(particle,"Kill","",6,null,null);
+			if(zmspawned){
+				EntFireByHandle(particle,"CallScriptFunction","StartMove3",0.3,null,null);
+			} else {
+				EntFireByHandle(particle,"CallScriptFunction","StartMove",0.3,null,null);
+			}
+			EntFireByHandle(particle,"RunScriptCode","starttracing<-true",0.3,null,null);
+			if(zmspawned){
+				EntFireByHandle(particle,"Kill","",3,null,null);
+			} else {
+				EntFireByHandle(particle,"Kill","",6,null,null);
+			}
 		}
-
+		EntFireByHandle(particle,"RunScriptCode","active=true",0.3,null,null);
 	} else {
+		EntFireByHandle(particle,"RunScriptCode","active=true",0.5,null,null);
 		EntFireByHandle(particle,"CallScriptFunction","StartMove2",2.25,null,null);
-		EntFireByHandle(particle,"RunScriptCode","rotate <- false;",2.25,null,null);
-		EntFireByHandle(particle,"RunScriptCode","starttracing <- true;",2.25,null,null);
+		EntFireByHandle(particle,"RunScriptCode","rotate<-false",2.25,null,null);
+		EntFireByHandle(particle,"RunScriptCode","starttracing<-true",2.25,null,null);
 		EntFireByHandle(particle,"Kill","",6,null,null);
 	}
 
@@ -1733,6 +1702,6 @@ function player_hdr() {
 	for(local h;h=Entities.FindByClassname(h,"player");){
 		EntFire("rxs_client","Command","mat_hdr_level 2",0.00,h);
 	}
-	EntFireByHandle(self,"CallScriptFunction","player_hdr",1,null,null);
+	EntFireByHandle(self,"RunScriptCode","player_hdr()",1,null,null);
 } 
 */

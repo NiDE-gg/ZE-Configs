@@ -2,6 +2,12 @@ const iMaxWeaponCount = 7;
 
 const strSpawnDestination = "4echo_dest_spawn";
 
+enum eTeams
+{
+	iZombie = 2,
+	iHuman = 3
+};
+
 enum eChatColors
 {
 	strDefault = "\x1",
@@ -27,37 +33,38 @@ iMaxPlayers <- MaxClients().tointeger(),
 ::hWorldSpawn <- Entities.First(),
 ::bNoPlayerDamage <-
 ::bHumanNoPlayerDamage <-
-bForcePlayerDamage <-
+::bForcePlayerDamage <-
 ::bIsEnding <-
 ::bIsEndingTrollAllowed <- false,
 iActiveVampires <- 0,
 hMathPlayer <- null,
 iMathState <- eMathStates.iInactive,
+bIsMathRoman <- false,
 iMathAnswer <- 0,
 aMathAnswerPlayers <- array(0);
 
 function OnSpawn()
 {
 	MarkForPurge();
-
 	local hBigNetwork = Entities.FindByName(null, "BigNet");
 	MarkForPurge(hBigNetwork);
 	hBigNetwork.Kill();
-
 	HookEvent("player_spawn", OnPlayerSpawn);
 	HookEvent("player_say", OnPlayerChat);
 	HookEvent("player_death", OnPlayerDeath);
 	HookEvent("player_disconnect", OnPlayerDisconnect);
-
 	SDKHook("SDKHook_OnTakeDamage", OnTakeDamage);
 }
 
 function OnRoundStart(tData)
 {
+	const iMathRomanChance = 10;
+
+	bIsMathRoman = !RandomInt(0, iMathRomanChance - 1);
+
 	if (bIsFirstRound)
 	{
 		bIsFirstRound = false;
-
 		OnSpawn();
 
 		return;
@@ -109,9 +116,9 @@ function OnTakeDamage(tData)
 		return;
 	}
 
-	if (hVictim.GetTeam() == 3)
+	if (hVictim.GetTeam() == eTeams.iHuman)
 	{
-		if (bForcePlayerDamage || !bHumanNoPlayerDamage || hAttacker.GetTeam() == 3)
+		if (bForcePlayerDamage || !bHumanNoPlayerDamage || hAttacker.GetTeam() == eTeams.iHuman)
 			return;
 
 		tData.early_out = true,
@@ -129,7 +136,6 @@ function OnTakeDamage(tData)
 	local iHealth = hAttacker.GetHealth(),
 	iMaxHealth = hAttacker.GetMaxHealth(),
 	iDamage = tData.damage;
-
 	tData.damage *= flDamageMultiplier;
 
 	if (iHealth >= iMaxHealth)
@@ -177,11 +183,10 @@ function OnPlayerChat(tData)
 	local hPlayer = GetPlayerFromUserID(tData.userid),
 	iTeam = hPlayer.GetTeam();
 
-	if (iTeam != 3 || iMathState != eMathStates.iActive || aMathAnswerPlayers.find(hPlayer) != null || tData.text != iMathAnswer.tostring())
+	if (iTeam != eTeams.iHuman || iMathState != eMathStates.iActive || aMathAnswerPlayers.find(hPlayer) != null || tData.text != iMathAnswer.tostring())
 		return;
 
-	MapPrintToChat(hPlayer, "You have answered correctly.");
-
+	MapPrintToChat(hPlayer, "You have answered the math question correctly!");
 	aMathAnswerPlayers.push(hPlayer);
 }
 
@@ -192,7 +197,6 @@ function OnPlayerDeath(tData)
 	for (local hPlayerChild = hPlayer.FirstMoveChild(); hPlayerChild; hPlayerChild = hPlayerChild.NextMovePeer())
 	{
 		MarkForPurge(hPlayerChild);
-
 		local hScriptScope = hPlayerChild.GetScriptScope();
 
 		if (!hScriptScope || !("iItemEffect" in hScriptScope))
@@ -203,13 +207,18 @@ function OnPlayerDeath(tData)
 		break;
 	}
 
-	if (hPlayer.GetTeam() == 3)
+	if (hPlayer.GetTeam() == eTeams.iHuman)
 	{
 		NetProps.SetPropInt(hPlayer, "m_afButtonDisabled", NetProps.GetPropInt(hPlayer, "m_afButtonDisabled") & ~2);
 		NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") & ~4);
 
 		return;
 	}
+
+	local iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayers);
+
+	if (iMathAnswerPlayerIndex != null)
+		aMathAnswerPlayers.remove(iMathAnswerPlayerIndex);
 
 	if (!iActiveVampires)
 		return;
@@ -232,7 +241,13 @@ function OnPlayerDeath(tData)
 
 function OnPlayerDisconnect(tData)
 {
-	if (hMathPlayer != GetPlayerFromUserID(tData.userid))
+	local hPlayers = GetPlayerFromUserID(tData.userid),
+	iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayers);
+
+	if (iMathAnswerPlayerIndex != null)
+		aMathAnswerPlayers.remove(iMathAnswerPlayerIndex);
+
+	if (hMathPlayer != hPlayers)
 		return;
 
 	hMathPlayer = null;
@@ -300,7 +315,7 @@ function EnableHumanPlayerDamage()
 
 function CheckKnifeStrip(bIsHumanItem = false)
 {
-	if (activator.GetTeam() != (bIsHumanItem ? 3 : 2))
+	if (activator.GetTeam() != (bIsHumanItem ? eTeams.iHuman : eTeams.iZombie))
 		return;
 
 	for (local iWeaponIndex = 0; iWeaponIndex < iMaxWeaponCount; iWeaponIndex++)
@@ -322,7 +337,7 @@ function CheckKnifeStrip(bIsHumanItem = false)
 
 ::FilterItemButton <- function(iType = 0)
 {
-	InputUse <- function()
+	function InputUse()
 	{
 		if ((!iType || (iType == 2 && !bIsEndingTrollAllowed)) && bIsEnding)
 		{
@@ -361,12 +376,11 @@ function ItemVampireUse()
 	const flDuration = 10.0;
 
 	iActiveVampires++;
-
 	EntFireByHandle(self, "CallScriptFunction", "ItemVampireEnd", flDuration, null, null);
 
 	foreach (hPlayer in GetPlayers())
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() == 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() == eTeams.iHuman)
 			continue;
 
 		hPlayer.AcceptInput("Color", "255", null, null);
@@ -375,7 +389,6 @@ function ItemVampireUse()
 			for (local hPlayerChild = hPlayer.FirstMoveChild(); hPlayerChild; hPlayerChild = hPlayerChild.NextMovePeer())
 			{
 				MarkForPurge(hPlayerChild);
-
 				local hScriptScope = hPlayerChild.GetScriptScope();
 
 				if (!hScriptScope || !("iItemEffect" in hScriptScope) || hScriptScope.iItemEffect != eItemEffects.iVampire)
@@ -395,10 +408,8 @@ function ItemVampireUse()
 		});
 		MarkForPurge(hParticle);
 		hParticle.AcceptInput("SetParent", "!activator", hPlayer, null);
-
 		hParticle.ValidateScriptScope();
 		hParticle.GetScriptScope().iItemEffect <- eItemEffects.iVampire;
-
 		EntFireByHandle(self, "CallScriptFunction", "ItemVampirePlayerEnd", flDuration, hPlayer, hParticle);
 	}
 }
@@ -446,7 +457,9 @@ function ItemDeathifierHurt()
 
 	local iArmor = NetProps.GetPropInt(activator, "m_ArmorValue");
 	NetProps.SetPropInt(activator, "m_ArmorValue", 0);
+	bForcePlayerDamage = true;
 	activator.TakeDamageEx(caller, caller.GetOwner(), null, Vector(), caller.GetOrigin(), activator.GetHealth(), 0);
+	bForcePlayerDamage = false;
 	NetProps.SetPropInt(activator, "m_ArmorValue", iArmor);
 }
 
@@ -474,7 +487,8 @@ function ItemLaserUse()
 	}
 
 	tTraceInfo.start = vEnd,
-	tTraceInfo.end = Vector(vEnd.x, vEnd.y, vEnd.z - flVerticalRange);
+	tTraceInfo.end = Vector(vEnd.x, vEnd.y, vEnd.z - flVerticalRange),
+	tTraceInfo.mask = tTraceInfo.mask | 2 | 8;
 	TraceLineEx(tTraceInfo);
 
 	if (!tTraceInfo.hit)
@@ -496,7 +510,6 @@ function ItemLaserUse()
 	hTemplate.SetAbsOrigin(tTraceInfo.endpos);
 	hTemplate.SetAbsAngles(QAngle(0, activator.EyeAngles().y));
 	hTemplate.AcceptInput("ForceSpawn", "", null, null);
-
 	caller.AcceptInput("FireUser1", "", null, null);
 }
 
@@ -511,7 +524,9 @@ function ItemLaserHurt()
 
 	local iArmor = NetProps.GetPropInt(activator, "m_ArmorValue");
 	NetProps.SetPropInt(activator, "m_ArmorValue", 0);
+	bForcePlayerDamage = true;
 	activator.TakeDamageEx(caller, null, null, Vector(), caller.GetOrigin(), activator.GetHealth(), 0);
+	bForcePlayerDamage = false;
 	NetProps.SetPropInt(activator, "m_ArmorValue", iArmor);
 }
 
@@ -539,7 +554,8 @@ function ItemWallUse()
 	}
 
 	tTraceInfo.start = vEnd,
-	tTraceInfo.end = Vector(vEnd.x, vEnd.y, vEnd.z - flVerticalRange);
+	tTraceInfo.end = Vector(vEnd.x, vEnd.y, vEnd.z - flVerticalRange),
+	tTraceInfo.mask = tTraceInfo.mask | 2 | 8;
 	TraceLineEx(tTraceInfo);
 
 	if (!tTraceInfo.hit)
@@ -561,7 +577,6 @@ function ItemWallUse()
 	hTemplate.SetAbsOrigin(tTraceInfo.endpos);
 	hTemplate.SetAbsAngles(QAngle(0, activator.EyeAngles().y));
 	hTemplate.AcceptInput("ForceSpawn", "", null, null);
-
 	caller.AcceptInput("FireUser1", "", null, null);
 }
 
@@ -576,7 +591,9 @@ function ItemWallHurt()
 	
 	local iArmor = NetProps.GetPropInt(activator, "m_ArmorValue");
 	NetProps.SetPropInt(activator, "m_ArmorValue", 0);
+	bForcePlayerDamage = true;
 	activator.TakeDamageEx(caller, caller.GetOwner(), null, Vector(), caller.GetOrigin(), activator.GetHealth(), 1);
+	bForcePlayerDamage = false;
 	NetProps.SetPropInt(activator, "m_ArmorValue", iArmor);
 }
 
@@ -590,7 +607,7 @@ function ItemOfficerUse()
 
 	foreach (hPlayer in GetPlayers())
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != eTeams.iHuman)
 			continue;
 
 		iHumanCount++;
@@ -621,8 +638,8 @@ function ItemOfficerUse()
 	{
 		local hPlayer = aPossibleVictims.remove(RandomInt(0, aPossibleVictims.len() - 1));
 
-		MapPrintToChat(hPlayer, "You can't breathe.");
-
+		ResetPlayerChatCooldown(hPlayer);
+		Say(hPlayer, "I can't breathe!", false);
 		hPlayer.AddFlag(128);
 		NetProps.SetPropInt(hPlayer, "m_afButtonDisabled", NetProps.GetPropInt(hPlayer, "m_afButtonDisabled") | 2);
 		NetProps.SetPropInt(hPlayer, "m_afButtonForced", NetProps.GetPropInt(hPlayer, "m_afButtonForced") | 4);
@@ -648,10 +665,8 @@ function ItemOfficerUse()
 		});
 		MarkForPurge(hSprite);
 		hSprite.AcceptInput("SetParent", "!activator", hPlayer, null);
-
 		hSprite.ValidateScriptScope();
 		hSprite.GetScriptScope().iItemEffect <- eItemEffects.iOfficer;
-
 		EntFireByHandle(self, "CallScriptFunction", "ItemOfficerPlayerEnd", flDuration, hPlayer, hSprite);
 	}
 }
@@ -697,7 +712,7 @@ function ItemSmiteUse()
 		return;
 	}
 
-	if (hEntityHit.GetTeam() != 3)
+	if (hEntityHit.GetTeam() != eTeams.iHuman)
 	{
 		MapPrintToChat(activator, "Target was not a human.");
 
@@ -714,23 +729,20 @@ function ItemSmiteUse()
 		return;
 	}
 
-	MapPrintToChat(hEntityHit, "Thou hast been smitten.");
+	const iCharacterDamage = 250;
 
+	MapPrintToChat(hEntityHit, "Thou hast been smitten.");
 	local hTemplate = Entities.FindByName(null, "map1item2extra1zombie1template1");
 	MarkForPurge(hTemplate);
 	hTemplate.SetAbsOrigin(hEntityHit.GetOrigin());
 	hTemplate.AcceptInput("ForceSpawn", "", null, null);
-
-	local iDamage = iHealth;
-
-	if (bVictimHasItem)
-		iDamage--;
-
-	local iArmor = NetProps.GetPropInt(hEntityHit, "m_ArmorValue");
+	local iNewDamage = bVictimHasItem ? PlayerHasCharacterItem(hEntityHit) && iHealth > iCharacterDamage ? iCharacterDamage : iHealth - 1 : iHealth,
+	iArmor = NetProps.GetPropInt(hEntityHit, "m_ArmorValue");
 	NetProps.SetPropInt(hEntityHit, "m_ArmorValue", 0);
-	hEntityHit.TakeDamageEx(hWorldSpawn, activator, null, Vector(0, 0, 1), Vector(), iDamage, 0);
+	bForcePlayerDamage = true;
+	hEntityHit.TakeDamageEx(hWorldSpawn, activator, null, Vector(0, 0, 1), Vector(), iNewDamage, 0);
+	bForcePlayerDamage = false;
 	NetProps.SetPropInt(hEntityHit, "m_ArmorValue", iArmor);
-
 	caller.AcceptInput("FireUser1", "", null, null);
 }
 
@@ -740,7 +752,6 @@ function ItemTeleportUse()
 	const flDuration = 5.0;
 
 	activator.AddFlag(64);
-
 	local vEyeOrigin = activator.EyePosition(),
 	tTraceInfo =
 	{
@@ -753,7 +764,6 @@ function ItemTeleportUse()
 	};
 	TraceHull(tTraceInfo);
 	activator.SetAbsOrigin(tTraceInfo.endpos);
-
 	EntFireByHandle(self, "CallScriptFunction", "ItemTeleportPlayerEnd", flDuration, activator, null);
 }
 
@@ -820,7 +830,6 @@ function ItemSpikeUse()
 		mask = 1 | 16384
 	};
 	TraceLineEx(tTraceInfo);
-
 	local vStart = tTraceInfo.endpos;
 	tTraceInfo.start = vStart,
 	tTraceInfo.end = Vector(vStart.x, vStart.y, NetProps.GetPropVector(hWorldSpawn, "m_WorldMins").z);
@@ -845,7 +854,6 @@ function ItemSpikeUse()
 	hTemplate.SetAbsOrigin(tTraceInfo.endpos);
 	hTemplate.SetAbsAngles(QAngle(0, vEyeAngles.y));
 	hTemplate.AcceptInput("ForceSpawn", "", null, null);
-
 	local hHurt = Entities.FindByName(null, "item5extra1zombie1hurt1&*")
 
 	if (!hHurt.GetOwner())
@@ -866,7 +874,9 @@ function ItemSpikeHurt()
 
 	local iArmor = NetProps.GetPropInt(activator, "m_ArmorValue");
 	NetProps.SetPropInt(activator, "m_ArmorValue", 0);
+	bForcePlayerDamage = true;
 	activator.TakeDamageEx(caller, caller.GetOwner(), null, Vector(), caller.GetOrigin(), iNewDamage, 0);
+	bForcePlayerDamage = false;
 	NetProps.SetPropInt(activator, "m_ArmorValue", iArmor);
 }
 
@@ -896,7 +906,7 @@ function ItemMathUse()
 
 	foreach (hPlayer in aPlayers)
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != eTeams.iHuman)
 			continue;
 
 		bFoundHuman = true;
@@ -915,7 +925,7 @@ function ItemMathUse()
 
 	local hText = SpawnEntityFromTable("game_text",
 	{
-		message = "Get ready for a math question."
+		message = "Get ready for a math question!"
 		channel = 2,
 		x = -1,
 		y = 0.25,
@@ -926,17 +936,15 @@ function ItemMathUse()
 
 	foreach (hPlayer in aPlayers)
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != eTeams.iHuman)
 			continue;
 
 		hText.AcceptInput("Display", "", hPlayer, null);
 	}
 
 	hText.Kill();
-
-	EntFireByHandle(self, "CallScriptFunction", "ItemMathStart", flDelay, null, null);
-
 	caller.AcceptInput("FireUser1", "", null, null);
+	EntFireByHandle(self, "CallScriptFunction", "ItemMathStart", flDelay, null, null);
 }
 
 function ItemMathStart()
@@ -960,17 +968,15 @@ function ItemMathStart()
 
 		else
 		{
-			local bDoubleDigit = !RandomInt(0, 1);
-
-			aContents.push(bDoubleDigit ? RandomInt(1, 9) : RandomInt(1, 99));
+			local bIsOneDoubleDigit = !RandomInt(0, 1);
+			aContents.push(bIsOneDoubleDigit ? RandomInt(2, 9) : RandomInt(2, 99));
 			aContents.push("*");
-			aContents.push(bDoubleDigit ? RandomInt(1, 99) : RandomInt(1, 9));
+			aContents.push(bIsOneDoubleDigit ? RandomInt(2, 99) : RandomInt(2, 9));
 		}
 
 		if (!RandomInt(0, 2))
 		{
 			flQuestionDuration = flLongDuration;
-
 			aContents.push(RandomInt(0, 1) ? "-" : "+");
 			aContents.push(RandomInt(1, 99));
 		}
@@ -983,51 +989,90 @@ function ItemMathStart()
 		aContents.push(10);
 	}
 
-	local iContentCount = aContents.len();
-
-	if (iContentCount == 3 && aContents[0] == 9 && aContents[1] == "+" && aContents[2] == 10)
+	if (aContents.len() == 3 && aContents[0] == 9 && aContents[1] == "+" && aContents[2] == 10)
 		iMathAnswer = 21;
 
 	else
-		for (local iContentNumberIndex = 0, iContentNumberCount = (iContentCount + 1) / 2; iContentNumberIndex < iContentNumberCount; iContentNumberIndex++)
+		foreach (iContentIndex, Content in aContents)
 		{
-			if (!iContentNumberIndex)
+			if (!iContentIndex)
 			{
-				iMathAnswer = aContents[0];
+				iMathAnswer = Content;
 
 				continue;
 			}
 
-			local iContentIndex = iContentNumberIndex * 2;
+			if (iContentIndex % 2)
+				continue;
 
 			switch (aContents[iContentIndex - 1])
 			{
 				case "-":
 
-				iMathAnswer -= aContents[iContentIndex];
+				iMathAnswer -= Content;
 
 				break;
 
 				case "+":
 
-				iMathAnswer += aContents[iContentIndex];
+				iMathAnswer += Content;
 
 				break;
 
 				case "*":
 
-				iMathAnswer *= aContents[iContentIndex];
+				iMathAnswer *= Content;
 			}
 		}
 
 	foreach (hPlayer in GetPlayers())
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != eTeams.iHuman)
 			continue;
 
-		MapPrintToChat(hPlayer, "You have " + HighlightChat(flQuestionDuration) + " seconds to answer.");
+		MapPrintToChat(hPlayer, "You have " + HighlightChat(flQuestionDuration) + " seconds to answer the math question.");
 
 		ResetPlayerChatCooldown(hPlayer);
+	}
+
+	if (bIsMathRoman)
+	{
+		foreach (iContentIndex, Content in aContents)
+		{
+			if (iContentIndex % 2)
+				continue;
+
+			local aRomanNumbers =
+			[
+				[1, "I"],
+				[4, "IV"],
+				[5, "V"],
+				[9, "IX"],
+				[10, "X"],
+				[40, "XL"],
+				[50, "L"],
+				[90, "XC"],
+				[100, "C"],
+				[400, "CD"],
+				[500, "D"],
+				[900, "CM"]
+			];
+
+			local strNumber = "";
+
+			for (local iNumberIndex = aRomanNumbers.len() - 1; Content; iNumberIndex--)
+			{
+				local iRomanNumber = aRomanNumbers[iNumberIndex],
+				iRomanNormalNumber = iRomanNumber[0];
+
+				for (local iDivision = Content / iRomanNormalNumber; iDivision; iDivision--)
+					strNumber += iRomanNumber[1];
+
+				Content %= iRomanNormalNumber;
+			}
+
+			aContents[iContentIndex] = strNumber;
+		}
 	}
 
 	local strText = "";
@@ -1036,7 +1081,6 @@ function ItemMathStart()
 		strText += Content + " ";
 
 	strText += "= ?";
-
 	local hText = SpawnEntityFromTable("game_text",
 	{
 		message = strText,
@@ -1050,7 +1094,6 @@ function ItemMathStart()
 	MarkForPurge(hText);
 	hText.AcceptInput("Display", "", null, null);
 	hText.Kill();
-
 	EntFireByHandle(self, "CallScriptFunction", "ItemMathEnd", flQuestionDuration, null, null);
 }
 
@@ -1060,14 +1103,16 @@ function ItemMathEnd()
 
 	foreach (hPlayer in GetPlayers())
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != 3 || aMathAnswerPlayers.find(hPlayer) != null)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() != eTeams.iHuman || aMathAnswerPlayers.find(hPlayer) != null)
 			continue;
 
-		MapPrintToChat(hPlayer, "You did not answer the question in time.");
+		MapPrintToChat(hPlayer, "You did not answer the math question in time.");
 
-		const iDamage = 100;
+		const iNormalDamage = 75;
+		const iRomanDamage = 50;
 
-		local iHealth = hPlayer.GetHealth(),
+		local iDamage = bIsMathRoman ? iRomanDamage : iNormalDamage,
+		iHealth = hPlayer.GetHealth(),
 		iNewDamage = PlayerHasItem(hPlayer) && iHealth <= iDamage ? iHealth - 1 : iDamage;
 
 		if (!iNewDamage)
@@ -1075,12 +1120,13 @@ function ItemMathEnd()
 
 		local iArmor = NetProps.GetPropInt(hPlayer, "m_ArmorValue");
 		NetProps.SetPropInt(hPlayer, "m_ArmorValue", 0);
+		bForcePlayerDamage = true;
 		hPlayer.TakeDamageEx(hWorldSpawn, hMathPlayer, null, Vector(0, 0, 1), Vector(), iNewDamage, 0);
+		bForcePlayerDamage = false;
 		NetProps.SetPropInt(hPlayer, "m_ArmorValue", iArmor);
 	}
 
 	MapPrintToChatAll("The answer was " + HighlightChat(iMathAnswer) + ".");
-
 	hMathPlayer = null,
 	iMathAnswer = 0;
 	aMathAnswerPlayers.clear();
@@ -1102,6 +1148,32 @@ function ItemMathEnd()
 	return false;
 }
 
+function PlayerHasCharacterItem(hPlayer)
+{
+	for (local iWeaponIndex = 0; iWeaponIndex < iMaxWeaponCount; iWeaponIndex++)
+	{
+		local hWeapon = NetProps.GetPropEntityArray(hPlayer, "m_hMyWeapons", iWeaponIndex);
+		MarkForPurge(hWeapon);
+
+		if (!hWeapon || !startswith(hWeapon.GetClassname(), "weapon_"))
+			continue;
+
+		for (local hWeaponChild = hWeapon.FirstMoveChild(); hWeaponChild; hWeaponChild = hWeaponChild.NextMovePeer())
+		{
+			MarkForPurge(hWeaponChild);
+
+			if (hWeaponChild.GetClassname() != "func_breakable")
+				continue;
+
+			return true;
+		}
+
+		break;
+	}
+
+	return false;
+}
+
 function CheckStuck()
 {
 	if (!IsPlayerStuck(activator))
@@ -1115,7 +1187,7 @@ function TeleportPlayerToSafety(hPlayer)
 	local hDestination,
 	qaAngles = QAngle();
 
-	if (hPlayer.GetTeam() == 2)
+	if (hPlayer.GetTeam() == eTeams.iZombie)
 		hDestination = Entities.FindByName(null, strSpawnDestination),
 		qaAngles = hDestination.GetAbsAngles();
 
@@ -1125,7 +1197,7 @@ function TeleportPlayerToSafety(hPlayer)
 
 		foreach (hLocalPlayer in GetPlayers())
 		{
-			if (hLocalPlayer == hPlayer || !hLocalPlayer.IsAlive() || hLocalPlayer.GetTeam() != 3 || IsPlayerStuck(hLocalPlayer))
+			if (hLocalPlayer == hPlayer || !hLocalPlayer.IsAlive() || hLocalPlayer.GetTeam() != eTeams.iHuman || IsPlayerStuck(hLocalPlayer))
 				continue;
 
 			aFreeHumans.push(hLocalPlayer);
@@ -1169,7 +1241,7 @@ function ShouldPreventNonHumanKill()
 
 	foreach (hPlayer in GetPlayers())
 	{
-		if (!hPlayer.IsAlive() || hPlayer.GetTeam() == 3)
+		if (!hPlayer.IsAlive() || hPlayer.GetTeam() == eTeams.iHuman)
 			continue;
 
 		if (bFoundNonHuman)
