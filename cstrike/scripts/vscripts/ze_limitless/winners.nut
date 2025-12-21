@@ -4,17 +4,17 @@
 // POWERS:
 
 // ct:
-// poison ball: the slow and the number of balls increase according the level of the player's item, totalDuration = 5.0 + (0.1 * level); 
+// poison ball: the slow and the number of balls increase according the level of the player's item, totalDuration = 5.0 + (0.1 * level);
 //local count = 1; (level = 0)
 //(level >= 40) count = 6;
 // lifesteal: if (level >= 10) infinite ammo if (level >= 30): immunity against zombies + damage attack money back: local multiplier = 2.0 + (level.tofloat() / 50.0) * (4.5 - 2.0);
-//push explosion: not winner: 2.5s // duration of the push increase level after level. local delay = 2.0 + 0.25 * level; 
+//push explosion: not winner: 2.5s // duration of the push increase level after level. local delay = 2.0 + 0.25 * level;
 // speed: extra speed duration, local duration = 2.0 + 0.16 * level;
 
 // zms:
 // poison ball: the slow and the number of balls increase according the level of the player's item
 // chat commands: damage increase level after level: baseDmg = 25.0; maxDmg = 200.0; totalDmg = baseDmg + ((maxDmg - baseDmg) / 50.0) * level;
-// invisibility: the time increase level after level, duration = 1.0 + (5.0 / 50.0) * level; 
+// invisibility: the time increase level after level, duration = 1.0 + (5.0 / 50.0) * level;
 // weapons killer: base: 1 weapon max: 6 weapons, removeCount = 1 + (level / 10).tointeger();
 // speed: speed: extra speed duration, local duration = 2.0 + 0.16 * level;
 
@@ -27,14 +27,14 @@ if (!("initialWinners" in getroottable())) {
 // MAX LEVEL IS 50 — CHANGE THE NUMBER AFTER THE STEAM ID TO INCREASE A PLAYER'S LEVEL
 // NOTE: IN-GAME, LEVELS CAN'T GO BEYOND THIS VALUE — IF A PLAYER STARTS AT LEVEL 25, THEY CAN'T DROP BELOW LEVEL 25
         "[U:1:48610849]" : 21       //  Lardy (yeah and fuck you it's my map xD)
-        "[U:1:43640319]"  : 20,     //  Batata 
-        "[U:1:160817921]" : 16,     //  Vndrew 
-        "[U:1:1067775748]": 16      //  Deepn      
+        "[U:1:43640319]"  : 20,     //  Batata
+        "[U:1:160817921]" : 16,     //  Vndrew
+        "[U:1:1067775748]": 16      //  Deepn
         "[U:1:229892849]" : 12,     //  Warrior
-        "[U:1:418960528]" : 12,     //  Fius 
+        "[U:1:418960528]" : 12,     //  Fius
         "[U:1:53708791]" : 12,      //  Hobbitten
         "[U:1:229842349]" : 12,     //  Koen
-        "[U:1:461991323]" : 12,     //  Rognus 
+        "[U:1:461991323]" : 12,     //  Rognus
         "[U:1:39005920]"  : 12,     //  Moltard
         "[U:1:1605719263]": 12,     //  Rushaway
         "[U:1:1255147342]": 12,     //  Pearl
@@ -126,7 +126,7 @@ if (::winners.len() == 0) {
             ::winnerChecked[p] <- true;
 
             if (::IsWinner(p)) {
-               
+
             }
         }
     }
