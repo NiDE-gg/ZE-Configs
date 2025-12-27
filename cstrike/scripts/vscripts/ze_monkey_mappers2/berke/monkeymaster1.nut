@@ -30,7 +30,6 @@ hProp <-
 hCase <- null,
 iSpawnMaxHealth <- 0,
 flLastTextTime <- -1.0,
-iLastButtons <- 0,
 iAnimationStatus <- 1,
 bIsForcedAnimationPlaying <-
 bIsForcedLoopedAnimationPlaying <- false,
@@ -84,7 +83,7 @@ function OnPickup()
 
 function OnTakeDamage(tData)
 {
-	if (!self.IsValid())
+	if (!self.IsValid() || bForcePlayerDamage)
 		return;
 
 	local hVictim = tData.const_entity,
@@ -116,7 +115,7 @@ function OnGameFrame()
 	{
 		OnDeath();
 
-		return;
+		return 0;
 	}
 
 	local iPlayerHealth = hPlayer.GetHealth();
@@ -129,7 +128,7 @@ function OnGameFrame()
 	local iButtons = NetProps.GetPropInt(hPlayer, "m_afButtonPressed"),
 	bUpdateText = false;
 
-	if (iButtons & 2048 && !(iLastButtons & 2048))
+	if (iButtons & 2048)
 	{
 		if (iAbilityNumber < iAbilityCount - 1)
 			iAbilityNumber++;
@@ -140,7 +139,7 @@ function OnGameFrame()
 		bUpdateText = true;
 	}
 
-	if (iButtons & 32 && !(iLastButtons & 32))
+	if (iButtons & 32)
 		if (aCooldownAbilities.find(iAbilityNumber) != null)
 			MapPrintToChat(hPlayer, HighlightChat(aAbilities[iAbilityNumber]) + " ability is on cooldown.");
 
@@ -231,8 +230,6 @@ function OnGameFrame()
 				EntFireByHandle(self, "RunScriptCode", "RemoveAbilityFromCoolDown(" + iAbilityNumber + (bShouldInform ? "" : ", false") + ")", flCooldown, null, null);
 			}
 		}
-
-	iLastButtons = iButtons;
 
 	if (bUpdateText || flLastTextTime == -1 || flLastTextTime + flTextDuration <=  Time())
 		DisplayAbilities();
@@ -392,7 +389,9 @@ function OnSlashPlayer()
 
 	const iDamage = 500;
 
+	bForcePlayerDamage = true;
 	activator.TakeDamageEx(caller, hPlayer, null, Vector(), hPlayer.GetOrigin(), iDamage, 0);
+	bForcePlayerDamage = false;
 }
 
 function OnDamaged()

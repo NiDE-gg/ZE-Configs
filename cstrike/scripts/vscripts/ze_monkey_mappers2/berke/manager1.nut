@@ -131,7 +131,7 @@ function OnTakeDamage(tData)
 		return;
 
 	const flDamageMultiplier = 5.0;
-	const flHealDivider = 10.0;
+	const flHealDivider = 5.0;
 
 	local iHealth = hAttacker.GetHealth(),
 	iMaxHealth = hAttacker.GetMaxHealth(),
@@ -188,6 +188,11 @@ function OnPlayerChat(tData)
 
 	MapPrintToChat(hPlayer, "You have answered the math question correctly!");
 	aMathAnswerPlayers.push(hPlayer);
+
+	if (iMathAnswer != 67)
+		return;
+
+	hPlayer.AcceptInput("SetHealth", "67", null, null);
 }
 
 function OnPlayerDeath(tData)
@@ -363,12 +368,19 @@ function StartEnding(bIsTrollAllowed = false)
 {
 	bIsEnding = true,
 	bIsEndingTrollAllowed = bIsTrollAllowed;
+
+	if (bIsTrollAllowed)
+		MapPrintToChatAll("An ending has started, disabled all but heal, character and troll items.");
+
+	else
+		MapPrintToChatAll("An ending has started, disabled all but heal and character items.");
 }
 
 function StopEnding()
 {
 	bIsEnding =
 	bIsEndingTrollAllowed = false;
+	MapPrintToChatAll("An ending has ended, all items are enabled.");
 }
 
 function ItemVampireUse()
@@ -638,7 +650,6 @@ function ItemOfficerUse()
 	{
 		local hPlayer = aPossibleVictims.remove(RandomInt(0, aPossibleVictims.len() - 1));
 
-		ResetPlayerChatCooldown(hPlayer);
 		Say(hPlayer, "I can't breathe!", false);
 		hPlayer.AddFlag(128);
 		NetProps.SetPropInt(hPlayer, "m_afButtonDisabled", NetProps.GetPropInt(hPlayer, "m_afButtonDisabled") | 2);
@@ -949,15 +960,23 @@ function ItemMathUse()
 
 function ItemMathStart()
 {
-	const flDuration = 15.0;
-	const flLongDuration = 35.0;
+	const flDuration = 20.0;
+	const flLongDuration = 30.0;
+	const flRomanExtraDuration = 10.0;
 	const iRiggedQuestionChance = 25;
 
 	iMathState = eMathStates.iActive;
 	local aContents = array(0),
 	flQuestionDuration = flDuration;
 
-	if (RandomInt(0, iRiggedQuestionChance - 1))
+	if (!RandomInt(0, iRiggedQuestionChance - 1))
+	{
+		aContents.push(9);
+		aContents.push("+");
+		aContents.push(10);
+	}
+
+	else
 	{
 		if (RandomInt(0, 1))
 		{
@@ -982,12 +1001,8 @@ function ItemMathStart()
 		}
 	}
 
-	else
-	{
-		aContents.push(9);
-		aContents.push("+");
-		aContents.push(10);
-	}
+	if (bIsMathRoman)
+		flQuestionDuration += flRomanExtraDuration;
 
 	if (aContents.len() == 3 && aContents[0] == 9 && aContents[1] == "+" && aContents[2] == 10)
 		iMathAnswer = 21;
@@ -1051,11 +1066,7 @@ function ItemMathStart()
 				[10, "X"],
 				[40, "XL"],
 				[50, "L"],
-				[90, "XC"],
-				[100, "C"],
-				[400, "CD"],
-				[500, "D"],
-				[900, "CM"]
+				[90, "XC"]
 			];
 
 			local strNumber = "";
@@ -1108,8 +1119,8 @@ function ItemMathEnd()
 
 		MapPrintToChat(hPlayer, "You did not answer the math question in time.");
 
-		const iNormalDamage = 75;
-		const iRomanDamage = 50;
+		const iNormalDamage = 50;
+		const iRomanDamage = 35;
 
 		local iDamage = bIsMathRoman ? iRomanDamage : iNormalDamage,
 		iHealth = hPlayer.GetHealth(),
