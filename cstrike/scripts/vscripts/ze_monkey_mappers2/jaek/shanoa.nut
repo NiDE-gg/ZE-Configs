@@ -304,7 +304,7 @@ function Tick(){
 }
 
 // health per player
-boss_health <- 1000;
+boss_health <- 500;
 boss_maxhealth <- 0;
 boss_currenthealth <- 0;
 
