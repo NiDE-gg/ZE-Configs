@@ -220,7 +220,7 @@ function OnPlayerDeath(tData)
 		return;
 	}
 
-	local iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayers);
+	local iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayer);
 
 	if (iMathAnswerPlayerIndex != null)
 		aMathAnswerPlayers.remove(iMathAnswerPlayerIndex);
@@ -246,13 +246,13 @@ function OnPlayerDeath(tData)
 
 function OnPlayerDisconnect(tData)
 {
-	local hPlayers = GetPlayerFromUserID(tData.userid),
-	iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayers);
+	local hPlayer = GetPlayerFromUserID(tData.userid),
+	iMathAnswerPlayerIndex = aMathAnswerPlayers.find(hPlayer);
 
 	if (iMathAnswerPlayerIndex != null)
 		aMathAnswerPlayers.remove(iMathAnswerPlayerIndex);
 
-	if (hMathPlayer != hPlayers)
+	if (hMathPlayer != hPlayer)
 		return;
 
 	hMathPlayer = null;
@@ -1137,7 +1137,7 @@ function ItemMathEnd()
 		NetProps.SetPropInt(hPlayer, "m_ArmorValue", iArmor);
 	}
 
-	MapPrintToChatAll("The answer was " + HighlightChat(iMathAnswer) + ".");
+	MapPrintToChatAll("Math question's answer was " + HighlightChat(iMathAnswer) + ".");
 	hMathPlayer = null,
 	iMathAnswer = 0;
 	aMathAnswerPlayers.clear();
@@ -1246,7 +1246,7 @@ function IsPlayerStuck(hPlayer)
 	return tTraceInfo.hit;
 }
 
-function ShouldPreventNonHumanKill()
+::ShouldPreventNonHumanKill <- function()
 {
 	local bFoundNonHuman = false;
 

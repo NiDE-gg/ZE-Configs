@@ -23,7 +23,7 @@ target <- null
 target_cooldown <- 7
 target_cooldown_left <- 0
 
-hp_per_human <- 2400
+hp_per_human <- 4800
 
 archer_origin <- []
 
@@ -31,7 +31,7 @@ ticking <- true
 
 archers_alive <- 0
 
-ability_cd <- 8
+ability_cd <- 3
 ability_cd_left <- ability_cd
 
 moving <- true
@@ -189,6 +189,20 @@ function ArcherSpam() {
 	ClientPrint(null, 3, "\x03MONKEY BOSS: \x01ARCHERS, ARISE, SHOOT THESE MONKEY PLAYERS")
 }
 
+function PlaneSpam() {
+	foreach (origin in archer_origin) 
+		SpawnTemplate("s_npc_plane", origin)
+
+	EmitSoundEx({
+		sound_name = archer_spam_snd
+		filter_type = 5
+		channel = 0
+		entity = self
+	})
+
+	ClientPrint(null, 3, "\x03MONKEY BOSS: \x01PLANES PLANES PLANES!")
+}
+
 function GhostSpam() {
 	for (local i = 1; i <= 2; i++)	
 		SpawnTemplate("s_npc_monkey_ghost", self.GetOrigin())
@@ -300,6 +314,10 @@ function CastAbility() {
 
 			hurt.AcceptInput("SetDamage", "50", null, null)
 
+			break
+		}
+		case 4: {
+			PlaneSpam()
 			break
 		}
 	}
@@ -431,7 +449,7 @@ function Tick() {
 		DisplayHealth()
 	}
 	else if (dead) {
-		dead_scale -= 0.2
+		dead_scale -= 0.5
 
 		self.SetAbsAngles(self.GetAbsAngles() + QAngle(0, 15 * 0.01, 0)) 
 
