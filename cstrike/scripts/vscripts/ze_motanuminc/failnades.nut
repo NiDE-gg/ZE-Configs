@@ -1,3 +1,6 @@
+// File made by .Rushaway
+// Thanks to ficool2 for review
+
 ::g_flLastGrenadeFailTime <- 0.0;
 ::g_bFailGrenadesEnabled <- false;
 
@@ -29,7 +32,7 @@ function OnTakeDamage(tData)
 
 	local flDamageDiff = flFinalDamage - flInitialDamage;
 	if (flDamageDiff > 0.0)
-		hVictim.AcceptInput("SetHealth", (hVictim.GetHealth() + flDamageDiff).tostring(), null, null);
+		hVictim.SetHealth(hVictim.GetHealth() + flDamageDiff);
 
 	tData.damage = flFinalDamage;
 }
