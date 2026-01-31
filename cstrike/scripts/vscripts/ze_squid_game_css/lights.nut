@@ -1,9 +1,10 @@
 //=========================================================
 // VScript ze_squid_game_css1 based on ze_squidzer
 // Author: .Rushaway
-// Version: 1.0.2 (Optimized Mouse & Movement Detection)
+// Version: 1.0.3 (Optimized Mouse & Movement Detection)
 //=========================================================
 
+const IN_ATTACK = 1
 const IN_JUMP = 2
 const IN_DUCK = 4
 const IN_FORWARD = 8
@@ -54,7 +55,7 @@ if(!("squidGameEventsArray" in this))
         return -1;
 
     local buttons = NetProps.GetPropInt(self, "m_nButtons");
-    if (buttons & (IN_JUMP | IN_DUCK | IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_WALK)) {
+    if (buttons & (IN_ATTACK | IN_JUMP | IN_DUCK | IN_FORWARD | IN_BACK | IN_MOVELEFT | IN_MOVERIGHT | IN_WALK)) {
         ::KillPlayer(self);
         return -1;
     }
