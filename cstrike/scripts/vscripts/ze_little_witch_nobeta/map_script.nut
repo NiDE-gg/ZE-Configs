@@ -639,6 +639,8 @@ function Stage2_Cleanup() {
 
 function HandleStage() {
 	printl("Handling Stage System.")
+	printl("Setting Playermodels to everyone")
+	SetNobetaModel()
 
 	switch(CURRENT_STAGE) {
 		case Stage.Warmup: {
@@ -721,18 +723,22 @@ function WinStage1() {
 			EntFireByHandle(_self, "RunScriptCode", "SetCurrentTrack(act2_music, true)", 3, null, null)
 			EntFire("act01_win_teleport_act02", "Enable", null, 3, null)
 			EntFire("act01_lost_teleport_act02", "Enable", null, 10.05 null)
-
-			for (local i = 1; i <= MaxPlayers; i++) {
-				local player = PlayerInstanceFromIndex(i)
-				if (player == null && player.GetTeam() != TEAM_HUMANS) continue
-				player.SetHealth(100)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 10)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 15)
+			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 15)
+			
+			// nah fuck that idc if people die, atleast game still goes on.
+			try {
+				for (local i = 1; i <= MaxPlayers; i++) {
+					local player = PlayerInstanceFromIndex(i)
+					if (player == null) continue
+					if (player.GetTeam() != TEAM_HUMANS || !player.IsValid()) continue
+					player.SetHealth(100)
+				}
 			}
+			catch(e) {
 
-			Delay(thread, 10)
-			SetLateTeleport("act02_spawn_teleport_act01")
-			Delay(thread, 5)
-			SetLateTeleport("act02_spawn_teleport")
-			_this.Stage1_Cleanup()
+			}
 		}
 		else {
 			CURRENT_STAGE = Stage.Act2
@@ -743,18 +749,22 @@ function WinStage1() {
 			EntFireByHandle(_self, "RunScriptCode", "SetCurrentTrack(act2_music, true)", 3, null, null)
 			EntFire("act01_win_teleport_act02", "Enable", null, 3, null)
 			EntFire("act01_lost_teleport_act02", "Enable", null, 10.05 null)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 10)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 15)
+			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 15)
 
-			for (local i = 1; i <= MaxPlayers; i++) {
-				local player = PlayerInstanceFromIndex(i)
-				if (player == null && player.GetTeam() != TEAM_HUMANS) continue
-				player.SetHealth(100)
+			// nah fuck that idc if people die, atleast game still goes on.
+			try {
+				for (local i = 1; i <= MaxPlayers; i++) {
+					local player = PlayerInstanceFromIndex(i)
+					if (player == null) continue
+					if (player.GetTeam() != TEAM_HUMANS || !player.IsValid()) continue
+					player.SetHealth(100)
+				}
 			}
+			catch(e) {
 
-			Delay(thread, 10)
-			SetLateTeleport("act02_spawn_teleport_act01")
-			Delay(thread, 5)
-			SetLateTeleport("act02_spawn_teleport")
-			_this.Stage1_Cleanup()
+			}
 		}
 	}, this, self)
 }
@@ -796,20 +806,14 @@ function SkipWarmup() {
 	}
 }
 
-// THis is some level of spaghetti i have never seen.
-// Im fixing this on Beta 1, maybe.
-MakePermanent("player_setmodels", [])
-// function SetNobetaModel() {
-// 	foreach (player in player_setmodels) {
-// 		NewThread(function(thread, _this, _self, args){
-// 			Delay(thread, 1)
-// 			if (args.p.GetTeam() == TEAM_HUMANS)
-// 				args.p.SetModelSimple("models/littlewitchnobeta/nobeta.mdl")
-// 		}, this, self, { p = player })
-// 	}
-
-// 	player_setmodels.clear()
-// }
+function SetNobetaModel() {
+	for (local i = 1; i <= MaxPlayers; i++) {
+		local player = PlayerInstanceFromIndex(i)
+		if (player == null) continue
+		if (player.GetTeam() != TEAM_HUMANS || !player.IsValid()) continue
+		player.SetModelSimple("models/littlewitchnobeta/nobeta.mdl")
+	}
+}
 
 // --------------------------------------------
 // Dev related stuff / functions / Game Events
@@ -826,10 +830,8 @@ MakePermanent("player_setmodels", [])
 // Experimental Shi
 local PlayerSpawnEvent = function(params) {
 	local player = GetPlayerFromUserID(params.userid)
-	if (!MapScriptSpawned) {
-		// Handle Playermodel Here!
-		player_setmodels.push(player)
-	}
+
+	if (player.IsFakeClient()) return
 
 	// Handle Bots XD
 	if (IsPlayerABot(player)) {
@@ -861,12 +863,6 @@ local PlayerSpawnEvent = function(params) {
 	}
 	
 	EntFireByHandle(player, "SetFogController", current_fog, 0.00, null, null)
-
-	// Yea no we are not running this. Just run on round start only.
-	// Set CTs playermodel to Nobeta
-	// if (player.GetTeam() == TEAM_HUMANS) {
-	// 	RunWithDelay(@() player.SetModelSimple("models/littlewitchnobeta/nobeta.mdl"), 0.5)
-	// }
 }
 
 // All events go here.
@@ -886,7 +882,6 @@ CollectEventsInScope({
 
 	// This runs last on round end.
 	OnGameEvent_round_end = function(params) {
-		player_setmodels = []
 		local winner = params.winner
 
 		if (winner == TEAM_ZOMBIES && EXTREME_MODE) {
@@ -904,8 +899,20 @@ CollectEventsInScope({
 	// -------------------------
 	// -- Player Spawn Events --
 	// -------------------------
+	// !! What the fuck is this shit !!
 	OnGameEvent_player_spawn = function(params) PlayerSpawnEvent(params)
 
+	// -----------------------------
+	// -- Player Disconnect Event --
+	// -----------------------------
+	OnGameEvent_player_disconnect = function(params){
+		local player = GetPlayerFromUserID(params.userid)
+
+		if (player in zombie_corridor_buffs) RunWithDelay(@() delete zombie_corridor_buffs[player], 0.5)
+		if (player in player_speed_modified) RunWithDelay(@() delete player_speed_modified[player], 0.5)
+		if (player in player_buffs) RunWithDelay(@() delete player_buffs[player], 0.5)
+	}
+	
 	// -------------------------
 	// -- Player Death Events --
 	// -------------------------
@@ -966,7 +973,10 @@ CollectEventsInScope({
 	OnScriptHook_OnTakeDamage = function(damage_table) {
 		local entity = damage_table.const_entity
 		local entity_script = entity.GetScriptScope()
+		local weapon = GetCurrentWeapon(damage_table.attacker)
 		
+		if (weapon != null) weapon = weapon.GetClassname()
+
 		// Intercept any entities with special ontakedamage functions
 		// They take in the damage table, they return false or null if no modifcations needed
 		// They return the new modified damage table if they modified something.
@@ -1003,16 +1013,19 @@ CollectEventsInScope({
 		}
 
 		// Handle Defense Crystal Shit Here
+		// TODO: Fix infection logic, somehow hitting a human with an item while defended can infect them.
 		if (entity in player_buffs) {
 			try {
-				if (entity.IsPlayer() && damage_table.attacker != null && !(damage_table.damage_type & DMG_AIRBOAT) && 
+				if ((weapon == "weapon_knife" || weapon == "zombie_claws_of_death" || weapon == "zombie_claws_of_doom") && // Surely this will not glitch
+					entity.IsPlayer() && damage_table.attacker != null &&
 					entity.GetTeam() == TEAM_HUMANS && damage_table.attacker.GetTeam() == TEAM_ZOMBIES && entity.GetHealth() > 30) {
+
 					local attacker = damage_table.attacker
 					damage_table.damage = 0
 					damage_table.early_out = true
 					damage_table.attacker = null
 
-					entity.TakeDamage(50, DMG_AIRBOAT, attacker)
+					entity.TakeDamageEx(world_spawn, world_spawn, null, Vector(), Vector(), 50, DMG_AIRBOAT) // Surely this fixes things right????????
 				}
 			}
 			catch (e) {
