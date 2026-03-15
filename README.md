@@ -118,7 +118,7 @@ Mode | Description
 
 #### Entwatch Colors
 
-Below is a quick list of colors, but here is a [Full List of color codes](https://github.com/srcdslab/sm-plugin-MultiColors/blob/master/addons/sourcemod/scripting/include/multicolors.inc#L870-#L1045) that can be used.
+Below is a quick list of colors, but here is a [Full List of color codes](https://github.com/srcdslab/sm-plugin-MultiColors/blob/master/addons/sourcemod/scripting/include/multicolors/morecolors.inc#L840-L1012) that can be used.
 
 - {red}
 - {darkred}
