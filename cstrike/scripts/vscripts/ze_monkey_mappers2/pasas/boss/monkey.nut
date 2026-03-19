@@ -23,7 +23,7 @@ target <- null
 target_cooldown <- 7
 target_cooldown_left <- 0
 
-hp_per_human <- 4800
+hp_per_human <- 8800
 
 archer_origin <- []
 
