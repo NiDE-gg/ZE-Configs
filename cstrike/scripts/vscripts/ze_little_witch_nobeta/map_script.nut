@@ -831,8 +831,6 @@ function SetNobetaModel() {
 local PlayerSpawnEvent = function(params) {
 	local player = GetPlayerFromUserID(params.userid)
 
-	if (player.IsFakeClient()) return
-
 	// Handle Bots XD
 	if (IsPlayerABot(player)) {
 		player.ValidateScriptScope()
