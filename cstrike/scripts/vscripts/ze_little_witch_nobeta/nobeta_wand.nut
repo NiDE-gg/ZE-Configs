@@ -113,14 +113,14 @@ MakePermanent("ice_level", 0) // 0 means not acquired yet.
 
 ice_shot_dmg <- 25
 ice_shot_cost <- 2
-ice_charged_dmg <- 1875 // split between multiple projectiles.
+ice_charged_dmg <- 2250 // split between multiple projectiles.
 ice_charged_shot_cost <- 100
 ice_charged_shot_projectiles <- 75
 ice_target_range <- 2048
 ice_target_max <- 6
 ice_charged_targets <- {}
 ice_charge_length <- 5
-ice_charge_cost <- 40
+ice_charge_cost <- 35
 ice_target_angle_threshold <- 0.98 
 
 // -- Initializers --
@@ -516,8 +516,11 @@ function StopCharging() {
 
 	// Reset ice targets
 	// Kill all the current sprites first.
-	foreach(sprite in ice_charged_targets)
+	foreach(sprite in ice_charged_targets) {
+		if (sprite == null || !sprite.IsValid()) continue
+
 		sprite.Kill()
+	}
 	
 	ice_charged_targets = {}
 	
@@ -666,6 +669,7 @@ function ShootArcane() {
 	}
 
 	projectile_script.DestroyProjectile <- function () {
+		if (!self.IsValid()) return
 		EmitSoundEx({
 			sound_name = "nobeta_snd/nobeta_wand_arcane_collision.mp3"
 			channel = 0
@@ -674,7 +678,7 @@ function ShootArcane() {
 		})
 
 		DispatchParticleEffect("nobeta_arcane_collision", self.GetOrigin(), self.GetAbsAngles().Forward())
-		if (self.IsValid()) self.Destroy()
+		self.Destroy()
 	}
 
 	projectile_script.ProjectileThink <- function() {
@@ -783,6 +787,7 @@ function ShootArcaneCharged() {
 	projectile_script.hit_players <- {}
 
 	projectile_script.DestroyProjectile <- function() {
+		if (!self.IsValid()) return 
 		EmitSoundEx({
 			sound_name = "nobeta_snd/nobeta_wand_arcane_charge_collision.mp3"
 			channel = 0
@@ -792,19 +797,19 @@ function ShootArcaneCharged() {
 
 		DispatchParticleEffect("nobeta_arcane_charged_collision", self.GetOrigin(), self.GetAbsAngles().Forward())
 		
-		if (self.IsValid()) self.Destroy()
+		self.Destroy()
 	}
 
 	projectile_script.HitPlayer <- function(ent) {
 		if (!(ent in hit_players) && ent.GetTeam() == TEAM_ZOMBIES) {
+			if (!self.IsValid()) return
 			ent.TakeDamageEx(base_script_entity, base_script.item_holder, base_script_entity, Vector(0, 0, 0), ent.GetOrigin(), damage, 0)
-			if (!self.IsValid())
-				EmitSoundEx({
-					sound_name = "nobeta_snd/nobeta_wand_arcane_charge_collision.mp3"
-					channel = 0
-					sound_level = 100
-					origin = self.GetOrigin()
-				})
+			EmitSoundEx({
+				sound_name = "nobeta_snd/nobeta_wand_arcane_charge_collision.mp3"
+				channel = 0
+				sound_level = 100
+				origin = self.GetOrigin()
+			})
 				
 			DispatchParticleEffect("nobeta_arcane_charged_collision", self.GetOrigin(), self.GetAbsAngles().Forward())
 			SetPlayerSpeed(ent, 0.75, 3)
@@ -931,6 +936,7 @@ function ShootIce() {
 	}
 
 	projectile_script.DestroyProjectile <- function () {
+		if (!self.IsValid()) return
 		EmitSoundEx({
 			sound_name = ice_collision_snd[RandomInt(0, ice_collision_snd.len() - 1)]
 			channel = 0
@@ -939,7 +945,7 @@ function ShootIce() {
 		})
 
 		DispatchParticleEffect("nobeta_ice_collision", self.GetOrigin(), self.GetAbsAngles().Forward())
-		if (self.IsValid()) self.Destroy()
+		self.Destroy()
 	}
 
 	projectile_script.ProjectileThink <- function() {
@@ -1155,6 +1161,31 @@ function ParseSpellName(spell) {
 			return "Arcane"
 		case NobetaSpells.Ice:
 			return "Ice"
+	}
+}
+
+function PrintTutorial(tut_type) {
+	switch(tut_type) {
+		// Shooting Pillars - Act 1
+		case 0: {
+			ClientPrint(base_script.item_holder, 3, "\x07b6f702[Tutorial]\x0702f702\n> Equip your pistol to be able to use the item! It is not a traditional item.\n> <L.Click> to Shoot\n> Aim for the pillar that is covered by the magic wall!\n> You can also press <R> to Charge your Wand!")
+			break
+		}
+		// First Fire Pillar - Act 2
+		case 1: {
+			ClientPrint(base_script.item_holder, 3, "\x07b6f702[Tutorial]\x0702f702\n> Hold <E> to start selecting spells\n> Press <L.CLick>/<R.Click> to cycle through spells\n> Let go of <E> to confirm selection\n> The fire pillar behind the magic wall needs <Ice> to be destroyed.")
+			break
+		}
+		// Linked Pillars - Act 2
+		case 2: {
+			ClientPrint(base_script.item_holder, 3, "\x07b6f702[Tutorial]\x0702f702\n> Change to your <Ice> Spell\n> Press <R> to charge your <Ice> Spell.\n> Hold <R.Click> to start targeting pillars.\n> Press <L.Click> to fire!\n> You need all three pillars to be destroyed at the same time to progress!")
+			break
+		}
+		// Fire Area - Act 2
+		case 3: {
+			ClientPrint(base_script.item_holder, 3, "\x07b6f702[Tutorial]\x0702f702\n> Change to your <Ice> Spell\n> Press <R> to charge your <Ice> Spell.\n> Having <Ice> charged will make you immune to fire! Go through and trigger for your teammates!")
+			break
+		}
 	}
 }
 

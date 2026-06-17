@@ -46,7 +46,7 @@ rotation_speed <- 0.4
 target_cooldown <- 5
 ability_cooldown <- 15
 speed <- 6
-damage <- 25
+damage <- 15
 grenade_damage <- 150
 hits_before_orb <- 16
 teleport_chance <- 20
@@ -119,7 +119,7 @@ function OnPostSpawn() {
 		base_script.max_hp = 2000
 		base_script.hp_per_human = 600
 
-		damage = 30
+		damage = 20
 		rotation_speed = 0.55
 		speed = 7
 		attacks_ghost_spawn = 3

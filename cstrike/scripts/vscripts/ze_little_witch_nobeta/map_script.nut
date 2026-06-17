@@ -175,7 +175,7 @@ class Player {
 			// Test if player is high enough for a double jump.
 			local can_doublejump = false
 
-			if (TraceLine(self.GetOrigin(), self.GetOrigin() + Vector(0, 0, -12), self) >= 1) 
+			if (TraceLine(self.GetOrigin(), self.GetOrigin() + Vector(0, 0, -36), self) >= 1) 
 				can_doublejump = true
 
 			if ((buttons_pressed & BTN_JUMP) && !(self.GetFlags() & 1) && !info.has_doublejumped && can_doublejump) {
@@ -437,7 +437,7 @@ init_commands <- [
 	"zr_class_modify zombies health 10000",
 	"zr_class_modify zombies health_regen_interval 1"
 	"zr_class_modify zombies health_regen_amount 50"
-	"zr_class_modify zombies speed 300",
+	"zr_class_modify zombies speed 295",
 	"zr_class_modify humans health 100"
 	"zr_class_modify humans no_fall_damage off",
 	"zr_infect_spawntime_min 25"
@@ -448,7 +448,7 @@ extreme_commands <- [
 	"zr_class_modify zombies health 15000",
 	"zr_class_modify zombies health_regen_interval 1"
 	"zr_class_modify zombies health_regen_amount 75"
-	"zr_class_modify zombies speed 350",
+	"zr_class_modify zombies speed 305",
 	"zr_class_modify humans health 100"
 ]
 
@@ -722,10 +722,10 @@ function WinStage1() {
 			_this.Stage2_Setup()
 			EntFireByHandle(_self, "RunScriptCode", "SetCurrentTrack(act2_music, true)", 3, null, null)
 			EntFire("act01_win_teleport_act02", "Enable", null, 3, null)
-			EntFire("act01_lost_teleport_act02", "Enable", null, 10.05 null)
-			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 10)
-			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 15)
-			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 15)
+			EntFire("act01_lost_teleport_act02", "Enable", null, 20.05 null)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 20)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 35)
+			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 35)
 			
 			// nah fuck that idc if people die, atleast game still goes on.
 			try {
@@ -748,10 +748,10 @@ function WinStage1() {
 			_this.Stage2_Setup()
 			EntFireByHandle(_self, "RunScriptCode", "SetCurrentTrack(act2_music, true)", 3, null, null)
 			EntFire("act01_win_teleport_act02", "Enable", null, 3, null)
-			EntFire("act01_lost_teleport_act02", "Enable", null, 10.05 null)
-			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 10)
-			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 15)
-			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 15)
+			EntFire("act01_lost_teleport_act02", "Enable", null, 20.05 null)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport_act01\")", 20)
+			EntFire("_map_script", "RunScriptCode", "SetLateTeleport(\"act02_spawn_teleport\")", 20)
+			EntFire("_map_script", "RunScriptCode", "Stage1_Cleanup()", 35)
 
 			// nah fuck that idc if people die, atleast game still goes on.
 			try {
@@ -1035,7 +1035,12 @@ CollectEventsInScope({
 
 		// Zombie Corridor Protection
 		if (entity in zombie_corridor_buffs) {
-			damage_table.damage = damage_table.damage - (damage_table.damage * (zombie_corridor_buffs[entity]))
+			if (entity in player_speed_modified) {
+				if (player_speed_modified[entity].speed < 1.25)
+					damage_table.damage = damage_table.damage - (damage_table.damage * (zombie_corridor_buffs[entity]))
+			}
+			else 
+				damage_table.damage = damage_table.damage - (damage_table.damage * (zombie_corridor_buffs[entity]))
 		}
 
 		// Ice Spell - Charged Shield
