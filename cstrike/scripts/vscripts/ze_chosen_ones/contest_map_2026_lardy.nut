@@ -1,5 +1,7 @@
+
+
 //--------------------------------------------------
-// SelectionPortal - CS:S VScript
+// Contest_map_2026_lardy.nut
 //--------------------------------------------------
 
 ::SelectionPortal <- {};
@@ -38,6 +40,27 @@
 ::SelectionPortal.proportionalSelectionMin <- 1;
 
 //--------------------------------------------------
+// CONFIG JUDGEMENT / !KILL
+//--------------------------------------------------
+
+// La commande !kill s'ouvre après la moitié du temps total de sélection.
+::SelectionPortal.killVoteOpenFraction <- 0.5;
+
+// Délai de grâce adaptatif après validation du vote :
+// ceil(temps restant * facteur), limité entre le minimum et le maximum.
+// Exemple avec facteur 0.4 : 25s -> 10s, 20s -> 8s, 15s -> 6s, 12s -> 5s.
+::SelectionPortal.killVoteGraceTimeLeftFactor <- 0.4;
+::SelectionPortal.killVoteGraceMinDelay <- 5.0;
+::SelectionPortal.killVoteGraceMaxDelay <- 10.0;
+
+// Pendant les 5 dernières secondes, le vote validé tue immédiatement.
+::SelectionPortal.killVoteInstantWindow <- 5.0;
+
+// Canal distinct du HUD principal (canal 3) et du HUD RaDodgeTrial (canal 4).
+// Le canal 2 sert uniquement à remplacer en rouge la ligne du joueur jugé.
+::SelectionPortal.judgementHudChannel <- 2;
+
+//--------------------------------------------------
 // ETAT
 //--------------------------------------------------
 
@@ -62,6 +85,29 @@
 
 ::SelectionPortal.hudRefreshInterval <- 0.25;
 ::SelectionPortal.selectionEndTime <- 0.0;
+::SelectionPortal.selectionVoteOpenTime <- 0.0;
+
+// Votes : targetKey -> { target = player, voters = { voterKey = true } }
+::SelectionPortal.killVotes <- {};
+
+// Un joueur ne peut soutenir qu'une seule cible à la fois.
+::SelectionPortal.killVoteByVoter <- {};
+
+// Jugement avec délai de grâce.
+::SelectionPortal.judgedTargetKey <- "";
+::SelectionPortal.judgedTargetPlayer <- null;
+::SelectionPortal.judgementEndTime <- 0.0;
+::SelectionPortal.judgementSessionId <- 0;
+
+// Verrou très court pour éviter un second !kill pendant une exécution instantanée.
+::SelectionPortal.instantExecutionTargetKey <- "";
+::SelectionPortal.instantExecutionSessionId <- 0;
+
+// HUD rouge affiché uniquement pendant le délai de grâce.
+// Il ne contient qu'une ligne et se place exactement sur la ligne masquée du HUD vert.
+::SelectionPortal.judgementTextName <- null;
+::SelectionPortal.judgementTextEnt <- null;
+::SelectionPortal.judgementHudLeadingLines <- -1;
 
 //--------------------------------------------------
 // OUTILS GENERAUX
@@ -136,6 +182,44 @@
     );
 }
 
+
+::SelectionPortal.CreateJudgementHudText <- function()
+{
+    this.KillJudgementHudText();
+
+    this.dynamicHudIndex += 1;
+    local idx = this.FormatIndex(this.dynamicHudIndex);
+
+    this.judgementTextName = "gt_selection_judgement_" + idx;
+
+    this.judgementTextEnt = this.CreateGameTextEntity(
+        this.judgementTextName,
+        0.02, 0.23,
+        "255 60 60",
+        "255 60 60",
+        this.judgementHudChannel,
+        0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0
+    );
+}
+
+::SelectionPortal.KillJudgementHudText <- function()
+{
+    if (this.judgementTextEnt != null && this.judgementTextEnt.IsValid())
+    {
+        this.judgementTextEnt.__KeyValueFromString("message", "");
+        this.ShowGameTextToAllPlayers(this.judgementTextEnt);
+        EntFireByHandle(this.judgementTextEnt, "Kill", "", 0.05, null, null);
+    }
+
+    this.judgementTextEnt = null;
+    this.judgementTextName = null;
+}
+
 ::SelectionPortal.KillSelectionHudText <- function()
 {
     if (this.selectionTextEnt != null && this.selectionTextEnt.IsValid())
@@ -194,6 +278,42 @@
     return s.slice(0, maxLen);
 }
 
+::SelectionPortal.UpdateJudgementHudText <- function()
+{
+    if (this.judgedTargetKey == "")
+        return;
+
+    if (this.judgementTextEnt == null || !this.judgementTextEnt.IsValid())
+        return;
+
+    if (this.judgementHudLeadingLines < 0)
+        return;
+
+    local target = this.judgedTargetPlayer;
+
+    if (!this.IsValidPlayer(target))
+        return;
+
+    local timeLeft = this.judgementEndTime - Time();
+    if (timeLeft < 0.0)
+        timeLeft = 0.0;
+
+    local seconds = this.GetCeilSeconds(timeLeft);
+
+    // Les sauts de ligne placent la ligne rouge exactement à la même hauteur
+    // que la ligne volontairement vide dans le HUD vert.
+    local msg = "";
+
+    for (local i = 0; i < this.judgementHudLeadingLines; i++)
+        msg += "\n";
+
+    msg += "[WILL DIE: " + seconds + "s] ";
+    msg += this.ShortName(this.GetPlayerDisplayName(target), 18);
+
+    this.judgementTextEnt.__KeyValueFromString("message", msg);
+    this.ShowGameTextToAllPlayers(this.judgementTextEnt);
+}
+
 ::SelectionPortal.UpdateSelectionHudText <- function()
 {
     if (!this.selectionActive)
@@ -202,34 +322,74 @@
     if (this.selectionTextEnt == null || !this.selectionTextEnt.IsValid())
         return;
 
-    local timeLeft = this.selectionEndTime - Time();
-
-    if (timeLeft < 0.0)
-        timeLeft = 0.0;
-
-    local insideCount = this.CountTable(this.insidePlayers);
+    local timeLeft = this.GetSelectionTimeLeft();
+    local insideCount = this.CountEligibleKillVoters();
     local selectedCount = this.CountTable(this.selectedPlayers);
 
     local msg = "RA'S TRIAL";
     msg += "\nChosen souls must reach the Portal";
-    msg += "\nTime: " + timeLeft.tointeger() + "s";
+    msg += "\nTime: " + this.GetCeilSeconds(timeLeft) + "s";
     msg += "\nSafe: " + insideCount + "/" + selectedCount;
+
+    if (this.IsKillVoteOpen())
+    {
+        if (this.HasPendingKillAction())
+            msg += "\nJudgement: ACTIVE";
+        else
+            msg += "\nJudgement: OPEN";
+    }
+    else
+    {
+        local voteOpenIn = this.selectionVoteOpenTime - Time();
+        if (voteOpenIn < 0.0)
+            voteOpenIn = 0.0;
+
+        msg += "\nJudgement opens: " + this.GetCeilSeconds(voteOpenIn) + "s";
+    }
+
+    local voteThreshold = this.GetKillVoteThreshold();
+
+    // Le bloc vert contient toujours cinq lignes avant la liste des sélectionnés :
+    // titre, consigne, timer, safe count, état du jugement.
+    local hudLineIndex = 5;
+    this.judgementHudLeadingLines = -1;
 
     foreach (key, player in this.selectedPlayers)
     {
         if (!this.IsValidPlayer(player))
             continue;
 
+        // Pendant le jugement, on conserve une ligne vide dans le HUD vert.
+        // Le game_text rouge écrit ensuite à exactement cette même hauteur.
+        if (key == this.judgedTargetKey)
+        {
+            this.judgementHudLeadingLines = hudLineIndex;
+            msg += "\n";
+            hudLineIndex++;
+            continue;
+        }
+
         local status = "[OUT] ";
+        local suffix = "";
 
         if (this.insidePlayers.rawin(key))
+        {
             status = "[SAFE] ";
+        }
+        else if (this.killVotes.rawin(key))
+        {
+            local votes = this.GetKillVoteCountForTarget(key);
+            if (votes > 0)
+                suffix = " Vote: " + votes + "/" + voteThreshold;
+        }
 
-        msg += "\n" + status + this.ShortName(this.GetPlayerDisplayName(player), 18);
+        msg += "\n" + status + this.ShortName(this.GetPlayerDisplayName(player), 18) + suffix;
+        hudLineIndex++;
     }
 
     this.selectionTextEnt.__KeyValueFromString("message", msg);
-    this.ShowGameTextToAllHumans(this.selectionTextEnt);
+    this.ShowGameTextToAllPlayers(this.selectionTextEnt);
+    this.UpdateJudgementHudText();
 }
 
 ::SelectionPortal.SelectionHudThink <- function(sessionId)
@@ -396,6 +556,590 @@
         return;
 
     EntFire(this.hurtName, "Hurt", "", 0.00, player);
+}
+
+//--------------------------------------------------
+// JUDGEMENT VOTE / !KILL
+//--------------------------------------------------
+
+::SelectionPortal.TrimString <- function(str)
+{
+    if (str == null)
+        return "";
+
+    local s = str.tostring();
+    local start = 0;
+    local finish = s.len() - 1;
+
+    while (start < s.len())
+    {
+        local c = s.slice(start, start + 1);
+        if (c != " " && c != "\t")
+            break;
+        start++;
+    }
+
+    while (finish >= start)
+    {
+        local c = s.slice(finish, finish + 1);
+        if (c != " " && c != "\t")
+            break;
+        finish--;
+    }
+
+    if (finish < start)
+        return "";
+
+    return s.slice(start, finish + 1);
+}
+
+::SelectionPortal.GetSelectionTimeLeft <- function()
+{
+    local timeLeft = this.selectionEndTime - Time();
+
+    if (timeLeft < 0.0)
+        timeLeft = 0.0;
+
+    return timeLeft;
+}
+
+::SelectionPortal.GetCeilSeconds <- function(value)
+{
+    if (value <= 0.0)
+        return 0;
+
+    local whole = value.tointeger();
+
+    if (value > whole.tofloat())
+        whole++;
+
+    return whole;
+}
+
+// Le jugement est plus long lorsqu'il démarre tôt, puis diminue avec le temps restant.
+// Le résultat est arrondi à la seconde supérieure afin que le HUD et la vraie durée correspondent.
+::SelectionPortal.GetAdaptiveKillVoteGraceDelay <- function(timeLeft)
+{
+    if (timeLeft <= this.killVoteInstantWindow)
+        return 0.0;
+
+    local delay = timeLeft * this.killVoteGraceTimeLeftFactor;
+    delay = this.GetCeilSeconds(delay).tofloat();
+
+    if (delay < this.killVoteGraceMinDelay)
+        delay = this.killVoteGraceMinDelay;
+
+    if (delay > this.killVoteGraceMaxDelay)
+        delay = this.killVoteGraceMaxDelay;
+
+    // Sécurité : ne jamais planifier la fin du jugement après la fin de sélection.
+    if (delay > timeLeft)
+        delay = timeLeft;
+
+    return delay;
+}
+
+::SelectionPortal.IsKillVoteOpen <- function()
+{
+    if (!this.selectionActive)
+        return false;
+
+    return Time() >= this.selectionVoteOpenTime;
+}
+
+::SelectionPortal.HasPendingKillAction <- function()
+{
+    if (this.judgedTargetKey != "")
+        return true;
+
+    if (this.instantExecutionTargetKey != "")
+        return true;
+
+    return false;
+}
+
+::SelectionPortal.IsSelectedPlayer <- function(player)
+{
+    if (!this.IsValidPlayer(player))
+        return false;
+
+    local key = this.GetPlayerUniqueKey(player);
+
+    if (key == "")
+        return false;
+
+    return this.selectedPlayers.rawin(key);
+}
+
+// Votant valide : sélectionné, humain vivant et déjà dans le portail.
+::SelectionPortal.IsEligibleKillVoter <- function(player)
+{
+    if (!this.IsAliveHuman(player))
+        return false;
+
+    local key = this.GetPlayerUniqueKey(player);
+
+    if (key == "")
+        return false;
+
+    if (!this.selectedPlayers.rawin(key))
+        return false;
+
+    if (!this.insidePlayers.rawin(key))
+        return false;
+
+    return true;
+}
+
+// Cible valide : sélectionnée, humaine vivante et encore hors du portail.
+::SelectionPortal.IsEligibleKillTarget <- function(player)
+{
+    if (!this.IsAliveHuman(player))
+        return false;
+
+    local key = this.GetPlayerUniqueKey(player);
+
+    if (key == "")
+        return false;
+
+    if (!this.selectedPlayers.rawin(key))
+        return false;
+
+    if (this.insidePlayers.rawin(key))
+        return false;
+
+    return true;
+}
+
+::SelectionPortal.CountEligibleKillVoters <- function()
+{
+    local count = 0;
+
+    foreach (key, player in this.selectedPlayers)
+    {
+        if (this.IsEligibleKillVoter(player))
+            count++;
+    }
+
+    return count;
+}
+
+// Majorité stricte des sélectionnés actuellement à l'abri dans le portail.
+::SelectionPortal.GetKillVoteThreshold <- function()
+{
+    local voterCount = this.CountEligibleKillVoters();
+
+    if (voterCount <= 0)
+        return 0;
+
+    return (voterCount / 2).tointeger() + 1;
+}
+
+::SelectionPortal.GetKillVoteCountForTarget <- function(targetKey)
+{
+    if (!this.killVotes.rawin(targetKey))
+        return 0;
+
+    return this.CountTable(this.killVotes[targetKey].voters);
+}
+
+::SelectionPortal.ResetKillVotes <- function()
+{
+    this.killVotes = {};
+    this.killVoteByVoter = {};
+}
+
+::SelectionPortal.RemoveVoteForVoter <- function(voterKey)
+{
+    if (voterKey == "")
+        return;
+
+    if (!this.killVoteByVoter.rawin(voterKey))
+        return;
+
+    local oldTargetKey = this.killVoteByVoter[voterKey];
+
+    if (this.killVotes.rawin(oldTargetKey))
+    {
+        local voters = this.killVotes[oldTargetKey].voters;
+
+        if (voters.rawin(voterKey))
+            voters.rawdelete(voterKey);
+
+        if (this.CountTable(voters) <= 0)
+            this.killVotes.rawdelete(oldTargetKey);
+    }
+
+    this.killVoteByVoter.rawdelete(voterKey);
+}
+
+// Supprime les votes devenus invalides si un votant sort du portail, meurt,
+// change d'équipe, ou si la cible entre dans le portail.
+::SelectionPortal.CleanupKillVotes <- function()
+{
+    local cleanedVotes = {};
+    local cleanedVoteByVoter = {};
+
+    foreach (targetKey, data in this.killVotes)
+    {
+        if (!this.selectedPlayers.rawin(targetKey))
+            continue;
+
+        local target = this.selectedPlayers[targetKey];
+
+        if (!this.IsEligibleKillTarget(target))
+            continue;
+
+        local voters = {};
+
+        foreach (voterKey, value in data.voters)
+        {
+            if (!this.selectedPlayers.rawin(voterKey))
+                continue;
+
+            local voter = this.selectedPlayers[voterKey];
+
+            if (!this.IsEligibleKillVoter(voter))
+                continue;
+
+            // Sécurité : un votant ne peut être conservé que pour une seule cible.
+            if (cleanedVoteByVoter.rawin(voterKey))
+                continue;
+
+            voters[voterKey] <- true;
+            cleanedVoteByVoter[voterKey] <- targetKey;
+        }
+
+        if (this.CountTable(voters) > 0)
+        {
+            cleanedVotes[targetKey] <- {
+                target = target,
+                voters = voters
+            };
+        }
+    }
+
+    this.killVotes = cleanedVotes;
+    this.killVoteByVoter = cleanedVoteByVoter;
+}
+
+::SelectionPortal.FindSelectedKillTargetByName <- function(inputName)
+{
+    local wanted = inputName.tolower();
+    local exact = null;
+    local partial = null;
+    local partialCount = 0;
+
+    foreach (key, player in this.selectedPlayers)
+    {
+        if (!this.IsEligibleKillTarget(player))
+            continue;
+
+        local playerName = this.GetPlayerDisplayName(player).tolower();
+
+        if (playerName == wanted)
+        {
+            exact = player;
+            break;
+        }
+
+        if (playerName.find(wanted) != null)
+        {
+            partial = player;
+            partialCount++;
+        }
+    }
+
+    if (exact != null)
+        return exact;
+
+    if (partialCount == 1)
+        return partial;
+
+    return null;
+}
+
+::SelectionPortal.ExtractKillTargetName <- function(message)
+{
+    if (message.len() <= 5)
+        return "";
+
+    local rest = this.TrimString(message.slice(5, message.len()));
+
+    if (rest.len() >= 2 && rest.slice(0, 1) == "\"" && rest.slice(rest.len() - 1, rest.len()) == "\"")
+        rest = rest.slice(1, rest.len() - 1);
+
+    return this.TrimString(rest);
+}
+
+::SelectionPortal.IsKillCommand <- function(message)
+{
+    local msg = this.TrimString(message).tolower();
+
+    if (msg.len() < 5)
+        return false;
+
+    if (msg.slice(0, 5) != "!kill")
+        return false;
+
+    if (msg.len() == 5)
+        return true;
+
+    local separator = msg.slice(5, 6);
+    return separator == " " || separator == "\t";
+}
+
+::SelectionPortal.StartInstantVoteExecution <- function(target)
+{
+    if (!this.IsEligibleKillTarget(target))
+        return;
+
+    local targetKey = this.GetPlayerUniqueKey(target);
+    if (targetKey == "")
+        return;
+
+    this.ResetKillVotes();
+
+    this.instantExecutionTargetKey = targetKey;
+    this.instantExecutionSessionId += 1;
+    local executionId = this.instantExecutionSessionId;
+    local sessionId = this.selectionSessionId;
+
+    ClientPrint(null, 3, "\x07FF0000[Ra] " + this.GetPlayerDisplayName(target) + " was judged too late and executed.");
+
+    this.HurtPlayer(target);
+    this.Schedule("SelectionPortal.ClearInstantExecutionLock(" + sessionId + "," + executionId + ");", 0.25);
+}
+
+::SelectionPortal.ClearInstantExecutionLock <- function(selectionSessionId, executionId)
+{
+    if (selectionSessionId != this.selectionSessionId)
+        return;
+
+    if (executionId != this.instantExecutionSessionId)
+        return;
+
+    this.instantExecutionTargetKey = "";
+}
+
+::SelectionPortal.StartJudgement <- function(target)
+{
+    if (this.HasPendingKillAction())
+        return;
+
+    if (!this.IsEligibleKillTarget(target))
+        return;
+
+    local timeLeft = this.GetSelectionTimeLeft();
+    local graceDelay = this.GetAdaptiveKillVoteGraceDelay(timeLeft);
+
+    if (graceDelay <= 0.0)
+    {
+        this.StartInstantVoteExecution(target);
+        return;
+    }
+
+    local targetKey = this.GetPlayerUniqueKey(target);
+    if (targetKey == "")
+        return;
+
+    this.ResetKillVotes();
+
+    this.judgedTargetKey = targetKey;
+    this.judgedTargetPlayer = target;
+    this.judgementEndTime = Time() + graceDelay;
+    this.judgementHudLeadingLines = -1;
+    this.judgementSessionId += 1;
+
+    local judgementId = this.judgementSessionId;
+    local selectionSessionId = this.selectionSessionId;
+
+    this.CreateJudgementHudText();
+    this.UpdateSelectionHudText();
+
+    local targetName = this.GetPlayerDisplayName(target);
+    local graceSeconds = this.GetCeilSeconds(graceDelay);
+    ClientPrint(null, 3, "\x07FF3300[Ra] " + targetName + " is judged. Reach the Portal in " + graceSeconds + " seconds.");
+    ClientPrint(target, 3, "\x07FF0000[Ra] You are judged. Enter the Portal immediately or die.");
+
+    this.Schedule("SelectionPortal.ResolveJudgement(" + selectionSessionId + "," + judgementId + ");", graceDelay);
+}
+
+::SelectionPortal.CancelJudgement <- function(reachedPortal = false)
+{
+    if (this.judgedTargetKey == "")
+        return;
+
+    local target = this.judgedTargetPlayer;
+
+    this.judgedTargetKey = "";
+    this.judgedTargetPlayer = null;
+    this.judgementEndTime = 0.0;
+    this.judgementHudLeadingLines = -1;
+    this.judgementSessionId += 1;
+
+    this.KillJudgementHudText();
+    this.ResetKillVotes();
+
+    if (reachedPortal && this.IsValidPlayer(target))
+        ClientPrint(null, 3, "\x0700FF00[Ra] " + this.GetPlayerDisplayName(target) + " reached the Portal. Judgement cancelled.");
+
+    if (this.selectionActive)
+        this.UpdateSelectionHudText();
+}
+
+::SelectionPortal.ResolveJudgement <- function(selectionSessionId, judgementId)
+{
+    if (selectionSessionId != this.selectionSessionId)
+        return;
+
+    if (judgementId != this.judgementSessionId)
+        return;
+
+    if (!this.selectionActive)
+        return;
+
+    local target = this.judgedTargetPlayer;
+
+    if (!this.IsEligibleKillTarget(target))
+    {
+        this.CancelJudgement(false);
+        return;
+    }
+
+    ClientPrint(null, 3, "\x07FF0000[Ra] " + this.GetPlayerDisplayName(target) + " was executed by judgement.");
+    this.HurtPlayer(target);
+
+    // Normalement player_death nettoie le HUD immédiatement. Ce fallback évite
+    // toute alerte rouge bloquée si le point_hurt ne tue pas pour une raison externe.
+    this.Schedule("SelectionPortal.ClearJudgementAfterExecution(" + selectionSessionId + "," + judgementId + ");", 0.25);
+}
+
+::SelectionPortal.ClearJudgementAfterExecution <- function(selectionSessionId, judgementId)
+{
+    if (selectionSessionId != this.selectionSessionId)
+        return;
+
+    if (judgementId != this.judgementSessionId)
+        return;
+
+    this.CancelJudgement(false);
+}
+
+::SelectionPortal.CheckKillVoteThresholds <- function()
+{
+    if (!this.IsKillVoteOpen())
+        return;
+
+    if (this.HasPendingKillAction())
+        return;
+
+    this.CleanupKillVotes();
+
+    local threshold = this.GetKillVoteThreshold();
+    if (threshold <= 0)
+        return;
+
+    local targetToJudge = null;
+
+    foreach (targetKey, data in this.killVotes)
+    {
+        if (!this.IsEligibleKillTarget(data.target))
+            continue;
+
+        if (this.GetKillVoteCountForTarget(targetKey) >= threshold)
+        {
+            targetToJudge = data.target;
+            break;
+        }
+    }
+
+    if (targetToJudge != null)
+        this.StartJudgement(targetToJudge);
+}
+
+::SelectionPortal.HandleKillChatCommand <- function(player, text)
+{
+    if (!this.IsKillCommand(text))
+        return false;
+
+    if (!this.selectionActive)
+        return false;
+
+    if (!this.IsKillVoteOpen())
+    {
+        ClientPrint(player, 3, "\x07FFCC00[Ra] Judgement votes open after half of the selection time.");
+        return true;
+    }
+
+    if (this.HasPendingKillAction())
+    {
+        ClientPrint(player, 3, "\x07FFCC00[Ra] A judgement is already in progress.");
+        return true;
+    }
+
+    if (!this.IsEligibleKillVoter(player))
+    {
+        ClientPrint(player, 3, "\x07FF0000[Ra] Only selected players inside the Portal may use !kill.");
+        return true;
+    }
+
+    local msg = this.TrimString(text);
+    local targetName = this.ExtractKillTargetName(msg);
+
+    if (targetName == "")
+    {
+        ClientPrint(player, 3, "\x07FFCC00[Ra] Usage: !kill \"player name\"");
+        return true;
+    }
+
+    local target = this.FindSelectedKillTargetByName(targetName);
+
+    if (target == null)
+    {
+        ClientPrint(player, 3, "\x07FF0000[Ra] Target not found, already safe, not selected, dead, or ambiguous.");
+        return true;
+    }
+
+    local voterKey = this.GetPlayerUniqueKey(player);
+    local targetKey = this.GetPlayerUniqueKey(target);
+
+    if (voterKey == "" || targetKey == "" || voterKey == targetKey)
+    {
+        ClientPrint(player, 3, "\x07FF0000[Ra] Invalid target.");
+        return true;
+    }
+
+    this.CleanupKillVotes();
+
+    if (this.killVoteByVoter.rawin(voterKey) && this.killVoteByVoter[voterKey] == targetKey)
+    {
+        ClientPrint(player, 3, "\x07FFCC00[Ra] You already voted against " + this.GetPlayerDisplayName(target) + ".");
+        return true;
+    }
+
+    // Un seul vote actif par joueur : un nouveau choix retire le précédent.
+    this.RemoveVoteForVoter(voterKey);
+
+    if (!this.killVotes.rawin(targetKey))
+    {
+        this.killVotes[targetKey] <- {
+            target = target,
+            voters = {}
+        };
+    }
+
+    this.killVotes[targetKey].voters[voterKey] <- true;
+    this.killVoteByVoter[voterKey] <- targetKey;
+
+    local votes = this.GetKillVoteCountForTarget(targetKey);
+    local threshold = this.GetKillVoteThreshold();
+
+    ClientPrint(null, 3, "\x07FFCC00[Ra] " + this.GetPlayerDisplayName(target) + ": " + votes + "/" + threshold + " judgement votes.");
+
+    this.UpdateSelectionHudText();
+    this.CheckKillVoteThresholds();
+    return true;
 }
 
 //--------------------------------------------------
@@ -611,6 +1355,7 @@
     this.selectionActive = true;
     this.selectedCountAtStart = count;
     this.selectionEndTime = Time() + activeDuration;
+    this.selectionVoteOpenTime = Time() + (activeDuration * this.killVoteOpenFraction);
     this.CreateSelectionHudText();
 
     EntFire(this.triggerName, "Enable", "", 0.00, null);
@@ -691,7 +1436,10 @@
     this.touchCounts[key] += 1;
     this.insidePlayers[key] <- player;
 
+    if (key == this.judgedTargetKey)
+        this.CancelJudgement(true);
 
+    this.CleanupKillVotes();
     this.UpdateSelectionHudText();
     this.CheckSelectionComplete();
 }
@@ -724,6 +1472,7 @@
         if (this.insidePlayers.rawin(key))
             this.insidePlayers.rawdelete(key);
 
+        this.CleanupKillVotes();
         this.UpdateSelectionHudText();
     }
 }
@@ -841,6 +1590,8 @@
         return;
 
     this.CleanupInvalidSelectedPlayers();
+    this.CleanupKillVotes();
+    this.CheckKillVoteThresholds();
     this.CheckSelectionComplete();
 
     if (!this.selectionActive)
@@ -857,6 +1608,17 @@
 {
     if (key == "")
         return;
+
+    if (key == this.judgedTargetKey)
+        this.CancelJudgement(false);
+
+    if (key == this.instantExecutionTargetKey)
+        this.instantExecutionTargetKey = "";
+
+    this.RemoveVoteForVoter(key);
+
+    if (this.killVotes.rawin(key))
+        this.killVotes.rawdelete(key);
 
     if (this.selectedPlayers.rawin(key))
         this.selectedPlayers.rawdelete(key);
@@ -879,7 +1641,10 @@
         this.userIdToSelectionKey.rawdelete(toDelete[i]);
 
     if (this.selectionActive)
+    {
+        this.CleanupKillVotes();
         this.UpdateSelectionHudText();
+    }
 }
 
 ::SelectionPortal.RemovePlayerFromSelection <- function(player)
@@ -938,6 +1703,20 @@
     this.touchCounts = {};
     this.userIdToSelectionKey = {};
     this.selectedCountAtStart = 0;
+    this.selectionVoteOpenTime = 0.0;
+
+    this.ResetKillVotes();
+
+    this.judgedTargetKey = "";
+    this.judgedTargetPlayer = null;
+    this.judgementEndTime = 0.0;
+    this.judgementHudLeadingLines = -1;
+    this.judgementSessionId += 1;
+
+    this.instantExecutionTargetKey = "";
+    this.instantExecutionSessionId += 1;
+
+    this.KillJudgementHudText();
 }
 
 ::SelectionPortal.ClearCurrentSelection <- function()
@@ -993,6 +1772,19 @@ if (!("selectionPortalCallbacksRegistered" in getroottable()))
 
 if (!("selectionPortalCallbacks" in getroottable()))
     ::selectionPortalCallbacks <- {};
+
+::selectionPortalCallbacks.OnGameEvent_player_say <- function(params)
+{
+    if (!("userid" in params) || !("text" in params))
+        return;
+
+    local player = GetPlayerFromUserID(params.userid);
+
+    if (player == null || !player.IsValid())
+        return;
+
+    ::SelectionPortal.HandleKillChatCommand(player, params.text);
+};
 
 ::selectionPortalCallbacks.OnGameEvent_player_death <- function(params)
 {
@@ -2702,6 +3494,7 @@ if (!("ContestItem" in getroottable()))
         readyParticleName = "heal_part",
         worldTextName = "heal_worldtext",
         worldTextDefaultColor = "255 190 40",
+        entwatchButtonName = "heal_button",
         cooldown = 50.0,
         team = 3
     },
@@ -2712,6 +3505,7 @@ if (!("ContestItem" in getroottable()))
         readyParticleName = "rapid_fire_part",
         worldTextName = "rapid_fire_worldtext",
         worldTextDefaultColor = "255 40 75",
+        entwatchButtonName = "rapid_fire_button",
         cooldown = 60.0,
         team = 3
     },
@@ -2722,6 +3516,7 @@ if (!("ContestItem" in getroottable()))
         readyParticleName = "wind_part",
         worldTextName = "wind_worldtext",
         worldTextDefaultColor = "0 120 255",
+        entwatchButtonName = "wind_button",
         cooldown = 60.0,
         team = 3
     }
@@ -3308,6 +4103,27 @@ if (!("contestItemCallbacks" in getroottable()))
 // USE ITEM
 //------------------------------------------------------------
 
+//------------------------------------------------------------
+// ENTWATCH FAKE BUTTON
+//------------------------------------------------------------
+
+::ContestItem.TriggerEntwatchButton <- function(player, buttonName)
+{
+    if (!this.IsAlivePlayer(player))
+        return false;
+
+    if (buttonName == null || buttonName == "")
+        return false;
+
+    local button = Entities.FindByName(null, buttonName);
+
+    if (button == null || !button.IsValid())
+        return false;
+    EntFireByHandle(button, "Press", "", 0.01, player, player);
+
+    return true;
+};
+
 ::ContestItem.TryUseItem <- function(playerKey)
 {
     if (!this.owners.rawin(playerKey))
@@ -3345,7 +4161,10 @@ if (!("contestItemCallbacks" in getroottable()))
         used = this.SpawnRapidFireEffect(player);
 
     if (!used)
-        return false;
+    return false;
+
+    if ("entwatchButtonName" in cfg)
+        this.TriggerEntwatchButton(player, cfg.entwatchButtonName);
 
     this.StartCooldown(itemKey);
     return true;

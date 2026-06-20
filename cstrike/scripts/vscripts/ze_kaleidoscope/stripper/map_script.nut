@@ -8,7 +8,7 @@ IncludeScript("ze_kaleidoscope/player.nut")
 IncludeScript("ze_kaleidoscope/player_speed.nut")
 IncludeScript("ze_kaleidoscope/events.nut")
 // IncludeScript("ze_kaleidoscope/map_functions.nut")
-IncludeScript("ze_kaleidoscope_fixes/map_functions.nut") // Fuck my life
+IncludeScript("ze_kaleidoscope/stripper/map_functions.nut")
 IncludeScript("ze_kaleidoscope/files/config_file.nut")
 
 const TEAM_ZOMBIES = 2
@@ -267,6 +267,7 @@ function ContestVersionBeaten() {
 
 		GateState.WhiteGate = false
 		GateState.BlueGate = false
+		GateState.VioletGate = false
 		KeyState.BlueKey = true
 		EntFire("console", "Command", "mp_restartgame 1", 0)
 	})

@@ -36,7 +36,7 @@ GateFunctions[Gate.Blue] <- function(player, info, buttons, buttons_changed, but
 		if (player.GetTeam() == TEAM_HUMANS)
 			EntFireByHandle(player, "RunScriptCode", "DispatchParticleEffect(\"blue_timeleap_player_indicator\", self.GetCenter() + (self.GetScriptScope().info.active_gate_variables.default_timeline ? Vector(0, 0, (-LeapDistance)) : Vector(0, 0, LeapDistance - 64)), self.GetAbsAngles().Forward())", 0.0, null, null)
 		else 
-			EntFireByHandle(player, "RunScriptCode", "DispatchParticleEffect(\"blue_timeleap_player_indicator_zm\", self.GetCenter() + (self.GetScriptScope().info.active_gate_variables.default_timeline ? Vector(0, 0, (-LeapDistance)) : Vector(0, 0, LeapDistance)), self.GetAbsAngles().Forward())", 0.0, null, null)
+			EntFireByHandle(player, "RunScriptCode", "DispatchParticleEffect(\"blue_timeleap_player_indicator_zm\", self.GetCenter() + (self.GetScriptScope().info.active_gate_variables.default_timeline ? Vector(0, 0, (-LeapDistance)) : Vector(0, 0, LeapDistance - 64)), self.GetAbsAngles().Forward())", 0.0, null, null)
 	}
 	else {
 		if (player.GetTeam() == TEAM_HUMANS)
@@ -158,15 +158,26 @@ function TimeleapTipLoop() {
 timeleap_events <- {
 	OnGameEvent_player_spawn = function(params){
 		if (timeleap_enabled) {
+			local player = GetPlayerFromUserID(params.userid)
 			RunWithDelay(function() {
-				local player = GetPlayerFromUserID(params.userid)
-				
 				local scope = player.GetScriptScope()
 				if (!("default_timeline" in scope.info.active_gate_variables)) {
 					scope.info.active_gate_variables.default_timeline <- true
 					scope.info.active_gate_variables.time_leap_cd_left <- 0.0
 				}
-			}, 0.25)
+			}, FrameTime() + FrameTime())
+		}
+	}
+
+	OnGameEvent_player_death = function(params){
+		if (timeleap_enabled) {
+			local player = GetPlayerFromUserID(params.userid)
+
+			local scope = player.GetScriptScope()
+			if (("default_timeline" in scope.info.active_gate_variables)) {
+				scope.info.active_gate_variables.default_timeline = true
+				scope.info.active_gate_variables.time_leap_cd_left = 0.0
+			}
 		}
 	}
 }
