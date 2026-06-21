@@ -6,6 +6,7 @@ const NPC_SCALER_ENT_STRING = "npc_hp_scaler_c"
 const WALLS_HP_ENT_STRING = "hotel_floor%d_wall*"
 const PLAT_CASE_ENT_STRING = "temple_space_br_case"
 const DEBRIS_ENT_STRING = "train_debris_spawn"
+const EVENT_TEXT_ENT_STRING = "event_text"
 const T = 2
 const CT = 3
 
@@ -16,7 +17,7 @@ const NPC_HP_MULTI = 75
 const BASE_HEALTH = 50
 
 // Breakable health scale - multiply by number of alive T-s (damage based)
-const ROOM_WALL_MULTI = 75 // knife ~15 dps averaged
+const ROOM_WALL_MULTI = 60 // knife ~15 dps averaged
 const DMG_BASE_HEALTH = 100
 
 // breakables can register multiple OnHealthChanged events from a single bullet
@@ -27,6 +28,11 @@ const DMG_BASE_HEALTH = 100
 const BULLET_BIAS = 1.5 // assumes 50% of players (on average) use high penetration weapons
 
 const NUM_BREAKABLE_PLATS = 3
+const EVENT_INTERVAL_SEC = 480 // 8 min
+
+if (!("last_event_time" in getroottable())) { // persist state across rounds
+    ::last_event_time <- -1;
+}
 
 /** Scales the health of the Phoenix egg (math_counter), based on number of alive CT-s */
 function scaleEggHealth() {
@@ -76,6 +82,47 @@ function setTSPlatformsBreakable() {
 function spawnSpaceDebris() {
     local spawnIdx = RandomInt(1, 17); // inclusive
     EntFire(DEBRIS_ENT_STRING + spawnIdx, "Trigger", "", 0, activator);
+}
+
+/** Attempt to perform a random event (see options below) */
+function attemptRandomEvent() {
+    local mapTime = Time(); // elapsed sec since map start
+    if(last_event_time == -1 || mapTime > last_event_time + EVENT_INTERVAL_SEC) { // random event
+        local rand = RandomInt(1, 10);
+        if(rand <= 1) { adjustHealthAllCTs(20); } // 10% chance to increase CT health
+        else { showFact(); }
+        last_event_time = mapTime;
+    }
+}
+
+/** Random event - display fact about space */
+function showFact() {
+    local factLines = _breakTextIntoChunks(_factRandom());
+    EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message Did you know", 0, null);
+    EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 0.01, null);
+    
+    local delay = 8;
+    for(local l = 0; l < factLines.len(); l++) {
+        EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message " + factLines[l], 4 + l * delay, null);
+        EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 4.01 + l * delay, null);
+    }
+}
+
+/** Random event - adjust the health of all CT players */
+function adjustHealthAllCTs(delta) {
+    EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message Blessing from the stars: +20hp", 0, null);
+    EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 0.01, null);
+
+    local player = null;
+     while ((player = Entities.FindByClassname(player, "player")) != null) {
+        if (player.IsValid() && player.IsAlive()) { // valid and alive
+            if (player.GetTeam() == CT) {
+                local newPlayerHP = player.GetHealth() + delta;
+                if(newPlayerHP < 1) { newPlayerHP = 1; } // lower cap at 1
+                EntFireByHandle(player, "AddOutput", "health " + newPlayerHP, 0.0, null, null );
+            }
+        }
+    }
 }
 
 /* --- Intended to have private scope (not called by entities) --- */

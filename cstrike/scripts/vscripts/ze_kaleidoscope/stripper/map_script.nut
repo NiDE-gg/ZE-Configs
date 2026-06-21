@@ -269,6 +269,8 @@ function ContestVersionBeaten() {
 		GateState.BlueGate = false
 		GateState.VioletGate = false
 		KeyState.BlueKey = true
+		KeyState.WhiteKey = false
+		KeyState.VioletKey = false
 		EntFire("console", "Command", "mp_restartgame 1", 0)
 	})
 }

@@ -19,7 +19,7 @@ const CONSOLE = "console"
 rooms_pool <- [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] // list of all available rooms (on any floor)
 
 // maps a floor to the floor's path (same length) and list of visited rooms (excluding exit room)
-const PATH_LEN = 5;
+path_len <- {[2] = 1, [3] = 4, [4] = 5, [5] = 4}; // path lengths at each floor
 floor_path <- {[2] = [2, 3, 4, 5, 11]} // ordering of rooms, the correct path to pass a floor
 path_visited <- {[2] = [1, 1, 1, 1]} // 1 if visited, 0 if not
 
@@ -30,12 +30,12 @@ match_hint_displayed <- false // If players have been notified what to do on non
 
 // Timers (in sec) handling when the staircase door for a floor (table idx) should open
 staircase_timer <- {[3] = -1, [4] = -1, [5] = -1} // -1 indicates timer not started or expired
-const STAIRS_INTERVAL = 15
+const STAIRS_INTERVAL = 10
 
 /** Resets all state (must be invoked on new round) */
 function resetAll() {
-    floor_path = {[2] = [2, 3, 4, 5, 11]}
-    path_visited = {[2] = [1, 1, 1, 1]}
+    floor_path = {[2] = [11]}
+    path_visited = {[2] = [1]}
 
     // Spawn the first exit room rope
     EntFire(ROPE_SPAWNER_ENT_STRING, "ForceSpawnAtEntityOrigin", _roomCeilEntName(2, 11), 0, null);
@@ -47,34 +47,35 @@ function activateBox(floor, room) {
 
     local nextRoom = 0; // The next room on the path, or 0 (if none) or -1 (not on path)
     local pathIdx = floor_path[floor].find(room);
+    local pathEndIdx = path_len[floor] - 1;
 
     if(pathIdx != null) {
-        if(pathIdx < PATH_LEN - 1) { // not the last room on the path, set the nextRoom, mark visited
+        if(pathIdx < pathEndIdx) { // not the last room on the path, set the nextRoom, mark visited
             nextRoom = floor_path[floor][pathIdx + 1];
             path_visited[floor][pathIdx] = 1;
         }
 
-        if(pathIdx == 0) { // first room, unlock and open the door
+        if(pathIdx == pathEndIdx) { // exit room, advance
+            EntFire(TIMER_RESET_ENT_STRING, "Trigger", "", 0, null); // reset the timer
+            EntFire(CONSOLE, "Command", format("say Floor %d completed - Timer reset", floor), 0, null);
+
+            EntFire(_roomCeilEntName(floor,  floor_path[floor][pathEndIdx]), "Break", "", 0.1, null);
+            _genNextFloor(floor, floor + 1)
+        }
+        else if(pathIdx == 0) { // first room, non-exit, unlock and open the door
             EntFire(_roomDoorEntName(floor, floor_path[floor][0]), "Unlock", "", 0, null);
             EntFire(_roomDoorEntName(floor, floor_path[floor][0]), "Open", "", 0, null);
 
             // Start a timer to open the staircase to this floor
             EntFire(CONSOLE, "Command", format("say Floor %d staircase door opening at timer end", floor), 2, null);
-            staircase_timer[floor] = STAIRS_INTERVAL * (END_FLOOR - floor + 1);
-        }
-        else if(pathIdx == PATH_LEN - 1) { // exit room, advance
-            EntFire(TIMER_RESET_ENT_STRING, "Trigger", "", 0, null); // reset the timer
-            EntFire(CONSOLE, "Command", format("say Floor %d completed - Timer reset", floor), 0, null);
-
-            EntFire(_roomCeilEntName(floor,  floor_path[floor][PATH_LEN - 1]), "Break", "", 0.1, null);
-            _genNextFloor(floor, floor + 1)
+            staircase_timer[floor] = STAIRS_INTERVAL * (END_FLOOR - floor + 1) + 5;
         }
         else if (path_visited[floor].find(0) == null) { // all non-exit rooms visited, unlock exit
-            EntFire(_roomDoorEntName(floor, floor_path[floor][PATH_LEN - 1]), "Unlock", "", 0, null);
+            EntFire(_roomDoorEntName(floor, floor_path[floor][pathEndIdx]), "Unlock", "", 0, null);
 
             EntFire(CONSOLE, "Command", format("say Final room on floor %d unlocked", floor), 0, null);
             if(floor == END_FLOOR) { // Notify players where the exit is
-                _displayHint(format("EXIT: Floor %d room %d", floor, floor_path[floor][PATH_LEN - 1]), 0);
+                _displayHint(format("EXIT: Floor %d room %d", floor, floor_path[floor][pathEndIdx]), 0);
             }
         }
     } else { // room not on path, trigger hurt
@@ -117,14 +118,14 @@ function floorDetectedT(floor) {
 
 /** Generates the the next floor in the hotel */
 function _genNextFloor(prevFloor, newFloor) {
-    if(prevFloor == END_FLOOR) { return; } // Last floor was the last one to auto-generate
+    if(prevFloor == END_FLOOR || path_len[newFloor] == null) { return; } // Last floor was the last to auto-gen
 
-    local startRoom = floor_path[prevFloor][PATH_LEN - 1]; // Last room from the prev floor
+    local startRoom = floor_path[prevFloor][path_len[prevFloor] - 1]; // Last room from the prev floor
     _shuffleRoomsOrderAddFloorPath(newFloor, startRoom);
-    path_visited[newFloor] <- array(PATH_LEN - 1, 0);
+    path_visited[newFloor] <- array(path_len[newFloor] - 1, 0);
 
     // Spawn the exit room rope (or teleport if end floor)
-    local exitRoom = floor_path[newFloor][PATH_LEN - 1];
+    local exitRoom = floor_path[newFloor][path_len[newFloor] - 1];
     if(newFloor == END_FLOOR) { // teleport
         EntFire(ENDTP_SPAWNER_ENT_STRING, "ForceSpawnAtEntityOrigin", _roomOriginEntName(newFloor, exitRoom), 0, null);
     } else { // rope
@@ -171,7 +172,7 @@ function _shuffleRoomsOrderAddFloorPath(floor, startRoom) {
     _moveElementToFront(rooms_pool, startRoom);
 
     // Add the new floor's path
-    floor_path[floor] <- rooms_pool.slice(0, PATH_LEN);
+    floor_path[floor] <- rooms_pool.slice(0, path_len[floor]);
     // _printlArray(floor_path[floor]);
 }
 

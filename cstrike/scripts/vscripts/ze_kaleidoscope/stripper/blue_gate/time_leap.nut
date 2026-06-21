@@ -2,6 +2,7 @@
 // Top part of the map is the default state.
 const LeapDistance = 7200
 const LeapCooldown = 2.0
+const LeapCooldownZm = 4.0
 
 timeleap_enabled <- false
 
@@ -18,13 +19,17 @@ GateFunctions[Gate.Blue] <- function(player, info, buttons, buttons_changed, but
 	local grounded = !(TraceLine(player.GetOrigin(), player.GetOrigin() + Vector(0, 0, -12), player) >= 1)
 
 	// Tick down cooldown.
-	if ("time_leap_cd_left" in info.active_gate_variables && info.active_gate_variables.time_leap_cd_left > 0)
+	if ("time_leap_cd_left" in info.active_gate_variables && info.active_gate_variables.time_leap_cd_left > 0) {
 		info.active_gate_variables.time_leap_cd_left -= FrameTime()
+		if (info.active_gate_variables.time_leap_cd_left > 0)
+			ClientPrint(player, 4, format("[Time Leap] Time Leap Cooldown: %.1f seconds", info.active_gate_variables.time_leap_cd_left))
+		else
+			ClientPrint(player, 4, "[Time Leap] Time Leap is ready!")
+	}
 
 	if (!grounded && (buttons_pressed & BTN_USE)) {
 		// Check first if off cooldown
 		if (info.active_gate_variables.time_leap_cd_left > 0) {
-			ClientPrint(player, 4, format("[Time Leap] Time Leap Cooldown: %.1f seconds", info.active_gate_variables.time_leap_cd_left))
 			return // Cancel it if still in cooldown
 		}
 
@@ -88,7 +93,7 @@ function TogglePlayerTimeline(player, forced = false) {
 		ClientPrint(player, 4, "[Time Leap] You Time Leaped into the Main Timeline!")
 
 	// Set the cooldown
-	scope.info.active_gate_variables.time_leap_cd_left = LeapCooldown
+	scope.info.active_gate_variables.time_leap_cd_left = player.GetTeam() == TEAM_HUMANS ? LeapCooldown : LeapCooldownZm
 	
 	EntFireByHandle(self, "RunScriptCode", "CreateTeleportParticles(activator)", 0.0, player, null)
 }
@@ -159,13 +164,20 @@ timeleap_events <- {
 	OnGameEvent_player_spawn = function(params){
 		if (timeleap_enabled) {
 			local player = GetPlayerFromUserID(params.userid)
-			RunWithDelay(function() {
-				local scope = player.GetScriptScope()
-				if (!("default_timeline" in scope.info.active_gate_variables)) {
-					scope.info.active_gate_variables.default_timeline <- true
-					scope.info.active_gate_variables.time_leap_cd_left <- 0.0
-				}
-			}, FrameTime() + FrameTime())
+
+			// Should stop printing out fuck ass errors 
+			try {
+				RunWithDelay(function() {
+					local scope = player.GetScriptScope()
+					if (!("default_timeline" in scope.info.active_gate_variables)) {
+						scope.info.active_gate_variables.default_timeline <- true
+						scope.info.active_gate_variables.time_leap_cd_left <- 0.0
+					}
+				}, FrameTime() + FrameTime())
+			}
+			catch(e) {
+
+			}
 		}
 	}
 
@@ -173,10 +185,13 @@ timeleap_events <- {
 		if (timeleap_enabled) {
 			local player = GetPlayerFromUserID(params.userid)
 
-			local scope = player.GetScriptScope()
-			if (("default_timeline" in scope.info.active_gate_variables)) {
-				scope.info.active_gate_variables.default_timeline = true
-				scope.info.active_gate_variables.time_leap_cd_left = 0.0
+			// Probably not reset them if their HP right now is above 0, meaning they just got infected
+			if (player.GetHealth() <= 0) {
+				local scope = player.GetScriptScope()
+				if (("default_timeline" in scope.info.active_gate_variables)) {
+					scope.info.active_gate_variables.default_timeline = true
+					scope.info.active_gate_variables.time_leap_cd_left = 0.0
+				}
 			}
 		}
 	}

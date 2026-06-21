@@ -75,7 +75,7 @@ function OnPostSpawn() {
 
 	hp = new_health
 	max_hp = new_health
-	self.AcceptInput("SetHealth", "999999999", null, null)
+	breakable.AcceptInput("SetHealth", "999999999", null, null)
 
 	breakable.ValidateScriptScope()
 	local scope = breakable.GetScriptScope()
@@ -412,7 +412,7 @@ function BlackRoseExplosions() {
 		if (player == null || !player.IsValid()) continue
 		if (player.GetTeam() != TEAM_HUMANS) continue
 		
-		ApplyBlackRoseDOT(player, 4)
+		ApplyBlackRoseDOT(player, 5)
 	}
 }
 
