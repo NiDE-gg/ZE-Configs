@@ -1,5 +1,3 @@
-
-
 //--------------------------------------------------
 // Contest_map_2026_lardy.nut
 //--------------------------------------------------
@@ -3463,23 +3461,15 @@ if (!("ContestItem" in getroottable()))
 
 // Touche E / USE
 ::ContestItem.IN_USE <- 32;
-
-// Brush model du trigger commun.
-// Dans ton .ent actuel: heal_trigger = model "*190".
-// Si ton autre VMF utilise l'ancien fichier, remplace par "*193".
 ::ContestItem.triggerModel <- "*189";
 
 // Durée des effets.
-::ContestItem.healEffectDuration <- 5.0;
+::ContestItem.healEffectDuration <- 8.0;
 ::ContestItem.windEffectDuration <- 6.0;
-::ContestItem.rapidFireZoneDuration <- 5.0;
-::ContestItem.rapidFireBuffDuration <- 6.0;
-
-// Position de spawn des zones devant le joueur.
+::ContestItem.rapidFireZoneDuration <- 7.0;
+::ContestItem.rapidFireBuffDuration <- 8.0;
 ::ContestItem.spawnForwardDistance <- 64.0;
 ::ContestItem.spawnZOffset <- -8.0;
-
-// Think.
 ::ContestItem.thinkInterval <- 0.05;
 
 
@@ -3530,6 +3520,9 @@ if (!("ContestItem" in getroottable()))
 ::ContestItem.cooldowns <- {};
 ::ContestItem.effectIndex <- 0;
 ::ContestItem.activeEffects <- {};
+::ContestItem.healDamageFilterName <- "Filter_Team_Zombies_Ignore";
+::ContestItem.healZoneMembers <- {};
+::ContestItem.healImmunityPlayers <- {};
 ::ContestItem.debug <- false;
 if (!("contestItemCallbacksRegistered" in getroottable()))
     ::contestItemCallbacksRegistered <- false;
@@ -3692,7 +3685,16 @@ if (!("contestItemCallbacks" in getroottable()))
     foreach (ent in this.activeEffects[key])
     {
         if (ent != null && ent.IsValid())
+        {
+            local entKey = ent.entindex().tostring();
+
+            // Si cette entité est un trigger Heal, retire l'immunité
+            // de tous les humains encore présents avant de le supprimer.
+            if (this.healZoneMembers.rawin(entKey))
+                this.ClearHealImmunityForTrigger(ent.entindex());
+
             EntFireByHandle(ent, "Kill", "", 0.0, null, null);
+        }
     }
 
     this.activeEffects.rawdelete(key);
@@ -3710,6 +3712,196 @@ if (!("contestItemCallbacks" in getroottable()))
     }
 
     this.activeEffects.clear();
+};
+
+//------------------------------------------------------------
+// HEAL IMMUNITY AGAINST ZOMBIES
+//------------------------------------------------------------
+
+::ContestItem.SetHealImmunity <- function(player, enabled)
+{
+    if (!this.IsValidPlayer(player))
+        return;
+
+    local filterName = "";
+
+    if (enabled)
+        filterName = this.healDamageFilterName;
+
+    EntFireByHandle(
+        player,
+        "SetDamageFilter",
+        filterName,
+        0.00,
+        null,
+        null
+    );
+};
+
+::ContestItem.GrantHealImmunity <- function(player, trigger)
+{
+    if (!this.IsAlivePlayer(player))
+        return;
+
+    if (player.GetTeam() != 3)
+        return;
+
+    if (!this.IsValidEntity(trigger))
+        return;
+
+    local playerKey = this.GetPlayerKey(player);
+    local triggerKey = trigger.entindex().tostring();
+
+    if (playerKey == "" || triggerKey == "")
+        return;
+
+    if (!this.healZoneMembers.rawin(triggerKey))
+        this.healZoneMembers[triggerKey] <- {};
+
+    // Le même joueur ne doit compter qu'une fois dans cette zone précise.
+    if (this.healZoneMembers[triggerKey].rawin(playerKey))
+        return;
+
+    this.healZoneMembers[triggerKey][playerKey] <- true;
+
+    if (!this.healImmunityPlayers.rawin(playerKey))
+    {
+        this.healImmunityPlayers[playerKey] <- {
+            player = player,
+            userID = this.GetUserID(player),
+            count = 0
+        };
+    }
+
+    local data = this.healImmunityPlayers[playerKey];
+
+    data.count += 1;
+
+    // Première zone Heal : activation réelle du filtre.
+    if (data.count == 1)
+        this.SetHealImmunity(player, true);
+};
+
+::ContestItem.RemoveHealImmunityByKeys <- function(playerKey, triggerKey)
+{
+    if (!this.healZoneMembers.rawin(triggerKey))
+        return;
+
+    if (!this.healZoneMembers[triggerKey].rawin(playerKey))
+        return;
+
+    this.healZoneMembers[triggerKey].rawdelete(playerKey);
+
+    if (this.healZoneMembers[triggerKey].len() <= 0)
+        this.healZoneMembers.rawdelete(triggerKey);
+
+    if (!this.healImmunityPlayers.rawin(playerKey))
+        return;
+
+    local data = this.healImmunityPlayers[playerKey];
+
+    data.count -= 1;
+
+    // Le joueur reste protégé s'il est encore dans une autre zone Heal.
+    if (data.count > 0)
+        return;
+
+    if ("player" in data && this.IsValidPlayer(data.player))
+        this.SetHealImmunity(data.player, false);
+
+    this.healImmunityPlayers.rawdelete(playerKey);
+};
+
+::ContestItem.RemoveHealImmunity <- function(player, trigger)
+{
+    if (!this.IsValidPlayer(player))
+        return;
+
+    if (!this.IsValidEntity(trigger))
+        return;
+
+    local playerKey = this.GetPlayerKey(player);
+    local triggerKey = trigger.entindex().tostring();
+
+    if (playerKey == "" || triggerKey == "")
+        return;
+
+    this.RemoveHealImmunityByKeys(playerKey, triggerKey);
+};
+
+::ContestItem.ClearHealImmunityForTrigger <- function(triggerEntIndex)
+{
+    local triggerKey = triggerEntIndex.tostring();
+
+    if (!this.healZoneMembers.rawin(triggerKey))
+        return;
+
+    local playerKeys = [];
+
+    foreach (playerKey, value in this.healZoneMembers[triggerKey])
+        playerKeys.append(playerKey);
+
+    foreach (playerKey in playerKeys)
+        this.RemoveHealImmunityByKeys(playerKey, triggerKey);
+};
+
+::ContestItem.ClearHealImmunityByPlayerKey <- function(playerKey)
+{
+    if (playerKey == "")
+        return;
+
+    local triggerKeys = [];
+
+    foreach (triggerKey, members in this.healZoneMembers)
+    {
+        if (members.rawin(playerKey))
+            triggerKeys.append(triggerKey);
+    }
+
+    foreach (triggerKey in triggerKeys)
+        this.RemoveHealImmunityByKeys(playerKey, triggerKey);
+
+    // Sécurité si une table est restée incohérente.
+    if (this.healImmunityPlayers.rawin(playerKey))
+    {
+        local data = this.healImmunityPlayers[playerKey];
+
+        if ("player" in data && this.IsValidPlayer(data.player))
+            this.SetHealImmunity(data.player, false);
+
+        this.healImmunityPlayers.rawdelete(playerKey);
+    }
+};
+
+::ContestItem.ClearHealImmunityByUserID <- function(userid)
+{
+    if (userid <= 0)
+        return;
+
+    local playerKeys = [];
+
+    foreach (playerKey, data in this.healImmunityPlayers)
+    {
+        if ("userID" in data && data.userID == userid)
+            playerKeys.append(playerKey);
+    }
+
+    foreach (playerKey in playerKeys)
+        this.ClearHealImmunityByPlayerKey(playerKey);
+};
+
+::ContestItem.ClearAllHealImmunity <- function()
+{
+    local playerKeys = [];
+
+    foreach (playerKey, data in this.healImmunityPlayers)
+        playerKeys.append(playerKey);
+
+    foreach (playerKey in playerKeys)
+        this.ClearHealImmunityByPlayerKey(playerKey);
+
+    this.healZoneMembers.clear();
+    this.healImmunityPlayers.clear();
 };
 
 //------------------------------------------------------------
@@ -4212,16 +4404,25 @@ if (!("contestItemCallbacks" in getroottable()))
         StartDisabled = 0,
         wait = 0.2,
         filtername = "filter_ct",
+
         "OnStartTouch#1": this.scriptName + ",RunScriptCode,ContestItem_HealTouch(),0,-1",
-        "OnStartTouch#2": "!self,Disable,,0.01,-1",
-        "OnStartTouch#3": "!self,Enable,,0.02,-1"
+        "OnEndTouch#1": this.scriptName + ",RunScriptCode,ContestItem_HealEndTouch(),0,-1"
     });
 
     if (trigger != null && trigger.IsValid())
     {
         trigger.SetOrigin(spawnPos);
+
         EntFire(triggerName, "Enable", "", 0.0);
         EntFire(triggerName, "Kill", "", this.healEffectDuration);
+
+        // Reset garanti à la fin des 5 secondes, même si OnEndTouch
+        // n'est pas appelé pendant la suppression du trigger.
+        this.Schedule(
+            "ContestItem.ClearHealImmunityForTrigger(" + trigger.entindex() + ");",
+            this.healEffectDuration
+        );
+
         this.TrackEffectEnt(player, trigger);
     }
 
@@ -4244,27 +4445,49 @@ if (!("contestItemCallbacks" in getroottable()))
 
     return (trigger != null || particle != null || snd != null);
 };
-
 ::ContestItem_HealTouch <- function()
 {
     local p = activator;
+    local trigger = caller;
 
     if (p == null || !p.IsValid())
-    return;
+        return;
 
     if (p.GetClassname() != "player")
-    return;
+        return;
 
     if (!p.IsAlive())
-    return;
+        return;
 
     if (p.GetTeam() != 3)
+        return;
+
+    if (trigger == null || !trigger.IsValid())
         return;
 
     local hp = p.GetHealth();
 
     if (hp < 250)
         p.SetHealth(250);
+
+    // Applique Filter_Team_Zombies_Ignore au joueur.
+    ::ContestItem.GrantHealImmunity(p, trigger);
+};
+
+::ContestItem_HealEndTouch <- function()
+{
+    local p = activator;
+    local trigger = caller;
+
+    if (p == null || !p.IsValid())
+        return;
+
+    if (p.GetClassname() != "player")
+        return;
+
+    if (trigger == null || !trigger.IsValid())
+        return;
+    ::ContestItem.RemoveHealImmunity(p, trigger);
 };
 
 //------------------------------------------------------------
@@ -4310,8 +4533,6 @@ if (!("contestItemCallbacks" in getroottable()))
         wait = 1.0,
         filtername = "filter_t",
         "OnStartTouch#1": this.scriptName + ",RunScriptCode,ContestItem_WindTouch(),0,-1",
-        "OnStartTouch#2": "!self,Disable,,0.01,-1",
-        "OnStartTouch#3": "!self,Enable,,0.02,-1"
     });
 
     if (trigger != null && trigger.IsValid())
@@ -4702,6 +4923,7 @@ if (!("CONTEST_IN_ATTACK" in getroottable()))
 
 ::ContestItem.ResetAll <- function()
 {
+    this.ClearAllHealImmunity();
     foreach (key, data in this.owners)
     {
         if ("player" in data)
@@ -4730,6 +4952,9 @@ if (!("CONTEST_IN_ATTACK" in getroottable()))
 ::contestItemCallbacks.OnGameEvent_player_death <- function(params)
 {
     if ("userid" in params)
+        ::ContestItem.ClearHealImmunityByUserID(params.userid);
+
+    if ("userid" in params)
         ::ContestItem.ClearOwnerByUserID(params.userid);
 
     local p = null;
@@ -4746,11 +4971,17 @@ if (!("CONTEST_IN_ATTACK" in getroottable()))
 ::contestItemCallbacks.OnGameEvent_player_disconnect <- function(params)
 {
     if ("userid" in params)
+        ::ContestItem.ClearHealImmunityByUserID(params.userid);
+
+    if ("userid" in params)
         ::ContestItem.ClearOwnerByUserID(params.userid);
 };
 
 ::contestItemCallbacks.OnGameEvent_player_team <- function(params)
 {
+    if ("userid" in params)
+        ::ContestItem.ClearHealImmunityByUserID(params.userid);
+
     if ("userid" in params)
         ::ContestItem.ClearOwnerByUserID(params.userid);
 
