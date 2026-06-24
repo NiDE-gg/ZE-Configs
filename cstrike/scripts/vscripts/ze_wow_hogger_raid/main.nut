@@ -180,139 +180,107 @@ function CollectEventsInScope(events)
 local _spawnHpRelay = self;
 
 CollectEventsInScope({
-    // Handles mid-round respawns safely
-    OnGameEvent_player_spawn = function(params) {
-        local foundPlayer = null;
-        if ("GetPlayerFromUserID" in this) {
-            foundPlayer = GetPlayerFromUserID(params.userid);
-        }
-        
-        if (foundPlayer == null || !foundPlayer.IsValid()) {
-            local player = null;
-            while (player = Entities.FindByClassname(player, "player")) {
-                if (player && player.IsValid() && "GetPlayerUserId" in player && player.GetPlayerUserId() == params.userid) {
-                    foundPlayer = player;
-                    break;
-                }
-            }
-        }
+	// Handles mid-round respawns safely
+	OnGameEvent_player_spawn = function(params) {
+		local foundPlayer = null;
+		if ("GetPlayerFromUserID" in this) {
+			foundPlayer = GetPlayerFromUserID(params.userid);
+		}
 
-        if (foundPlayer == null || !foundPlayer.IsValid()) return;
-        if (foundPlayer.GetTeam() != 3) return; // Team 3 is CT
+		if (foundPlayer == null || !foundPlayer.IsValid()) {
+			local player = null;
+			while (player = Entities.FindByClassname(player, "player")) {
+				if (player && player.IsValid() && "GetPlayerUserId" in player && player.GetPlayerUserId() == params.userid) {
+					foundPlayer = player;
+					break;
+				}
+			}
+		}
 
-        local idx = foundPlayer.entindex();
-        if (!(idx in ::WARCRAFT_PLAYER_LEVEL)) return;
-        
-        local level = ::WARCRAFT_PLAYER_LEVEL[idx];
-        if (level <= 0) return;
+		if (foundPlayer == null || !foundPlayer.IsValid()) return;
+		if (foundPlayer.GetTeam() != 3) return; // Team 3 is CT
 
-        local newMaxHp = 100 + level * 10;
+		local idx = foundPlayer.entindex();
+		if (!(idx in ::WARCRAFT_PLAYER_LEVEL)) return;
 
-        // Apply immediately for mid-round spawns
-        try {
-            foundPlayer.SetMaxHealth(newMaxHp);
-            foundPlayer.SetHealth(newMaxHp);
-        } catch(e) {
-            NetProps.SetPropInt(foundPlayer, "m_iMaxHealth", newMaxHp);
-            foundPlayer.SetHealth(newMaxHp);
-        }
+		local level = ::WARCRAFT_PLAYER_LEVEL[idx];
+		if (level <= 0) return;
 
-        // Delayed backup check to catch spawning frame dips
-        EntFireByHandle(_spawnHpRelay, "RunScriptCode", 
-            format("local target = activator; if(target && target.IsValid() && target.GetHealth() > 0) { try { target.SetMaxHealth(%d); } catch(e) { NetProps.SetPropInt(target, 'm_iMaxHealth', %d); } target.SetHealth(%d); }", newMaxHp, newMaxHp, newMaxHp), 
-            0.75, foundPlayer, null);
-    }
+		local newMaxHp = 100 + level * 10;
+
+		// Apply immediately for mid-round spawns
+		try {
+			foundPlayer.SetMaxHealth(newMaxHp);
+			foundPlayer.SetHealth(newMaxHp);
+		} catch(e) {
+			NetProps.SetPropInt(foundPlayer, "m_iMaxHealth", newMaxHp);
+			foundPlayer.SetHealth(newMaxHp);
+		}
+
+		// Delayed backup check to catch spawning frame dips
+		EntFireByHandle(_spawnHpRelay, "RunScriptCode",
+			format("local target = activator; if(target && target.IsValid() && target.GetHealth() > 0) { try { target.SetMaxHealth(%d); } catch(e) { NetProps.SetPropInt(target, 'm_iMaxHealth', %d); } target.SetHealth(%d); }", newMaxHp, newMaxHp, newMaxHp),
+			0.75, foundPlayer, null);
+	}
 });
 
 CollectEventsInScope({
-    // FIX: Overrides the base CS:S health reset when a brand new round begins!
-    OnGameEvent_round_start = function(params) {
-        // We delay the application by 0.5 seconds to let the engine finish resetting everyone to 100 HP first
-        EntFireByHandle(_spawnHpRelay, "RunScriptCode", "WARCRAFT_RestoreRoundStartHP()", 0.5, null, null);
-    }
+	// FIX: Overrides the base CS:S health reset when a brand new round begins!
+	OnGameEvent_round_start = function(params) {
+		// We delay the application by 0.5 seconds to let the engine finish resetting everyone to 100 HP first
+		EntFireByHandle(_spawnHpRelay, "RunScriptCode", "WARCRAFT_RestoreRoundStartHP()", 0.5, null, null);
+	}
 });
 
 // Helper function called by the round_start delay timer
 ::WARCRAFT_RestoreRoundStartHP <- function() {
-    local player = null;
-    while (player = Entities.FindByClassname(player, "player")) {
-        if (player && player.IsValid() && player.GetHealth() > 0 && player.GetTeam() == 3) {
-            local idx = player.entindex();
-            if (idx in ::WARCRAFT_PLAYER_LEVEL) {
-                local level = ::WARCRAFT_PLAYER_LEVEL[idx];
-                if (level > 0) {
-                    local newMaxHp = 100 + level * 10;
-                    try {
-                        player.SetMaxHealth(newMaxHp);
-                        player.SetHealth(newMaxHp);
-                    } catch(e) {
-                        NetProps.SetPropInt(player, "m_iMaxHealth", newMaxHp);
-                        player.SetHealth(newMaxHp);
-                    }
-                }
-            }
-        }
-    }
+	local player = null;
+	while (player = Entities.FindByClassname(player, "player")) {
+		if (player && player.IsValid() && player.GetHealth() > 0 && player.GetTeam() == 3) {
+			local idx = player.entindex();
+			if (idx in ::WARCRAFT_PLAYER_LEVEL) {
+				local level = ::WARCRAFT_PLAYER_LEVEL[idx];
+				if (level > 0) {
+					local newMaxHp = 100 + level * 10;
+					try {
+						player.SetMaxHealth(newMaxHp);
+						player.SetHealth(newMaxHp);
+					} catch(e) {
+						NetProps.SetPropInt(player, "m_iMaxHealth", newMaxHp);
+						player.SetHealth(newMaxHp);
+					}
+				}
+			}
+		}
+	}
 };
 
 CollectEventsInScope({
-    OnGameEvent_player_hurt = function(params) {
-        if (::WARCRAFT_DMG_BYPASS) { return; }
+	OnGameEvent_player_hurt = function(params) {
+		if (::WARCRAFT_DMG_BYPASS) { return; }
 
-        local victim = null;
-        if ("GetPlayerFromUserID" in this) {
-            victim = GetPlayerFromUserID(params.userid);
-        }
-        
-        if (victim == null || !victim.IsValid()) {
-            local player = null;
-            while (player = Entities.FindByClassname(player, "player")) {
-                if (player && player.IsValid() && "GetPlayerUserId" in player && player.GetPlayerUserId() == params.userid) {
-                    victim = player;
-                    break;
-                }
-            }
-        }
+		local victim = GetPlayerFromUserID(params.userid);
+		if (victim == null || !victim.IsValid() || !victim.IsAlive()) { return; }
+		if (victim.GetTeam() != WARCRAFT_TEAM.CT) { return; }
+		if (!WARCRAFTIsValidEntity(WARCRAFTResolveModelEntity(victim))) { return; }
 
-        // Catch players even if they are at 0 HP on this frame to process the death-prevention math
-        if (victim == null || !victim.IsValid()) { return; }
-        if (victim.GetTeam() != 3) { return; } 
-        if (!(!WARCRAFTIsValidEntity(WARCRAFTResolveModelEntity(victim)))) { return; }
+		local idx = victim.GetEntityIndex();
+		if (!(idx in ::WARCRAFT_PLAYER_ARMOR_CLASS)) { return; }
+		local armorClass = ::WARCRAFT_PLAYER_ARMOR_CLASS[idx];
+		if (!(armorClass in ::WARCRAFT_ARMOR_TABLE)) { return; }
+		local reduction = ::WARCRAFT_ARMOR_TABLE[armorClass];
 
-        local idx = victim.entindex();
-        if (!(idx in ::WARCRAFT_PLAYER_ARMOR_CLASS)) { return; } 
-        local armorClass = ::WARCRAFT_PLAYER_ARMOR_CLASS[idx];
-        if (!(armorClass in ::WARCRAFT_ARMOR_TABLE)) { return; }
-        local reduction = ::WARCRAFT_ARMOR_TABLE[armorClass];
+		local dmg = params.dmg_health;
+		if (dmg <= 0) { return; }
 
-        local dmg = params.dmg_health;
-        if (dmg <= 0) { return; }
+		local heal = (dmg * reduction).tointeger();
+		if (heal < 1) { return; }
 
-        // Calculate how much damage the armor was supposed to block
-        local blockedDmg = (dmg * reduction).tointeger();
-        if (blockedDmg < 1) { return; }
-
-        // SERVER FIX: Check if the raw damage killed the player on this frame
-        local currentHp = victim.GetHealth();
-        if (currentHp <= 0) {
-            // Player "died" on this frame. If their armor reduction would have kept them alive, resurrect them instantly!
-            local maxHp = victim.GetMaxHealth();
-            local survivalHp = maxHp - (dmg - blockedDmg); 
-
-            if (survivalHp > 0) {
-                victim.SetHealth(survivalHp);
-                // Optional: Reset dead/ragdoll flags here if server plugins conflict with script-side resurrection
-                return;
-            }
-        } else {
-            // Normal non-fatal damage mitigation
-            local newHp = currentHp + blockedDmg;
-            local maxHp = victim.GetMaxHealth();
-            if (newHp > maxHp) { newHp = maxHp; }
-            
-            victim.SetHealth(newHp);
-        }
-    }
+		local newHp = victim.GetHealth() + heal;
+		local maxHp = victim.GetMaxHealth();
+		if (newHp > maxHp) { newHp = maxHp; }
+		victim.SetHealth(newHp);
+	}
 });
 
 ::WARCRAFTGetPlayerSteamId <- function(player) {
@@ -387,34 +355,34 @@ CollectEventsInScope({
 // Prints color-coded text using ^-style color tags converted at runtime.
 ::ClientPrintSafe <- function(player, text)
 {
-    //replace ^ with \x07 at run-time
-    local escape = "^"
+	//replace ^ with \x07 at run-time
+	local escape = "^"
 
 	//just use the normal print function if there's no escape character
 	if (text.find(escape) == null)
-    {
-        ClientPrint(player, 3, text)
-        return
-    }
-    
-    //split text at the escape character
-    local splittext = split(text, escape, true)
-    
-    //format into new string
-    local formatted = ""
-    foreach (_i, t in splittext)
-        formatted += format("\x07%s", t)
-    
-    //print formatted string
-    ClientPrint(player, 3, formatted)
+	{
+		ClientPrint(player, 3, text)
+		return
+	}
+
+	//split text at the escape character
+	local splittext = split(text, escape, true)
+
+	//format into new string
+	local formatted = ""
+	foreach (_i, t in splittext)
+		formatted += format("\x07%s", t)
+
+	//print formatted string
+	ClientPrint(player, 3, formatted)
 }
 
 function ApplyModel()
 {
-    local player = null;
-    while (player = Entities.FindByClassname(player, "player")) {
-        WARCRAFTApplySpawnModel(player);
-    }
+	local player = null;
+	while (player = Entities.FindByClassname(player, "player")) {
+		WARCRAFTApplySpawnModel(player);
+	}
 }
 
 if (!("WARCRAFTMeleeNPCSpawnCounter" in getroottable())) {
@@ -769,19 +737,19 @@ if (!("WARCRAFTMeleeNPCSpawnCounter" in getroottable())) {
 // Awards the touching CT player 30 % of their current level's EXP threshold.
 // Call from trigger_once OnStartTouch → main_script RunScriptCode → WARCRAFTChestCollect()
 if (!("WARCRAFTChestCollect" in getroottable())) {
-    ::WARCRAFTChestCollect <- function() {
-        local player = activator;
-        if (!WARCRAFTIsAlivePlayer(player) || player.GetTeam() != WARCRAFT_TEAM.CT) { return; }
+	::WARCRAFTChestCollect <- function() {
+		local player = activator;
+		if (!WARCRAFTIsAlivePlayer(player) || player.GetTeam() != WARCRAFT_TEAM.CT) { return; }
 
-        local idx       = player.GetEntityIndex();
-        local level     = (idx in ::WARCRAFT_PLAYER_LEVEL) ? ::WARCRAFT_PLAYER_LEVEL[idx] : 0;
-        local threshold = ::WARCRAFTGetExpThreshold(level);
-        local amount    = (threshold.tofloat() * 0.3).tointeger();
-        if (amount < 1) { amount = 1; }
+		local idx       = player.GetEntityIndex();
+		local level     = (idx in ::WARCRAFT_PLAYER_LEVEL) ? ::WARCRAFT_PLAYER_LEVEL[idx] : 0;
+		local threshold = ::WARCRAFTGetExpThreshold(level);
+		local amount    = (threshold.tofloat() * 0.3).tointeger();
+		if (amount < 1) { amount = 1; }
 
-        ClientPrint(player, WARCRAFT_CONST.HUD_PRINTTALK,
-            "\x07FFD700[Treasure Chest] \x07FFFFFFYou found a treasure chest and received \x0700FF00+" + amount + " EXP\x07FFFFFF!");
+		ClientPrint(player, WARCRAFT_CONST.HUD_PRINTTALK,
+			"\x07FFD700[Treasure Chest] \x07FFFFFFYou found a treasure chest and received \x0700FF00+" + amount + " EXP\x07FFFFFF!");
 
-        ::WARCRAFTAwardExp(player, amount, false);
-    };
+		::WARCRAFTAwardExp(player, amount, false);
+	};
 }

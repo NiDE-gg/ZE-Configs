@@ -148,8 +148,8 @@ IncludeScript("warcraft/common.nut");
         ::_WQFire("human_music",      "PickRandomShuffle",       "",                                     20.0);
         ::_WQFire("server",    "Command",        "say <> Follow the road to the castle and accept the quest on the way there <>",                                      25.0);
         ::_WQFire("server",    "Command",        "sv_enablebunnyhopping 1",                                      25.0);
-        ::_WQFire("main_script",          "RunScriptCode", "WARCRAFTScheduleAfkTeleportNotice(15)", 30.0);
-        ::_WQFire("afk_teleport_4",       "Enable",        "",                                      45.0);
+        ::_WQFire("main_script",          "RunScriptCode", "WARCRAFTScheduleAfkTeleportNotice(25)", 30.0);
+        ::_WQFire("afk_teleport_4",       "Enable",        "",                                      55.0);
         ::_WQFire("ysera_model",          "Kill",          "",                                      60.0);
     },
 
