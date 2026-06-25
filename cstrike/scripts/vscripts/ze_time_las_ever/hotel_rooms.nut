@@ -30,7 +30,7 @@ match_hint_displayed <- false // If players have been notified what to do on non
 
 // Timers (in sec) handling when the staircase door for a floor (table idx) should open
 staircase_timer <- {[3] = -1, [4] = -1, [5] = -1} // -1 indicates timer not started or expired
-const STAIRS_INTERVAL = 10
+const STAIRS_DELAY = 15;
 
 /** Resets all state (must be invoked on new round) */
 function resetAll() {
@@ -65,10 +65,6 @@ function activateBox(floor, room) {
         else if(pathIdx == 0) { // first room, non-exit, unlock and open the door
             EntFire(_roomDoorEntName(floor, floor_path[floor][0]), "Unlock", "", 0, null);
             EntFire(_roomDoorEntName(floor, floor_path[floor][0]), "Open", "", 0, null);
-
-            // Start a timer to open the staircase to this floor
-            EntFire(CONSOLE, "Command", format("say Floor %d staircase door opening at timer end", floor), 2, null);
-            staircase_timer[floor] = STAIRS_INTERVAL * (END_FLOOR - floor + 1) + 5;
         }
         else if (path_visited[floor].find(0) == null) { // all non-exit rooms visited, unlock exit
             EntFire(_roomDoorEntName(floor, floor_path[floor][pathEndIdx]), "Unlock", "", 0, null);
@@ -77,6 +73,10 @@ function activateBox(floor, room) {
             if(floor == END_FLOOR) { // Notify players where the exit is
                 _displayHint(format("EXIT: Floor %d room %d", floor, floor_path[floor][pathEndIdx]), 0);
             }
+
+            // Start a timer to open the staircase to this floor
+            EntFire(CONSOLE, "Command", format("say Floor %d staircase door opening at timer end", floor), 2, null);
+            staircase_timer[floor] = STAIRS_DELAY;
         }
     } else { // room not on path, trigger hurt
         nextRoom = -1
@@ -103,14 +103,6 @@ function staircaseTick() {
             EntFire(_staricaseTextEntName(fl), "Display", "", 0.01, null);
         }
         staircase_timer[fl]--;
-    }
-}
-
-/** Invoked whenever a floor is entered for the first time by any T-side player */
-function floorDetectedT(floor) {
-    EntFire(CONSOLE, "Command", format("say Zombies breached floor %d - stairs timer adjusted", floor), 0, null);
-    if(staircase_timer[floor] > STAIRS_INTERVAL) {
-        staircase_timer[floor] = STAIRS_INTERVAL
     }
 }
 
