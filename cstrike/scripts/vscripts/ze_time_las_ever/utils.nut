@@ -9,7 +9,7 @@ function _shuffleArray(arr) {
     for (local i = len - 1; i > 0; i--) {
         // Generate a random index from 0 to i (inclusive)
         local j = RandomInt(0, i);
-        
+
         // Swap array[i] with array[j]
         local temp = arr[i];
         arr[i] = arr[j];
@@ -21,7 +21,7 @@ function _shuffleArray(arr) {
 function _moveElementToFront(arr, val) {
     // Find the index of the value in the array
     local index = arr.find(val);
-    
+
     // If find returns null, the element doesn't exist
     if (index != null) {
         // remove() returns the value at the given index
@@ -77,10 +77,10 @@ function _breakTextIntoChunks(text) {
     local chunks = [];
     local words = split(text, " ");
     local currentChunk = "";
-    
+
     foreach(word in words) { // Calculate what the chunk would be if we add this word
         local proposedChunk = (currentChunk == "") ? word : (currentChunk + " " + word);
-        
+
         // If it exceeds the 80 character limit, finalize the current chunk and start a new one
         if (proposedChunk.len() > 80) {
             if (currentChunk.len() > 0) {
@@ -89,11 +89,11 @@ function _breakTextIntoChunks(text) {
             }
         } else { // Update the chunk
             currentChunk = proposedChunk;
-            
+
             // Check if it hit our minimum or a delimiter, and finalize it if safe
             if (currentChunk.len() >= 40) {
                 local lastChar = currentChunk.slice(currentChunk.len() - 1);
-                
+
                 // If it ends with a comma/dot or the next word would push it over 80, we flush it
                 if (lastChar == "," || lastChar == ".") {
                     chunks.append(currentChunk);
@@ -116,6 +116,7 @@ function _factRandom() {
     return facts[randomIndex];
 }
 
+if (!("facts" in this))
 facts <- [ // list25.com/100-space-facts-speechless
 "The Sun accounts for 99.8% of the total mass of our entire solar system. Everything else — every planet, moon, asteroid, and comet — makes up just the remaining 0.2%.",
 "The Sun’s core temperature reaches approximately 15 million degrees Celsius (27 million °F). At its surface, temperatures “cool” to around 5,500°C (9,932°F).",

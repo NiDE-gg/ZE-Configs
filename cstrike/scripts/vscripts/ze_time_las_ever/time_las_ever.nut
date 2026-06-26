@@ -13,11 +13,11 @@ const CT = 3
 // HP scale - multiply by number of alive CT-s (counter based)
 const EGG_HP_MULTI = 10
 const ICED_HP_MULTI = 10
-const NPC_HP_MULTI = 75
+const NPC_HP_MULTI = 62 // originally 75 (lowered by ~17%)
 const BASE_HEALTH = 50
 
 // Breakable health scale - multiply by number of alive T-s (damage based)
-const ROOM_WALL_MULTI = 60 // knife ~15 dps averaged
+const ROOM_WALL_MULTI = 35 // knife ~15dps * 10 sec * 0.2 zombies knifing + 5 buffer
 const DMG_BASE_HEALTH = 100
 
 // breakables can register multiple OnHealthChanged events from a single bullet
@@ -67,14 +67,14 @@ function scaleRoomWallsHealth() {
     }
 }
 
-/** Make some of the space platforms between the station and temple breakable 
+/** Make some of the space platforms between the station and temple breakable
  * Neither of the selected should be consecutive platforms
  * This is to ensure that gaps, after platforms break, don't become too wide for players to jump over */
 function setTSPlatformsBreakable() {
-    local selected = _pickRandomNonConsecutive(1, 8, NUM_BREAKABLE_PLATS - RandomInt(0, 1));
+    local selected = _pickRandomNonConsecutive(1, 8, NUM_BREAKABLE_PLATS);
     //_printlArray(selected);
     foreach (num in selected) {
-        EntFire(PLAT_CASE_ENT_STRING, "InValue", "" + num, 0, null); 
+        EntFire(PLAT_CASE_ENT_STRING, "InValue", "" + num, 0, null);
     }
 }
 
@@ -100,7 +100,7 @@ function showFact() {
     local factLines = _breakTextIntoChunks(_factRandom());
     EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message Did you know", 0, null);
     EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 0.01, null);
-    
+
     local delay = 8;
     for(local l = 0; l < factLines.len(); l++) {
         EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message " + factLines[l], 4 + l * delay, null);
