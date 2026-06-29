@@ -121,7 +121,7 @@ function OnPostSpawn(){
 	HITBOX = MODEL.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(75*ctcount) // 300 starting hp + 200/per player
+	maxhealth = HITBOX.GetHealth()+(112*ctcount) // 300 starting hp + 200/per player
 
 	HITBOX.SetHealth(maxhealth)
 	// printl("RESCALED HP "+maxhealth)
@@ -166,6 +166,7 @@ function OnPostSpawn(){
 	MODEL.GetScriptScope().offset <- 48.00;
     MODEL.GetScriptScope().damage_cooldown <- 0.7;
     MODEL.GetScriptScope().touchers <- {};
+	MODEL.GetScriptScope().touchers2 <- {};
 	MODEL.GetScriptScope().active <- false;
 	MODEL.GetScriptScope().baseent <- self;
 
@@ -175,8 +176,15 @@ function OnPostSpawn(){
         delete touchers[activator];
     }
 
+	MODEL.GetScriptScope().ClearCD2 <- function(){
+    if(activator==null||!activator.IsValid())return;
+    if(activator in touchers2)
+        delete touchers2[activator];
+    }
+
     MODEL.GetScriptScope().ThinkHurt <- function(){
 		local checkpos = self.GetOrigin()+Vector(0, 0, 24)+self.GetForwardVector()*offset;
+		local checktouch = self.GetOrigin()+Vector(0, 0, 24)
 		local scope = baseent.GetScriptScope()
 
 		if(active){
@@ -204,9 +212,21 @@ function OnPostSpawn(){
 				sound_level = soundlevel,
 				volume = 1,
 			});
-
-
 		}
+
+		for(local j;j=Entities.FindInSphere(j,checktouch,32);){ // TOUCH DAMAGE
+			if(scope.DEAD) return 60;
+			if(!j.IsPlayer()) continue;
+			if(!j.IsAlive()) continue;
+			if(j.GetTeam()!=3) continue;    //<---- ignore players by team, if you want
+			if(j in touchers2) continue;    //touching player is in damage-cooldown, ignore for now
+
+			DebugDrawCircle(checktouch, Vector(255, 0, 0), 100, 32, true, 0.1);
+			touchers2[j] <- j;
+			EntFireByHandle(self,"CallScriptFunction","ClearCD2",damage_cooldown,j,null);
+			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 10, 8)
+		}
+
         return -1;
     };	
 
@@ -414,7 +434,7 @@ function Attack(){
 			break;
 	}
 
-	EntFireByHandle(MODEL, "RunScriptCode", "damage=20", 0, null, null)	
+	EntFireByHandle(MODEL, "RunScriptCode", "damage=40", 0, null, null)	
 	EntFireByHandle(MODEL, "RunScriptCode", "damage_range=32", 0, null, null)	
 	EntFireByHandle(MODEL, "RunScriptCode", "offset=48", 0, null, null)	
 
@@ -479,7 +499,7 @@ function Attack(){
 		default:
 			EntFireByHandle(MODEL, "SetAnimation", "attack_strong", 0, null, null);
 
-			EntFireByHandle(MODEL, "RunScriptCode", "damage=50", 0.1, null, null)	
+			EntFireByHandle(MODEL, "RunScriptCode", "damage=75", 0.1, null, null)	
 			EntFireByHandle(MODEL, "RunScriptCode", "damage_range=48", 0.1, null, null)	
 			EntFireByHandle(MODEL, "RunScriptCode", "offset=64", 0.1, null, null)	
 

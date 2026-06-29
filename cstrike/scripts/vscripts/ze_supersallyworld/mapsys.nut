@@ -1,9 +1,17 @@
 ////// NIDE26 MAPSYS (STRIPPER VERSION)
 
 // don't forget to change these with each update!!
-::g_iStripperVersion <- 1.0;
-m_szStripper <- "\x07FFCC00 ELTRAFIXES: This server is running \x07FFFFFFSallyPatch "+g_iStripperVersion.tostring()+"\x07FFCC00."
+::g_iStripperVersion <- 1.1;
 
+
+m_szStripper <- "\x07FFCC00ELTRAFIXES: This server is running \x07FFFFFFSallyPatch "+g_iStripperVersion.tostring()+"\x07FFCC00!!!!"
+if (g_iStripperVersion == 0.0) {
+	if (RandomInt(0,14) == 14) {
+		m_szStripper <- "\x07FFCC00ELTRAFIXES: This server is running raw SallyWorld. Directly from \x07FFFFFFthe cow\x07FFCC00. Thank you."
+	} else {
+		m_szStripper <- ""
+	}
+} 
 
 // ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⡀⠄⢀⠄⠄⡀⠄⡀⢀⠄⡀⢀⠄⡀⢀⠄⡀⢀⠄⢀⠄⢀⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 // ⠄⠄⠐⠈⠄⢈⠄⠈⠄⠁⠈⡀⠁⠈⠄⠁⢀⠠⠄⠄⠂⠄⠄⠠⠄⠠⡠⢠⠠⠠⡀⠄⡠⠠⡐⠄⠠⠄⡀⠈⡀⠈⠄⠐⠄⠐⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -111,25 +119,33 @@ IncludeScript("eltrasnag/nide26/stage3.nut", this)
 IncludeScript("eltrasnag/modules/weaponfunc.nut", getroottable())
 IncludeScript("eltrasnag/nide26/shared.nut", this)
 IncludeScript("eltrasnag/fmv.nut", this)
-IncludeScript("eltrasnag/nide26_edit/pathfollowing.nut", this)
+IncludeScript("eltrasnag/nide26/pathfollowing.nut", this)
 IncludeScript("eltrasnag/nide26/story.nut", this)
 IncludeScript("eltrasnag/modules/econstants.nut", this)
 IncludeScript("eltrasnag/csrounds.nut", this)
 IncludeScript("eltrasnag/nide26/stage2.nut", this)
 IncludeScript("eltrasnag/modules/multifog.nut", this)
 
+
+
+
+
+
 // make sure this gets included AFTER all the rest
 IncludeScript("eltrasnag/nide26/playersettings.nut", this)
 
-// feature ideas :
-// - the common cold
 
-// !CompilePal::IncludeDirectory("models/eltra/nide26")
+// STRIPPER EDITS!!!
+IncludeScript("ze_supersallyworld/strippersys.nut", this);
+// STRIPPER EDITS!!!
 
 
 
 
 ::g_pServerCommand <- Spawn("point_servercommand", {targetname = "cmd", classname = "point_servercommand_kill"})
+
+// Enable enforcement of custom crowbar knife model? (Disable if people start experiencing crashes again!!!)
+::g_bDoApplyCustomWeapons <- true;
 
 // Earthbound-style rolling health for humans
 ::g_bDoRollingHealth <- true;
@@ -140,6 +156,29 @@ IncludeScript("eltrasnag/nide26/playersettings.nut", this)
 // can you read
 ::g_bDoTeeKnockBack <- false;
 
+// Make player-held props trace for where they should be held, rather than always trying to move to the normal offset pos
+::g_bDoPropTrace <- false;
+
+// Mask to use when tracing props
+::g_iPropTraceMask <- EConstants.ECollisionMasks.MASK_PLAYERSOLID
+
+// Collision group for player-held props to be added to
+::g_iPropCollisionGroup <- EConstants.ECollisionGroup.COLLISION_GROUP_INTERACTIVE_DEBRIS
+
+// Should we disable fall damage?
+// m_bNoFallDamage <- false; // this is the one which u should set if you want to disable it
+
+::g_bNoFallDamage <- true; // this is the one which is used by the map // whatever just add some bullshit relay onspawn to set this because this isnt working
+
+// Rolling player health 'tick-rate'
+::g_flHealthUpdateDelay <- 0.1;
+
+// How much health should the Lois boss have per player?
+::g_flLoisBossScaling <- 500;
+
+// How much damage should a zombie hit inflict on humans?
+::g_iZombieInflictDamage <- 25;
+
 // TO DO:
 // STAGE 1: FINISHED!!!!
 // STAGE 2: CHECK PLEASE - MOSTLY FINISHED!!! BROKEN TPS
@@ -147,7 +186,7 @@ IncludeScript("eltrasnag/nide26/playersettings.nut", this)
  
 // POTENTIAL CRASHES WITH ITEMS
 // MAYBE CAUSES: - CROWBAR VIEWMODEL. LESHAWNA. PLAYERMODEL.
-
+// note: the crashes DID stop after disabling the crowbar, but let's try enabling it again via different method to be certain.
 
 // equivalent
 
@@ -186,7 +225,6 @@ enum TEAMS {
 ::g_iPrayersPerPlayer <- 5;
 ::g_iPrayerDamage <- g_iFinalBossHealthPerPlayer/g_iPrayersPerPlayer
 
-::g_bDoApplyCustomWeapons <- false;
 
 point_clientcommand <- Spawn("point_clientcommand", {targetname = "clientcmd"})
 
@@ -203,6 +241,9 @@ m_bIsReleaseMap <- false;
 
 // certain variables are only needed when playing on the actual map, so lets make dev time a bit easier
 vec_SkyCameraOrigin <- Entities.FindByClassname(null, "sky_camera") != null ? Entities.FindByClassname(null, "sky_camera").GetOrigin() : Vector();
+::g_vSkyCamera <- vec_SkyCameraOrigin // not replacing original for backwards compat in scripts which use the other one
+
+::g_hSkyCamera <- Entities.FindByClassname(null, "sky_camera");
 if (GetMapName().find("supersallyworld") != null) {
 	::v_BlackZone_hDest <- Entities.FindByName(null, "nothingzone_hdest").GetOrigin();
 	::v_BlackZone_zDest <- Entities.FindByName(null, "nothingzone_zdest").GetOrigin();
@@ -230,6 +271,7 @@ if (GetMapName().find("supersallyworld") != null) {
 	"spacetilt" : "Eltra	Space Tilt (Part I)"
 	"spacetilt_p2" : "Eltra	Space Tilt (Part II)"
 	"kill_lois" : "Eltra	KILL LOIS"
+	"kill_lois_real" : "Eltra	KILL LOIS"
 	"lesbian_times" : "Eltra	Cool and Lesbian Times."
 	"funkytown_credits" : "Eltra/Lipps Inc.	Funkytown (sally mix)"
 	"rockinback" : "Julee Cruise	Rockin' Back Inside my Heart"
@@ -242,6 +284,8 @@ if (GetMapName().find("supersallyworld") != null) {
 	"angel_fire" : "Eltra	AngelFire"
 	"space_needle_south" : "Eltra	Space Needle South"
 	"addisonpepsi" : "Addison Rae	Diet Pepsi"
+	"preg_suburbs" : "Eltra	Pregnant City Test: Positive."
+	"Tyra Banks' Homemade Modelland Song" : "Tyra Banks	Tyra Banks' Homemade Modelland Song"
 }
 
 ::MAP_COLOR_HEX <- "FFFFFF"
@@ -317,7 +361,8 @@ function CleanSkyboxModels() {
 	}
 }
 
-
+// Should we do the stage 3 sky? (obsolete as this is no longer handled via script)
+::g_bDoStage3Sky <- true;
 
 ::SetVisFilter <- function(player, toggle) {
 	printl("visfilter")
@@ -352,7 +397,7 @@ function CleanSkyboxModels() {
 
 
 ::MAPSYS_EVENTS <- {OnGameEvent_player_spawn = function(params) {
-		printl("\n\n\n\n\n\n I spawned. \n\n\n\n\n\n")
+		// printl("\n\n\n\n\n\n I spawned. \n\n\n\n\n\n")
 		SpawnFunction(params.userid)
 	},
 
@@ -385,6 +430,12 @@ function CleanSkyboxModels() {
 const SALLY_WARNING_ALARM = "eltra/nide26/map_reset_alarm.mp3"
 const SALLY_WARNING_MESSAGE = "Super Sally:\nYour game is about to freeze while I reload my AWESOME Sally world!\nDO NOT press your keyboard or your mouse during the freeze!!!\nOr you will crash for real!!!!"
 
+// Should players use the alternate animated roblox models? (NOTE: This is broken in v1e)
+::g_bEnableAlternatePlayermodels <- false;
+
+// Should we show the round-end warning? (Obsolete as we no longer use r_radiosity switches for light system)
+::g_bDoFreezeWarning <- false;
+
 // hack
 ::g_bDidRoundEnd <- false;
 ::MAPSYS_EVENTS.OnGameEvent_round_end <- function(params) {
@@ -393,18 +444,20 @@ const SALLY_WARNING_MESSAGE = "Super Sally:\nYour game is about to freeze while 
 	}
 	::g_bDidRoundEnd <- true;
 
-	ClientPrint(null, 4, SALLY_WARNING_MESSAGE)
+	if (g_bDoFreezeWarning) {
+		ClientPrint(null, 4, SALLY_WARNING_MESSAGE)
 
-	::g_hSallyAlarmSound <- Spawn("ambient_generic", {
-		health = 10,
-		spawnflags = 49,
-		message = SALLY_WARNING_ALARM,
-	})
+		::g_hSallyAlarmSound <- Spawn("ambient_generic", {
+			health = 10,
+			spawnflags = 49,
+			message = SALLY_WARNING_ALARM,
+		})
 
-	for (local i=0; i<5; i++) {
-		EntFire("worldspawn", "RunScriptCode", "ClientPrint(null, 4, SALLY_WARNING_MESSAGE)", i, null);
-		// sally blaring alarm
-		EntFireByHandle(g_hSallyAlarmSound, "PlaySound", "", i*2.0+1, null, null);
+		for (local i=0; i<5; i++) {
+			EntFire("worldspawn", "RunScriptCode", "ClientPrint(null, 4, SALLY_WARNING_MESSAGE)", i, null);
+			// sally blaring alarm
+			EntFireByHandle(g_hSallyAlarmSound, "PlaySound", "", i*2.0+1, null, null);
+		}
 	}
 	
 	// for (local ambi; ambi = Entities.FindByClassname(ambi, "ambient_generic");) {
@@ -458,16 +511,39 @@ __CollectGameEventCallbacks(MAPSYS_EVENTS) // I dont get this .
 // }
 
 
-function SpawnSkyboxModel(modelname = "", origin_name = "", origin_offset = Vector()) {
+function SpawnSkyboxModel(modelname = "", origin_name = Vector(0 0 0), origin_offset = Vector(0 0 0)) {
 	if (vec_SkyCameraOrigin) {
+		local origin_pos;
 
-		local origin_pos = Entities.FindByName(null, origin_name);
+		if (modelname.len() == 0) {
+			dprintl("ERROR SPAWNING SKY MODEL: Passed with NO MODEL NAME!!!!!!!!!!!!");
 
-		if (modelname.len() == 0 || origin_name == "" || !ValidEntity(origin_pos)) {
 			return
 		}
 
-		origin_pos = origin_pos.GetOrigin()
+		if (type(origin_name).tolower() == "string") {
+
+			if (origin_name.len() > 0) {
+				local e = Entities.FindByName(null, origin_name)
+				if (ValidEntity(e)) {
+					origin_pos = e.GetOrigin();			
+				} else {
+					dprintl("ERROR SPAWNING SKY MODEL: Origin "+origin_name+" DOES NOT EXIST!!!!!!!!!!")
+					return;
+				}
+			} else {
+				origin_pos = Vector();
+			}
+		}
+		else {
+			origin_pos = origin_name;
+			dprintl(origin_pos)
+			dprintl(typeof origin_pos)
+		}
+
+
+
+		// origin_pos = origin_pos.GetOrigin()
 
 		local h_SkyProp = Spawn("prop_dynamic", {
 			targetname = "skymodel"
@@ -482,9 +558,18 @@ function SpawnSkyboxModel(modelname = "", origin_name = "", origin_offset = Vect
 		QAcceptInput(h_SkyProp, "TurnOff")
 		QFireByHandle(h_SkyProp, "TurnOn")
 		m_pSkyProps.append(h_SkyProp)
+		return h_SkyProp
 	}
 }
 
+function Stage3_RandMusic() {
+	if (RandomInt(0,1) == 0) {
+		QFire("s3_mus_needlesouth", "Kill")
+		QFire("s3_mus_suburbs", "AddOutput", "Targetname s3_mus_needlesouth", 0.1)
+
+	}
+	QFire("s3_mus_needlesouth", "PlaySound", "", 0.2)
+}
 function SetSky(next_int) {
 
 	local l_off
@@ -518,7 +603,6 @@ function SetSky(next_int) {
 		case PREG_SKY.DESERT:
 			CleanSkyboxModels()
 			SetFog("fog_desert")
-			// SpawnSkyboxModel("models/eltra/nide26/skybox/sky_desert.mdl", "s2_sky_origin_desert1")
 			SetSkyboxTexture("sky_pregnant_desert")
 			QFire("light_desert", "TurnOn", "", 0) // hacky way of doing this because 3 lights cant all affect rad light
 			// QFire("light_day", "TurnOn", "", 0)
@@ -601,10 +685,10 @@ IncludeScript("eltrasnag/nide26/misc/guy_names.nut", this) // the names dictiona
 
 			ply.TerminateScriptScope()
 			ply.ValidateScriptScope()
-			// ply.AcceptInput("RunScriptFile", "eltrasnag/nide26/player.nut", null, null)
+			// ply.AcceptInput("RunScriptFile", "sallyworld/player.nut", null, null)
 			local pscope = ply.GetScriptScope()
-			EntFireByHandle(ply, "RunScriptFile", "eltrasnag/nide26/player.nut", 0, null, null)
-			// pscope.IncludeScript("eltrasnag/nide26/player.nut", pscope)
+			EntFireByHandle(ply, "RunScriptFile", "ze_supersallyworld/player.nut", 0, null, null)
+			// pscope.IncludeScript("sallyworld/player.nut", pscope)
 			
 			
 
@@ -630,9 +714,16 @@ const EPILEPSY_WARN_DURATION = 5
 
 ::g_bDoIntroCutscene <- false;
 
+// for (local i = 0; i < 100; i++) {
+// 	printl("fuck")
+// }
+
+
 function OnPostSpawn() {
 
-	// ze_map_say(m_szStripper, 1)
+	
+
+
 	ClientPrint(null, 3, m_szStripper)
 	// make server SHUT THE FUCK UP GOD DAMN
 	PrecacheSound("eltra/nide26/player/bloxstep3.mp3")
@@ -646,12 +737,20 @@ function OnPostSpawn() {
 		// cached_entity.KeyValueFromString("classname", "info_target")
 		cached_entity.Kill()
 	}
+	EntFire("cmd", "Command", "sv_enablebunnyhopping 0", 0.1, null) // Rape Bhop
+	EntFire("cmd", "Command", "sv_airaccelerate 3", 0.1, null) // Rape Bhop
 	EntFire("cmd", "Command", "sm_force_shake 1", 0.1, null) // you WILL look at the map shakes and you WILL like it
 	EntFire("cmd", "Command", "mp_flashlight 1", 0.1, null) // incase
 	
 	g_pServerCommand.AcceptInput("Command", "mp_roundtime 60", null, null)
 	g_pServerCommand.AcceptInput("Command", "sv_turbophysics 0", null, null)
 	
+
+	// roll maria jumpscare to keep in line with other eltra maps
+	if (RandomInt(0,10000) == 14) {
+		Maria()
+	}
+
 
 	// also allowing noshake during the final boss would be kind of cheaty
 
@@ -665,11 +764,11 @@ function OnPostSpawn() {
 	// }
 	// EntFire("playermodel_helper*", "Kill", "", 0, null)
 	for (local p = null; p = Entities.FindByClassname(p, "player");) {
-		p.AcceptInput("RunScriptFile", "eltrasnag/nide26/player.nut", null, null)
+		p.AcceptInput("RunScriptFile", "ze_supersallyworld/player.nut", null, null)
 		// SpawnFunction(NetProps.GetPropInt(p, "m_iUserID"))
 	}
 
-	// QAcceptInput(ply, "RunScriptFile", "eltrasnag/nide26/player.nut")
+	// QAcceptInput(ply, "RunScriptFile", "sallyworld/player.nut")
 
 
 
@@ -692,6 +791,7 @@ function OnPostSpawn() {
 		getroottable().PermaVars <- {}
 		PermaVars.iRoundCount <- 0
 		PermaVars.i_MapStage <- 0
+		g_bMaria <- false; // controls whether maria has been shown on this map session
 		PermaVars.m_bDoFruitSkip <- false
 		PermaVars.b_ShowEpilepsyWarning <- true // show this once per stage, except stage 3
 		// where we show it ALWAYS
@@ -778,7 +878,7 @@ function OnPostSpawn() {
 }
 
 function LogIntro() {
-	return DoFMVSequence("logladyintro_new_frames/logladyintro_new_frame_", 1052, 23.97602397602398, "logladyintro.mp3")
+	return DoFMVSequence("logladyintro_new", 1052, 23.97602397602398, "logladyintro.mp3")
 }
 
 // !CompilePal::IncludeDirectory("materials/eltra/nide26/titlecard")
@@ -817,20 +917,28 @@ function StageAction(mapstage) {
 
 		break;
 		case 2:
+			Entities.FindByName(null, "tem_stage2").AcceptInput("ForceSpawn", "", null, null)
 			Stage2_Start()
 			DesertAction()
-			Entities.FindByName(null, "tem_stage2").AcceptInput("ForceSpawn", "", null, null)
 
 
 		break;
 		case 3: // stage 3 start
-			SetSky(PREG_SKY.NIGHT)
-			// QFire("s3_sky_1", "Color", "50 50 50")
 			Entities.FindByName(null, "tem_stage3").AcceptInput("ForceSpawn", "", null, null)
+			SetSky(PREG_SKY.NIGHT)
+			
+			// SpawnSkyboxModel("models/eltra/propper/stage3_sky/stage3_sky.mdl")
+			QFire("s3_sky", "Color", "50 50 50", 0.1)
+
 			// QAcceptInput(STAGE_TEMPLATES[2], "ForceSpawn")
 		break;
 
+
 	}
+
+	// now that the stages have spawned, apply any stripper changes
+	STRIPPER.ApplyStages()
+
 }
 
 
@@ -839,7 +947,7 @@ function StageAction(mapstage) {
 
 FRUIT_INTERVAL <- 13
 FRUIT_PROGRESS <- 0
-FRUIT_TALKS <- ["Laura Palmer would be apple", "Jamesf would BE: kumquat", "Dale cooper: pomegerate", "BOB!!!!!!!!!!!!!!!: pineapple", "Twinpeaks fruits: Audrey Horne wuold be ...CHERRIES", "Eland palmer date", "Ummm Lucys wife would be e,.. i Tink thats one", "Nadine \"THE\"\" BITCH hurly wouldw be Strawbery", "Okay guys......./ thats all I thnk"]
+FRUIT_TALKS <- ["Laura Palmer would be apple", "Jamesf: kumquat", "Dale cooper: pomegerate", "BOB!!!!!!!!!!!!!!!: pineapple", "Twinpeaks fruits: Audrey Horne wuold be ...CHERRIES", "Eland palmer date", "Ummm Lucys wife would be e,.. i Tink thats one", "Nadine hurly wouldw be Strawbery", "Okay guys......./ thats all I thnk"]
 
 
 function TestPeaksSkip() {
@@ -1001,7 +1109,10 @@ function MapThink() {
 const OVERLAY_MARIA = "eltra/face.vmt"
 const SOUND_MARIA = "eltra/dinosaur.mp3"
 
+
+
 ::Maria <- function() {
+	PermaVars.g_bMaria <- true;
 	PlaySoundGlobal(SOUND_MARIA)
 	QFire("player", "RunScriptCode", "self.SetScriptOverlayMaterial(OVERLAY_MARIA)")
 	QFire("player", "RunScriptCode", "self.SetMoveType(MOVETYPE_NONE, MOVECOLLIDE_DEFAULT)")
@@ -1150,31 +1261,54 @@ function WaitingThink() {
 const WATER_SPLASH_PATH = "eltra/nide26/watersplash/drown_splash"
 
 function Drown(activator) {
-	if (P_UTILS.ValidTeam(activator) != true) {
+	if (P_UTILS.ValidTeam(activator) == false) { // ensure only valid teams can be drowned
 		return
 	}
-	activator.KeyValueFromVector("basevelocity", Vector(0,0,9999))
-	PlaySoundEX(WATER_SPLASH_PATH + RandomInt(1,5) + ".mp3", activator.GetOrigin())
 
+	PlaySoundEX(WATER_SPLASH_PATH + RandomInt(1,5) + ".mp3", activator.GetOrigin())
+	DoEffect("cic_watersplash", activator.GetOrigin())
 	if (activator.GetTeam() == TEAMS.HUMANS) {
+		activator.KeyValueFromVector("basevelocity", Vector(0,0,9999))
 		activator.TakeDamage(99999, DMG_DROWN, activator)
 		dprintl(activator, " drowned")
 	}
 	else {
+		// activator.TakeDamage(99, DMG_DROWN, activator)
 		ZTele(activator) // just send them to most recent tp
 		// zombie drowned do something here probably!!!
 	}
 }
 
+::FreezePlayers <- function() {
+	QFire("player", "RunScriptCode", "self.SetMoveType(MOVETYPE_NONE, MOVECOLLIDE_DEFAULT)")
+}
+
+::UnfreezePlayers <- function() {
+	QFire("player", "RunScriptCode", "self.SetMoveType(MOVETYPE_WALK, MOVECOLLIDE_DEFAULT)")
+}
 
 function DoEndingFMV() {
+	PrecacheSound("eltra/fmv/leshawna_ending_fmv.mp3")
+	// stop players from being killable during end cutscene
+	FreezePlayers()
+	SendPlayersToDarkRoom()
+
 	QFire("d_mus*", "Volume", "0")
-	local dur = DoFMVSequence("end_lowres_frames/end_lowres_frame_", 2650, 12, "leshawna_ending_fmv.mp3")
-	g_bStaminaEnabled = false
+	// local dur = 221
+
+	local dur = DoFMVSequence("rerender_webm_test", 2650, 12, "leshawna_ending_fmv.mp3")
+
+	// beef up ending fmv volume to the point of distortion
+	// PlaySoundGlobal("eltra/fmv/leshawna_ending_fmv.mp3")
+	PlaySoundGlobal("eltra/fmv/leshawna_ending_fmv.mp3")
 	
-	for (local ply; ply = Entities.FindByClassname(ply, "player");) {
-		NetProps.SetPropFloat(ply, "m_flLaggedMovementValue", 0)
-	}
+	g_bStaminaEnabled = false
+
+	// FAILED EXPERIMENT
+	// for (local ply; ply = Entities.FindByClassname(ply, "player");) {
+		// EntFire("point_clientcommand", "command", "playvideo nide26/rerender_webm_test.bik", 0, ply);
+	// 	NetProps.SetPropFloat(ply, "m_flLaggedMovementValue", 0)
+	// }
 
 	RunScriptCode(self, "CSRounds.RoundWin(CTs_Win)" , dur)
 	RunScriptCode(self, "PermaVars.i_MapStage = 1" , dur)
@@ -1182,6 +1316,12 @@ function DoEndingFMV() {
 
 
 function StartTransitionToFinalBoss() {
+	g_bNoFallDamage = true; // disable fall damage
+	g_bNoFallDamage = true; // disable fall damage
+	g_bNoFallDamage = true; // disable fall damage / /HELLO PLEAS WORK?
+	g_bNoFallDamage = true; // disable fall damage
+	g_bNoFallDamage = true; // disable fall damage
+	g_bNoFallDamage = true; // disable fall damage
 	Entities.FindByName(null, "tem_finalboss").AcceptInput("ForceSpawn", "", null, null);
 
 	local hHumanDest = Entities.FindByName(null, "final_boss_dest").GetOrigin();
@@ -1204,6 +1344,15 @@ function StartTransitionToFinalBoss() {
 	
 }
 
+function SendPlayersToDarkRoom() {
+	for (local hPlayer; hPlayer = Entities.FindByClassname(hPlayer, "player");) {
+		if (hPlayer.GetTeam() == TEAMS.HUMANS) {
+			hPlayer.SetAbsOrigin(v_BlackZone_hDest)
+		} else if (hPlayer.GetTeam() == TEAMS.ZOMBIES) {
+			hPlayer.SetAbsOrigin(v_BlackZone_zDest)
+		}
+	}
+}
 
 
 
@@ -1231,10 +1380,10 @@ DoWinnerFMV <- function(winner) {
 		while (p = Entities.FindByClassname(p, "player")) {
 			EntFire("point_clientcommand", "Command", "speak \"level "+STAGE_STRING+". clear\"",1, p)
 		}
-		DoFMVSequence("ctwin1_frames/ctwin1_frame_",116, 23333/1000, "ctwin_fmv.mp3")
+		DoFMVSequence("ctwin1",116, 23333/1000, "ctwin_fmv.mp3")
 	}
 	if (winner == TEAMS.ZOMBIES) {
-		DoFMVSequence("zmwin1_frames/zmwin1_frame_",40, 8, "zmwin1.mp3")
+		DoFMVSequence("zmwin1",40, 8, "zmwin1.mp3")
 	}
 }
 
@@ -1327,6 +1476,16 @@ function TitleCard() {
 
 ::ZTele <- function(activator) {
 	if (ValidEntity(activator)) {
+		
+		activator.ValidateScriptScope() // ripped directly from mccm so if this causess buigs? Well i guess thats it
+
+		local scope = activator.GetScriptScope()
+
+		if ("vehicle" in scope && ValidEntity(scope.vehicle)) {
+			scope.vehicle.ValidateScriptScope()
+			scope.vehicle.GetScriptScope().Exit(false, false)
+		}
+		
 		activator.SetOrigin(g_vMapTeleport)
 	}
 }
@@ -1387,3 +1546,9 @@ function TeleportTest() {
 }
 
 ::Boom <- Explode
+
+function TryModelland() {
+	if (RandomInt(0,100000) == 14) {
+		QFire("mus_modelland", "PlaySound")
+	}
+}
