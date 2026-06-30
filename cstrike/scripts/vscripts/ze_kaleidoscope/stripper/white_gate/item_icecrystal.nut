@@ -139,7 +139,7 @@ function ItemUse() {
 		field.ValidateScriptScope()
 		local scope = field.GetScriptScope()
 		scope.frozen_players <- {}
-		scope.timer <- 5
+		scope.timer <- 2.5
 		scope.Think <- function() {
 			for (local ent; ent = Entities.FindByClassnameWithin(ent, "player", self.GetOrigin(), 256);) {
 				if (ent.GetTeam() != TEAM_ZOMBIES || !ent.IsAlive()) continue;

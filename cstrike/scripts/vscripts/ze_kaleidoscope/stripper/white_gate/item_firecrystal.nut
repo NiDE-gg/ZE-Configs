@@ -105,7 +105,7 @@ function ItemUse() {
 			if (player == null || !player.IsValid()) continue
 			if (player.GetTeam() != TEAM_HUMANS) continue
 
-			player.TakeDamageEx(item, item_script.item_holder, item, Vector(), player.GetOrigin(), 10, 0)
+			player.TakeDamageEx(item, item_script.item_holder, item, Vector(), player.GetOrigin(), 20, 0)
 		}
 
 		local trace = {
@@ -135,7 +135,6 @@ function ItemUse() {
 			players_hit <- {}
 			for (local ent = null; ent = Entities.FindByClassnameWithin(ent, "player", self.GetOrigin(), 128);) {
 				if (ent.GetTeam() != TEAM_HUMANS || !ent.IsAlive()) continue;
-				// Wonky ahh so that they wont be burnt inside and only the ring outside.
 
 				if (!(ent in players_hit)) {
 					players_hit[ent] <- true

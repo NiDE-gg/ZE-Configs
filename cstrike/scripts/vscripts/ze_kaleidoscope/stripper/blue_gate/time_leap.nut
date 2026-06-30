@@ -4,6 +4,8 @@ const LeapDistance = 7200
 const LeapCooldown = 2.0
 const LeapCooldownZm = 4.0
 
+const LeapBorder = -3552 // The border between the two timelines in the z axis
+
 timeleap_enabled <- false
 
 timeleap_snd <- "kaleidoscope_snd/blue_gate/timeleap.mp3"
@@ -49,6 +51,21 @@ GateFunctions[Gate.Blue] <- function(player, info, buttons, buttons_changed, but
 		else
 			EntFireByHandle(player, "RunScriptCode", "DispatchParticleEffect(\"blue_timeleap_player_indicator_zm\", self.GetCenter() + Vector(0, 0, -LeapDistance), self.GetAbsAngles().Forward())", 0.0, null, null)
 	}
+
+	// Might as well have a backup.
+	if ("default_timeline" in info.active_gate_variables) {
+		local origin_z = player.GetOrigin().z
+		local old_timeline = info.active_gate_variables.default_timeline
+
+		if (origin_z < LeapBorder && old_timeline) { // If they are below this, they are in the alternate timeline
+			ClientPrint(player, 4, "[Time Leap] You are now in the alternate timeline!")
+			info.active_gate_variables.default_timeline = false
+		}
+		else if (origin_z > LeapBorder && !old_timeline) { // Else main timeline
+			ClientPrint(player, 4, "[Time Leap] You are now in the main timeline!")
+			info.active_gate_variables.default_timeline = true
+		}
+	}
 }.bindenv(this)
 
 function TogglePlayerTimeline(player, forced = false) {
@@ -82,15 +99,21 @@ function TogglePlayerTimeline(player, forced = false) {
 		return
 	}
 	
-	player.SetAbsOrigin(new_origin)
+	if (forced && stuck) {
+		// Send them back to the Late Teleport instead.
+		// Now this would make sense if they are forced back and they get stuck.
+		SendPlayerToLateTeleport(player)
+	}
+	else 
+		player.SetAbsOrigin(new_origin)
 
 	// Set new timeline
 	scope.info.active_gate_variables.default_timeline = !scope.info.active_gate_variables.default_timeline 
 
 	if (!scope.info.active_gate_variables.default_timeline) 
-		ClientPrint(player, 4, "[Time Leap] You Time Leaped into the Alternate Timeline!")
+		ClientPrint(player, 3, "\x07fcd9f1[Time Leap] \x07defafcYou Time Leaped into the \x0766ffaaAlternate Timeline!")
 	else 
-		ClientPrint(player, 4, "[Time Leap] You Time Leaped into the Main Timeline!")
+		ClientPrint(player, 3, "\x07fcd9f1[Time Leap] \x07defafcYou Time Leaped into the \x0766aaffMain Timeline!")
 
 	// Set the cooldown
 	scope.info.active_gate_variables.time_leap_cd_left = player.GetTeam() == TEAM_HUMANS ? LeapCooldown : LeapCooldownZm
@@ -185,13 +208,11 @@ timeleap_events <- {
 		if (timeleap_enabled) {
 			local player = GetPlayerFromUserID(params.userid)
 
-			// Probably not reset them if their HP right now is above 0, meaning they just got infected
-			if (player.GetHealth() <= 0) {
-				local scope = player.GetScriptScope()
-				if (("default_timeline" in scope.info.active_gate_variables)) {
-					scope.info.active_gate_variables.default_timeline = true
-					scope.info.active_gate_variables.time_leap_cd_left = 0.0
-				}
+			if (player.IsAlive()) return
+			local scope = player.GetScriptScope()
+			if (("default_timeline" in scope.info.active_gate_variables)) {
+				scope.info.active_gate_variables.default_timeline = true
+				scope.info.active_gate_variables.time_leap_cd_left = 0.0
 			}
 		}
 	}
