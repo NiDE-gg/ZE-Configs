@@ -8,12 +8,14 @@ const ROOM_BOX_TEXT_ENT_STRING = "hotel_floor%d_box%d_text"
 const ROOM_ORIGIN_ENT_STRING = "hotel_floor%d_room_o%d"
 const ROOM_CEIL_ENT_STRING = "hotel_floor%d_ceil%d"
 const ROOM_DOOR_ENT_STRING = "hotel_floor%d_door%d"
+const ROOM_WALL_ENT_STRING = "hotel_floor%d_wall%d"
 const BOOM_SFX_ENT_STRING = "hotel_sfx_boom"
 const TIMER_RESET_ENT_STRING = "countdown_reset"
 const STAIRS_DOOR_ENT_STRING = "hotel_floor%d_stairs_door"
 const STAIRS_CLIP_ENT_STRING = "hotel_floor%d_stairs_clip"
 const STAIRS_TEXT_ENT_STRING = "staircase%d_text"
 const HINT_ENT_STRING = "hotel_trail_hint"
+const NODMG_FILTER = "MapFilterNoDamage"
 const CONSOLE = "console"
 
 rooms_pool <- [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] // list of all available rooms (on any floor)
@@ -124,6 +126,9 @@ function _genNextFloor(prevFloor, newFloor) {
         EntFire(ROPE_SPAWNER_ENT_STRING, "ForceSpawnAtEntityOrigin", _roomCeilEntName(newFloor, exitRoom), 0, null);
     }
 
+    // Make the exit room wall non-breakable to prevent zombies from getting ahead of humans
+    EntFire(_roomWallEntName(newFloor, exitRoom), "SetDamageFilter", NODMG_FILTER, 0, null);
+
     // Lock the doors of the start and end rooms on the new floor
     EntFire(_roomDoorEntName(newFloor, startRoom), "Lock", "", 0, null);
     EntFire(_roomDoorEntName(newFloor, exitRoom), "Lock", "", 0, null);
@@ -194,6 +199,11 @@ function _roomCeilEntName(floor, room) {
 /** The name of func_door entity, entrance for the targeted room */
 function _roomDoorEntName(floor, room) {
     return format(ROOM_DOOR_ENT_STRING, floor, room);
+}
+
+/** The name of func_breakable entity, cracked wall of the targeted room */
+function _roomWallEntName(floor, room) {
+    return format(ROOM_WALL_ENT_STRING, floor, room);
 }
 
 /** The name of breakable entity, staircase door for a floor */

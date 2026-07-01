@@ -4,6 +4,7 @@ const EGG_HP_ENT_STRING = "temple_egg_hbx_hp"
 const ICED_HP_ENT_STRING = "landmark_iced_hbx_hp"
 const NPC_SCALER_ENT_STRING = "npc_hp_scaler_c"
 const WALLS_HP_ENT_STRING = "hotel_floor%d_wall*"
+const DOORSHUT_ENT_STRING = "landmark_doorshut_%d_hbx"
 const PLAT_CASE_ENT_STRING = "temple_space_br_case"
 const DEBRIS_ENT_STRING = "train_debris_spawn"
 const EVENT_TEXT_ENT_STRING = "event_text"
@@ -17,7 +18,8 @@ const NPC_HP_MULTI = 62 // originally 75 (lowered by ~17%)
 const BASE_HEALTH = 50
 
 // Breakable health scale - multiply by number of alive T-s (damage based)
-const ROOM_WALL_MULTI = 35 // knife ~15dps * 10 sec * 0.2 zombies knifing + 5 buffer
+const ROOM_WALL_MULTI = 25 // knife ~15dps * 10 sec * 1 in 7 zombies knifing + buffer
+const DOORSHUT_MULTI = 10 // ~15dps * 4 sec * 1 in 7 zombies knifing + buffer
 const DMG_BASE_HEALTH = 100
 
 // breakables can register multiple OnHealthChanged events from a single bullet
@@ -37,13 +39,13 @@ if (!("last_event_time" in getroottable())) { // persist state across rounds
 /** Scales the health of the Phoenix egg (math_counter), based on number of alive CT-s */
 function scaleEggHealth() {
     local scaledHealth = EGG_HP_MULTI * BULLET_BIAS * _countAlivePlayers(CT) - BASE_HEALTH * 0.5;
-    EntFire(EGG_HP_ENT_STRING, "Add", scaledHealth, 0, activator);
+    EntFire(EGG_HP_ENT_STRING, "Add", scaledHealth, 0, null);
 }
 
 /** Scales the health of the Landmark iced (math_counter), based on number of alive CT-s */
 function scaleIcedHealth() {
     local scaledHealth = ICED_HP_MULTI * BULLET_BIAS * _countAlivePlayers(CT) - BASE_HEALTH * 0.5;
-    EntFire(ICED_HP_ENT_STRING, "Add", scaledHealth, 0, activator);
+    EntFire(ICED_HP_ENT_STRING, "Add", scaledHealth, 0, null);
 }
 
 /** Scales the health of newly spawned NPC (with active scaler math_counter) */
@@ -54,7 +56,7 @@ function scaleNPCHealthIfNew() {
     while ((scaler = Entities.FindByName(scaler, NPC_SCALER_ENT_STRING + "*")) != null) {
         if (scaler.IsValid()) { // valid new entity
             local scaledHealth = NPC_HP_MULTI * BULLET_BIAS * _countAlivePlayers(CT) - BASE_HEALTH * 0.5;
-            EntFireByHandle(scaler, "Add", "" + scaledHealth, 0, activator, caller);
+            EntFireByHandle(scaler, "Add", "" + scaledHealth, 0, null, null);
         }
     }
 }
@@ -63,25 +65,33 @@ function scaleNPCHealthIfNew() {
 function scaleRoomWallsHealth() {
     local scaledHealth = ROOM_WALL_MULTI * _countAlivePlayers(T) - DMG_BASE_HEALTH * 0.5;
     for (local fl = 3; fl <= 5; fl++) { // do this for floors 3-5
-        EntFire(format(WALLS_HP_ENT_STRING, fl), "AddHealth", scaledHealth, 0, activator);
+        EntFire(format(WALLS_HP_ENT_STRING, fl), "AddHealth", scaledHealth, 0, null);
     }
 }
 
-/** Make some of the space platforms between the station and temple breakable
+/** Scales the health of the arena doorshut hitboxes (breakable), based on number of alive T-s */
+function scaleDoorShutHealth() {
+    local scaledHealth = DOORSHUT_MULTI * _countAlivePlayers(T) - DMG_BASE_HEALTH * 0.5;
+    for (local i = 1; i <= 8; i++) { // all 8 hitboxes
+        EntFire(format(DOORSHUT_ENT_STRING, i), "AddHealth", scaledHealth, 0, null);
+    }
+}
+
+/** Make some of the space platforms between the station and temple breakable 
  * Neither of the selected should be consecutive platforms
  * This is to ensure that gaps, after platforms break, don't become too wide for players to jump over */
 function setTSPlatformsBreakable() {
     local selected = _pickRandomNonConsecutive(1, 8, NUM_BREAKABLE_PLATS);
     //_printlArray(selected);
     foreach (num in selected) {
-        EntFire(PLAT_CASE_ENT_STRING, "InValue", "" + num, 0, null);
+        EntFire(PLAT_CASE_ENT_STRING, "InValue", "" + num, 0, null); 
     }
 }
 
 /** Spawns space debris at one of the locations */
 function spawnSpaceDebris() {
     local spawnIdx = RandomInt(1, 17); // inclusive
-    EntFire(DEBRIS_ENT_STRING + spawnIdx, "Trigger", "", 0, activator);
+    EntFire(DEBRIS_ENT_STRING + spawnIdx, "Trigger", "", 0, null);
 }
 
 /** Attempt to perform a random event (see options below) */
@@ -100,11 +110,32 @@ function showFact() {
     local factLines = _breakTextIntoChunks(_factRandom());
     EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message Did you know", 0, null);
     EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 0.01, null);
-
+    
     local delay = 8;
     for(local l = 0; l < factLines.len(); l++) {
         EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message " + factLines[l], 4 + l * delay, null);
         EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 4.01 + l * delay, null);
+    }
+}
+
+/** Random event - display fact about space */
+function showFact() {
+    local factLines = _breakTextIntoChunks(_factRandom());
+    EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message Did you know", 0, null);
+    EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 0.01, null);
+    
+    local delay = 8;
+    for(local l = 0; l < factLines.len(); l++) {
+        EntFire(EVENT_TEXT_ENT_STRING, "AddOutput", "message " + factLines[l], 4 + l * delay, null);
+        EntFire(EVENT_TEXT_ENT_STRING, "Display", "", 4.01 + l * delay, null);
+    }
+}
+
+/** Gives money to the activator player */
+function giveActivatorPlayerMoney(money) {
+    if(activator != null && activator.IsValid() && activator.IsPlayer() && activator.IsAlive()) {
+        local pl_money = NetProps.GetPropInt(activator, "m_iAccount");
+        NetProps.SetPropInt(activator, "m_iAccount", pl_money + money);
     }
 }
 
@@ -119,7 +150,7 @@ function adjustHealthAllCTs(delta) {
             if (player.GetTeam() == CT) {
                 local newPlayerHP = player.GetHealth() + delta;
                 if(newPlayerHP < 1) { newPlayerHP = 1; } // lower cap at 1
-                EntFireByHandle(player, "AddOutput", "health " + newPlayerHP, 0.0, null, null );
+                EntFireByHandle(player, "AddOutput", "health " + newPlayerHP, 0.0, null, null);
             }
         }
     }
