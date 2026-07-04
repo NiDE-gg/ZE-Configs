@@ -127,7 +127,7 @@ function OnPostSpawn(){
 	HITBOX = MODEL.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(90*ctcount) // 300 starting hp + 200/per player
+	maxhealth = HITBOX.GetHealth()+(175*ctcount) // 300 starting hp + 200/per player
 
 	HITBOX.SetHealth(maxhealth)
 	// printl("RESCALED HP "+maxhealth)
@@ -145,7 +145,7 @@ function OnPostSpawn(){
 	EntFireByHandle(HITBOX,"Break","",120,null,null);
 
 	MODEL.ValidateScriptScope();
-    MODEL.GetScriptScope().damage <- 40;
+    MODEL.GetScriptScope().damage <- 50;
     MODEL.GetScriptScope().damage_range <- 32.00;
     MODEL.GetScriptScope().damage_cooldown <- 0.5;
     MODEL.GetScriptScope().touchers <- {};
@@ -207,7 +207,7 @@ function OnPostSpawn(){
 			DebugDrawCircle(checktouch, Vector(255, 0, 0), 100, 32, true, 0.1);
 			touchers2[j] <- j;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD2",damage_cooldown,j,null);
-			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 10, 8)
+			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 30, 8) // 30 touch damage
 		}
 
         return -1;
@@ -928,7 +928,7 @@ function ShootMissile(target){
 
 	particle.ValidateScriptScope();
 	particle.GetScriptScope().speed <- 3;
-	particle.GetScriptScope().damage <- 35;
+	particle.GetScriptScope().damage <- 70;
 	particle.GetScriptScope().damage_range <- 16;
 	particle.GetScriptScope().damage_cooldown <- 1;
 	particle.GetScriptScope().touchers <- {};

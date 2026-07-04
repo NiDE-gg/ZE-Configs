@@ -164,7 +164,7 @@ function OnPostSpawn(){
 	EntFireByHandle(HITBOX,"Break","",120,null,null);
 
 	MODEL.ValidateScriptScope();
-    MODEL.GetScriptScope().damage <- 25;
+    MODEL.GetScriptScope().damage <- 40;
     MODEL.GetScriptScope().damage_range <- 32.00;
     MODEL.GetScriptScope().damage_cooldown <- 0.7;
     MODEL.GetScriptScope().touchers <- {};
@@ -226,7 +226,7 @@ function OnPostSpawn(){
 			DebugDrawCircle(checktouch, Vector(255, 0, 0), 100, 32, true, 0.1);
 			touchers2[j] <- j;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD2",damage_cooldown,j,null);
-			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 10, 8)
+			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 20, 8)
 		}
 
         return -1;

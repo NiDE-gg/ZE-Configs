@@ -119,7 +119,7 @@ function OnPostSpawn(){
 	HITBOX = MODEL.FirstMoveChild();
 
 	// printl("INITIAL HP "+HITBOX.GetHealth())
-	maxhealth = HITBOX.GetHealth()+(150*ctcount) // 300 starting hp + 300/per player
+	maxhealth = HITBOX.GetHealth()+(300*ctcount) // 300 starting hp + 300/per player
 
 	HITBOX.SetHealth(maxhealth)
 	// printl("RESCALED HP "+maxhealth)
@@ -137,7 +137,7 @@ function OnPostSpawn(){
 	EntFireByHandle(HITBOX,"Break","",120,null,null);
 
 	MODEL.ValidateScriptScope();
-    MODEL.GetScriptScope().damage <- 40;
+    MODEL.GetScriptScope().damage <- 50;
     MODEL.GetScriptScope().damage_range <- 32.00;
 	MODEL.GetScriptScope().offset <- 48.00;
     MODEL.GetScriptScope().damage_cooldown <- 0.5;
@@ -206,7 +206,7 @@ function OnPostSpawn(){
 			DebugDrawCircle(checktouch, Vector(255, 0, 0), 100, 32, true, 0.1);
 			touchers2[j] <- j;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD2",damage_cooldown,j,null);
-			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 10, 8)
+			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 40, 8)
 		}
 
         return -1;
@@ -406,7 +406,7 @@ function Attack(){
 			break;
 	}
 
-	EntFireByHandle(MODEL, "RunScriptCode", "damage=60", 0, null, null)	
+	EntFireByHandle(MODEL, "RunScriptCode", "damage=80", 0, null, null)	
 	EntFireByHandle(MODEL, "RunScriptCode", "damage_range=32", 0, null, null)	
 	EntFireByHandle(MODEL, "RunScriptCode", "offset=48", 0, null, null)	
 

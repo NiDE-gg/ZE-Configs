@@ -166,7 +166,7 @@ function OnPostSpawn(){
 	EntFireByHandle(HITBOX,"Break","",120,null,null);
 
 	MODEL.ValidateScriptScope();
-    MODEL.GetScriptScope().damage <- 40;
+    MODEL.GetScriptScope().damage <- 50;
     MODEL.GetScriptScope().damage_range <- 32.00;
     MODEL.GetScriptScope().damage_cooldown <- 0.5;
     MODEL.GetScriptScope().touchers <- {};
@@ -228,7 +228,7 @@ function OnPostSpawn(){
 			DebugDrawCircle(checktouch, Vector(255, 0, 0), 100, 32, true, 0.1);
 			touchers2[j] <- j;
 			EntFireByHandle(self,"CallScriptFunction","ClearCD2",damage_cooldown,j,null);
-			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 10, 8)
+			j.TakeDamageEx(self, self, self, Vector(0, 0, 0), j.GetOrigin(), 30, 8)
 		}
 
         return -1;
@@ -941,7 +941,7 @@ function ShootMissile(target){
 			printl("we found something")
 			DebugDrawLine(initial_trace.startpos, initial_trace.endpos, 0, 0, 0, false, 0.1); //Draw a black line from the player's gun to where the grapple hit
 
-			initial_trace.enthit.TakeDamageEx(self, null, null, Vector(0, 0, 0), initial_trace.enthit.GetOrigin(), 45, 8)
+			initial_trace.enthit.TakeDamageEx(self, null, null, Vector(0, 0, 0), initial_trace.enthit.GetOrigin(), 60, 8)
 
 		} else {
 			printl("Hit a wall maybe")
