@@ -11,8 +11,8 @@ target_cooldown <- 6
 target <- null
 target_cd_left <- 0
 
-ability_cooldown <- 8
-ability_cd_left <- 8
+ability_cooldown <- 6
+ability_cd_left <- 6
 
 moving <- true
 turning <- true
@@ -20,13 +20,13 @@ attacking <- false
 defending <- false
 ticking <- true
 
-damage <- 20
+damage <- 25
 
 dead <- false
 
 hp <- 1000
 max_hp <- 1000
-hp_to_add <- 12500
+hp_to_add <- 15000
 
 damage_multiplier <- 1.0
 

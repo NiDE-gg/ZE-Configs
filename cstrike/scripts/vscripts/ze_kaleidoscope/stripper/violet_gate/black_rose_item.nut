@@ -1,7 +1,7 @@
 item_holder <- null
 weapon <- null
 
-cooldown <- 45
+cooldown <- 30
 cooldown_ready_time <- 0
 
 item_ready <- true
@@ -33,6 +33,9 @@ function ItemPickup(activator) {
 
 	item_holder.GetScriptScope().info.current_item = this
 	item_holder.GetScriptScope().info.current_item_entity = self
+
+	item_holder.SetMaxHealth(50000)
+	item_holder.SetHealth(50000)
 
 	if (first_pickup)
 		MapPrint("A zombie has picked up a \x079300e2Black Rose")
@@ -91,7 +94,7 @@ function ItemUse() {
 		}
 
 		local rnd = RandomInt(0, available_humans.len() - 1)
-		ApplyBlackRoseDOT(available_humans[rnd], 2)
+		ApplyBlackRoseDOT(available_humans[rnd], 4)
 		available_humans.remove(rnd)
 	}
 }

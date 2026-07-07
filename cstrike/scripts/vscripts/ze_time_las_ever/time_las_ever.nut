@@ -14,7 +14,7 @@ const CT = 3
 // HP scale - multiply by number of alive CT-s (counter based)
 const EGG_HP_MULTI = 10
 const ICED_HP_MULTI = 10
-const NPC_HP_MULTI = 62 // originally 75 (lowered by ~17%)
+const NPC_HP_MULTI = 67 // originally 75 (lowered by ~10%)
 const BASE_HEALTH = 50
 
 // Breakable health scale - multiply by number of alive T-s (damage based)

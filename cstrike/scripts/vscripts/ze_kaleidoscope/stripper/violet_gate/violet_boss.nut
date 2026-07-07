@@ -15,21 +15,21 @@ target <- null
 
 attacking <- false
 
-base_damage <- 20
+base_damage <- 30
 
 dead <- false
 ticking <- true
 
-ability_cooldown <- 10
-ability_cd_left <- 8
+ability_cooldown <- 7
+ability_cd_left <- 7
 can_cast_ability <- true
 
-attack_cooldown <- 2.5
+attack_cooldown <- 2
 attack_cd_left <- attack_cooldown
 
 hp <- 1000
 max_hp <- 1000
-hp_to_add <- 13500
+hp_to_add <- 14000
 
 damage_multiplier <- 1.0
 
@@ -412,7 +412,7 @@ function BlackRoseExplosions() {
 		if (player == null || !player.IsValid()) continue
 		if (player.GetTeam() != TEAM_HUMANS) continue
 		
-		ApplyBlackRoseDOT(player, 5)
+		ApplyBlackRoseDOT(player, 8)
 	}
 }
 
