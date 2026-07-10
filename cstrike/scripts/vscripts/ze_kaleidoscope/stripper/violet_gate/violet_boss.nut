@@ -15,7 +15,7 @@ target <- null
 
 attacking <- false
 
-base_damage <- 30
+base_damage <- 20
 
 dead <- false
 ticking <- true
@@ -412,7 +412,7 @@ function BlackRoseExplosions() {
 		if (player == null || !player.IsValid()) continue
 		if (player.GetTeam() != TEAM_HUMANS) continue
 		
-		ApplyBlackRoseDOT(player, 8)
+		ApplyBlackRoseDOT(player, 6)
 	}
 }
 

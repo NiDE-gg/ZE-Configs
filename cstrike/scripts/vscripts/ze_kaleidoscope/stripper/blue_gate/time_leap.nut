@@ -83,8 +83,8 @@ function TogglePlayerTimeline(player, forced = false) {
 		start = new_origin,
 		end = new_origin,
 		ignore = player,
-		hullmin = player.GetBoundingMins() + Vector(4, 4, 4),
-		hullmax = player.GetBoundingMaxs() - Vector(4, 4, 4),
+		hullmin = player.GetBoundingMins() - Vector(4.25, 4.25, 4.25),
+		hullmax = player.GetBoundingMaxs() + Vector(4.25, 4.25, 4.25),
 		mask = 16395
 	}
 

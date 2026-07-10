@@ -20,7 +20,7 @@ attacking <- false
 defending <- false
 ticking <- true
 
-damage <- 25
+damage <- 20
 
 dead <- false
 
@@ -87,6 +87,9 @@ function OnPostSpawn() {
 
 	new_health *= config.boss_hp_scale
 
+	CanZombieUseItems = false
+	MapPrint("Zombies can't use items!")
+
 	hp = new_health
 	max_hp = new_health
 	breakable.AcceptInput("SetHealth", "999999999", null, null)
@@ -139,16 +142,19 @@ function OnDeath(killer) {
 	self.AcceptInput("SetDefaultAnimation", "dog_die_loop", null, null)
 
 	CancelThread(ultimate_thread)
+
+	CanZombieUseItems = true
+	MapPrint("Zombies can now use items!")
 	
 	// Open the arena up
 	SetLateTeleport("teledest_white_school_endsequence")
 	EntFire("whitegate_school_lateteleport_arena_out", "Enable", null, 0.0)
-	EntFire("whitegate_school_wall3a_break", "Toggle", null, 0.0)
-	EntFire("whitegate_school_wall3b_break", "Toggle", null, 0.0)
-	EntFire("whitegate_school_wall3c_break", "Toggle", null, 0.0)
-	EntFire("whitegate_school_wall3a", "Stop", null, 0.0)
-	EntFire("whitegate_school_wall3b", "Stop", null, 0.0)
-	EntFire("whitegate_school_wall3c", "Stop", null, 0.0)
+	EntFire("whitegate_school_wall3a_break", "Kill", null, 0.0)
+	EntFire("whitegate_school_wall3b_break", "Kill", null, 0.0)
+	EntFire("whitegate_school_wall3c_break", "Kill", null, 0.0)
+	EntFire("whitegate_school_wall3a", "Kill", null, 0.0)
+	EntFire("whitegate_school_wall3b", "Kill", null, 0.0)
+	EntFire("whitegate_school_wall3c", "Kill", null, 0.0)
 }
 
 function SearchTarget() {

@@ -18,8 +18,8 @@ const NPC_HP_MULTI = 67 // originally 75 (lowered by ~10%)
 const BASE_HEALTH = 50
 
 // Breakable health scale - multiply by number of alive T-s (damage based)
-const ROOM_WALL_MULTI = 25 // knife ~15dps * 10 sec * 1 in 7 zombies knifing + buffer
-const DOORSHUT_MULTI = 10 // ~15dps * 4 sec * 1 in 7 zombies knifing + buffer
+const ROOM_WALL_MULTI = 20 // knife ~15dps * 8 sec * 1 in 6 zombies knifing
+const DOORSHUT_MULTI = 10 // ~15dps * 4 sec * 1 in 6 zombies knifing
 const DMG_BASE_HEALTH = 100
 
 // breakables can register multiple OnHealthChanged events from a single bullet
