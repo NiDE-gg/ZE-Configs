@@ -47,14 +47,10 @@ function Init()
 function TickReset()
 {
 	if (g_bKilling || g_bPreKilling)
-	{
 		return;
-	}
 
 	if (g_hPlayers.len() < 1)
-	{
 		Reset();
-	}
 }
 
 function Reset()
@@ -67,9 +63,7 @@ function Reset()
 function Tick()
 {
 	if (!g_bTicking)
-	{
 		return;
-	}
 
 	if (g_bPreKilling || g_bKilling)
 	{
@@ -102,11 +96,8 @@ function Tick()
 			EntFireByHandle(self, "RunScriptCode", "SaveAngles();g_bKilling = true;g_bPreKilling = false;", 1.5, null, null);
 		}
 		else
-		{
 			g_fTimer_Check += TICKRATE;
-		}
 	}
-
 	EntFireByHandle(self, "RunScriptCode", "Tick()", TICKRATE, null, null);
 }
 
@@ -119,7 +110,6 @@ function SaveAngles()
 			g_hPlayers[i].angles = g_hPlayers[i].handle.GetAngles();
 			continue;
 		}
-
 		g_hPlayers.remove(i);
 	}
 }
@@ -133,20 +123,18 @@ function TickKillMovingPlayers()
 			local vVelocity = g_hPlayers[i].handle.GetVelocity();
 			local vAngles1 = g_hPlayers[i].handle.GetAngles();
 			local vAngles2 = g_hPlayers[i].angles;
+			local iButtons = NetProps.GetPropInt(g_hPlayers[i].handle, "m_nButtons");
 
-			if ((vVelocity.x == 0 && vVelocity.y == 0 && vVelocity.z == 0) && (vAngles1.x == vAngles2.x && vAngles1.y == vAngles2.y && vAngles1.z == vAngles2.z))
-			{
+			if ((vVelocity.x == 0 && vVelocity.y == 0 && vVelocity.z == 0) && (vAngles1.x == vAngles2.x && vAngles1.y == vAngles2.y && vAngles1.z == vAngles2.z) && !(iButtons & (1 | 2048)))
 				continue;
-			}
 
 			local timetokill = RandomFloat(0, TICKRATE);
 
-			EntFire("models_guard", "FireUser1", "", 0.0);
-			EntFireByHandle(g_hPlayers[i].handle, "SetHealth", "-1", timetokill, null, null);
-			EntFireByHandle(g_hSound, "RunScriptCode", "self.SetOrigin(activator.GetOrigin())", timetokill, g_hPlayers[i].handle, g_hPlayers[i].handle);
+			EntFire("models_guard", "FireUser1");
+			EntFireByHandle(g_hPlayers[i].handle, "SetHealth", "0", timetokill, null, null);
+			EntFireByHandle(g_hSound, "RunScriptCode", "self.SetOrigin(activator.GetOrigin());", timetokill, g_hPlayers[i].handle, g_hPlayers[i].handle);
 			EntFireByHandle(g_hSound, "PlaySound", "", timetokill, null, null);
 		}
-
 		g_hPlayers.remove(i);
 	}
 }
@@ -160,9 +148,7 @@ function StartTouch()
 	}
 
 	if (InArray(activator, g_hPlayers) != -1)
-	{
 		return;
-	}
 
 	g_hPlayers.push(class_player_move(activator));
 	g_hPlayers[g_hPlayers.len()-1].angles = g_hPlayers[g_hPlayers.len()-1].handle.GetAngles();
@@ -171,11 +157,8 @@ function StartTouch()
 function EndTouch()
 {
 	local iActivator = InArray(activator, g_hPlayers);
-
 	if (iActivator != -1)
-	{
 		g_hPlayers.remove(iActivator);
-	}
 }
 
 function SetForward()
@@ -185,7 +168,6 @@ function SetForward()
 		SetAnimation(Anim_Forward);
 		SetDefaultAnimation(Anim_Forward_Idle);
 	}
-
 	g_szAnim = "forward";
 }
 
@@ -196,7 +178,6 @@ function SetBackward()
 		SetAnimation(Anim_Backward);
 		SetDefaultAnimation(Anim_Backward_Idle);
 	}
-
 	g_szAnim = "backward";
 }
 
@@ -205,11 +186,8 @@ function InArray(value, array)
 	for (local i = 0; i < array.len(); i++)
 	{
 		if (value == array[i].handle)
-		{
 			return i;
-		}
 	}
-
 	return -1;
 }
 
