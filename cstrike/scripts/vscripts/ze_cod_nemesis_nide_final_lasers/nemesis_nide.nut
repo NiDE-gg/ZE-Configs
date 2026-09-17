@@ -55,7 +55,7 @@ if (!("NIDE_trapKillHurt" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_JUGGERNOG_COST" in getroottable()))
-    ::NIDE_JUGGERNOG_COST <- 8000;
+    ::NIDE_JUGGERNOG_COST <- 10000;
 
 if (!("NIDE_JUGGERNOG_BUFFER_HEALTH" in getroottable()))
     ::NIDE_JUGGERNOG_BUFFER_HEALTH <- 100000;
@@ -270,7 +270,7 @@ if (!("NIDE_POWERED_WEAPON_SOUND_RADIUS" in getroottable()))
 if (!("NIDE_poweredWeaponSoundEmitters" in getroottable()))
     ::NIDE_poweredWeaponSoundEmitters <- {};
 
-    
+
 // ============================================================================
 // MYSTERY BOX CONFIG
 // ============================================================================
@@ -1150,17 +1150,18 @@ if (!("NIDE_thundergunItemPropIndex" in getroottable()))
     if (data.token != token)
         return;
 
-    ::NIDE_perkDrinkStates.rawdelete(playerIndex);
-
     local player = data.player;
 
-    if (!::NIDE_IsValidHuman(player))
-        return;
+    // Accepte aussi les joueurs morts ou spectateurs.
+    if (::NIDE_IsValidPlayer(player))
+    {
+        ::NIDE_PerkDrink_SetSpeed(
+            player,
+            ::NIDE_PERK_DRINK_NORMAL_SPEED
+        );
+    }
 
-    ::NIDE_PerkDrink_SetSpeed(
-        player,
-        ::NIDE_PERK_DRINK_NORMAL_SPEED
-    );
+    ::NIDE_perkDrinkStates.rawdelete(playerIndex);
 };
 
 
@@ -1201,36 +1202,45 @@ if (!("NIDE_thundergunItemPropIndex" in getroottable()))
 };
 
 
-::NIDE_PerkDrink_Cancel <- function(player, restoreSpeed = false)
+::NIDE_PerkDrink_Cancel <- function(
+    player,
+    restoreSpeed = false
+)
 {
-    if (player == null)
+    if (!::NIDE_IsValidPlayer(player))
         return;
 
     local playerIndex = player.entindex();
 
-    if (::NIDE_perkDrinkStates.rawin(playerIndex))
-        ::NIDE_perkDrinkStates.rawdelete(playerIndex);
+    // Ne touche que les joueurs immobilises par la boisson.
+    if (!::NIDE_perkDrinkStates.rawin(playerIndex))
+        return;
 
-    if (restoreSpeed && ::NIDE_IsValidHuman(player))
+    local data = ::NIDE_perkDrinkStates[playerIndex];
+
+    if (data.player != player)
+        return;
+
+    if (restoreSpeed)
     {
         ::NIDE_PerkDrink_SetSpeed(
             player,
             ::NIDE_PERK_DRINK_NORMAL_SPEED
         );
     }
+
+    // L'ancien timer ne trouvera plus cet etat.
+    ::NIDE_perkDrinkStates.rawdelete(playerIndex);
 };
 
 
 ::NIDE_PerkDrink_Reset <- function()
 {
-    local players = [];
-
     foreach (playerIndex, data in ::NIDE_perkDrinkStates)
-        players.append(data.player);
-
-    foreach (player in players)
     {
-        if (::NIDE_IsValidHuman(player))
+        local player = data.player;
+
+        if (::NIDE_IsValidPlayer(player))
         {
             ::NIDE_PerkDrink_SetSpeed(
                 player,
@@ -3533,7 +3543,7 @@ if (!("NIDE_callbacks" in getroottable()))
         ::NIDE_Mode_OnPlayerRemoved(player);
 
     if ("NIDE_PerkDrink_Cancel" in getroottable())
-        ::NIDE_PerkDrink_Cancel(player, false);
+        ::NIDE_PerkDrink_Cancel(player, true);
 
     // Ces perks ne sont jamais sauvegardÃ©s par Tombstone.
     if ("NIDE_SpeedCola_RemovePlayer" in getroottable())
@@ -3586,7 +3596,7 @@ if (!("NIDE_callbacks" in getroottable()))
     if (newTeam != 3)
     {
         if ("NIDE_PerkDrink_Cancel" in getroottable())
-            ::NIDE_PerkDrink_Cancel(player, false);
+            ::NIDE_PerkDrink_Cancel(player, true);
 
         if ("NIDE_Tombstone_RemoveActive" in getroottable())
             ::NIDE_Tombstone_RemoveActive(player);
@@ -7956,7 +7966,7 @@ reserve =
             (reserve < required)
                 ? reserve
                 : required;
-                
+
         if (transferred > 0)
         {
             clip += transferred;
