@@ -57,6 +57,12 @@ if (!("NIDE_trapKillHurt" in getroottable()))
 if (!("NIDE_JUGGERNOG_COST" in getroottable()))
     ::NIDE_JUGGERNOG_COST <- 10000;
 
+if (!("NIDE_JUGGERNOG_PROMOTION_COST" in getroottable()))
+    ::NIDE_JUGGERNOG_PROMOTION_COST <- 7500;
+
+if (!("NIDE_JUGGERNOG_MAX_HITS" in getroottable()))
+    ::NIDE_JUGGERNOG_MAX_HITS <- 3;
+
 if (!("NIDE_JUGGERNOG_BUFFER_HEALTH" in getroottable()))
     ::NIDE_JUGGERNOG_BUFFER_HEALTH <- 100000;
 
@@ -64,7 +70,7 @@ if (!("NIDE_JUGGERNOG_KILL_DAMAGE" in getroottable()))
     ::NIDE_JUGGERNOG_KILL_DAMAGE <- 9999999;
 
 if (!("NIDE_JUGGERNOG_RECOVERY_DELAY" in getroottable()))
-    ::NIDE_JUGGERNOG_RECOVERY_DELAY <- 5.0;
+    ::NIDE_JUGGERNOG_RECOVERY_DELAY <- 10.0;
 
 if (!("NIDE_JUGGERNOG_FADE_INTERVAL" in getroottable()))
     ::NIDE_JUGGERNOG_FADE_INTERVAL <- 0.40;
@@ -176,7 +182,19 @@ if (!("NIDE_doubleTapThinkRunning" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_START_CASH" in getroottable()))
-    ::NIDE_START_CASH <- 3000;
+    ::NIDE_START_CASH <- 7000;
+
+if (!("NIDE_START_CASH_WINDOW" in getroottable()))
+    ::NIDE_START_CASH_WINDOW <- 25.0;
+
+if (!("NIDE_startCashRoundToken" in getroottable()))
+    ::NIDE_startCashRoundToken <- 0;
+
+if (!("NIDE_startCashWindowOpen" in getroottable()))
+    ::NIDE_startCashWindowOpen <- false;
+
+if (!("NIDE_startCashPlayers" in getroottable()))
+    ::NIDE_startCashPlayers <- {};
 
 if (!("NIDE_TOMBSTONE_Z_OFFSET" in getroottable()))
     ::NIDE_TOMBSTONE_Z_OFFSET <- -64.0;
@@ -2190,7 +2208,7 @@ if ("NIDE_Trap_Reset" in getroottable())
 
 // ============================================================================
 // TEMPORARY ROUND MODES
-// One human mode and one zombie mode per round.
+// Two human modes and two zombie modes per round.
 // ============================================================================
 
 if (!("NIDE_MODE_NONE" in getroottable()))
@@ -2209,20 +2227,24 @@ if (!("NIDE_MODE_DARK" in getroottable()))
     ::NIDE_MODE_DARK <- 7;
 
 if (!("NIDE_MODE_FIRST_DELAY" in getroottable()))
-    ::NIDE_MODE_FIRST_DELAY <- 60.0;
+    ::NIDE_MODE_FIRST_DELAY <- 35.0;
 if (!("NIDE_MODE_SECOND_DELAY" in getroottable()))
-    ::NIDE_MODE_SECOND_DELAY <- 110.0;
+    ::NIDE_MODE_SECOND_DELAY <- 57.0;
+if (!("NIDE_MODE_THIRD_DELAY" in getroottable()))
+    ::NIDE_MODE_THIRD_DELAY <- 79.0;
+if (!("NIDE_MODE_FOURTH_DELAY" in getroottable()))
+    ::NIDE_MODE_FOURTH_DELAY <- 100.0;
 
 if (!("NIDE_MODE_MONEY_DURATION" in getroottable()))
-    ::NIDE_MODE_MONEY_DURATION <- 30.0;
+    ::NIDE_MODE_MONEY_DURATION <- 15.0;
 if (!("NIDE_MODE_LENNY_DURATION" in getroottable()))
-    ::NIDE_MODE_LENNY_DURATION <- 20.0;
+    ::NIDE_MODE_LENNY_DURATION <- 15.0;
 if (!("NIDE_MODE_PROMOTION_DURATION" in getroottable()))
-    ::NIDE_MODE_PROMOTION_DURATION <- 25.0;
+    ::NIDE_MODE_PROMOTION_DURATION <- 15.0;
 if (!("NIDE_MODE_FURY_DURATION" in getroottable()))
     ::NIDE_MODE_FURY_DURATION <- 15.0;
 if (!("NIDE_MODE_INVISIBLE_DURATION" in getroottable()))
-    ::NIDE_MODE_INVISIBLE_DURATION <- 10.0;
+    ::NIDE_MODE_INVISIBLE_DURATION <- 15.0;
 if (!("NIDE_MODE_DARK_DURATION" in getroottable()))
     ::NIDE_MODE_DARK_DURATION <- 15.0;
 
@@ -2231,7 +2253,7 @@ if (!("NIDE_MODE_MONEY_PER_DAMAGE" in getroottable()))
 if (!("NIDE_MODE_LENNY_REWARD" in getroottable()))
     ::NIDE_MODE_LENNY_REWARD <- 500;
 if (!("NIDE_MODE_LENNY_COOLDOWN" in getroottable()))
-    ::NIDE_MODE_LENNY_COOLDOWN <- 0.25;
+    ::NIDE_MODE_LENNY_COOLDOWN <- 0.50;
 if (!("NIDE_MODE_PROMOTION_MULTIPLIER" in getroottable()))
     ::NIDE_MODE_PROMOTION_MULTIPLIER <- 0.50;
 if (!("NIDE_MODE_POWER_ACTIVATION_DELAY" in getroottable()))
@@ -2377,6 +2399,9 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
 {
     if (::NIDE_modeCurrent == ::NIDE_MODE_PROMOTION_DAY)
     {
+        if (baseCost == ::NIDE_JUGGERNOG_COST)
+            return ::NIDE_JUGGERNOG_PROMOTION_COST;
+
         return (baseCost * ::NIDE_MODE_PROMOTION_MULTIPLIER).tointeger();
     }
 
@@ -3187,7 +3212,7 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
 
     local text = params.text.tostring();
 
-    if (text != ":lenny:" && text != "( Í¡Â° ÍœÊ– Í¡Â°)")
+    if (text != ":lenny:" && text.find("͡°") == null)
         return;
 
     local player = GetPlayerFromUserID(params.userid);
@@ -3468,11 +3493,15 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     local token = ::NIDE_modeRoundToken;
     local firstFunction = "NIDE_Mode_StartRandomHuman";
     local secondFunction = "NIDE_Mode_StartRandomZombie";
+    local thirdFunction = "NIDE_Mode_StartRandomHuman";
+    local fourthFunction = "NIDE_Mode_StartRandomZombie";
 
     if (RandomInt(0, 1) == 1)
     {
         firstFunction = "NIDE_Mode_StartRandomZombie";
         secondFunction = "NIDE_Mode_StartRandomHuman";
+        thirdFunction = "NIDE_Mode_StartRandomZombie";
+        fourthFunction = "NIDE_Mode_StartRandomHuman";
     }
 
     EntFire(
@@ -3488,6 +3517,22 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
         "RunScriptCode",
         secondFunction + "(" + token + ");",
         ::NIDE_MODE_SECOND_DELAY,
+        null
+    );
+
+    EntFire(
+        ::NIDE_SCRIPT_NAME,
+        "RunScriptCode",
+        thirdFunction + "(" + token + ");",
+        ::NIDE_MODE_THIRD_DELAY,
+        null
+    );
+
+    EntFire(
+        ::NIDE_SCRIPT_NAME,
+        "RunScriptCode",
+        fourthFunction + "(" + token + ");",
+        ::NIDE_MODE_FOURTH_DELAY,
         null
     );
 };
@@ -3587,6 +3632,9 @@ if (!("NIDE_callbacks" in getroottable()))
     local newTeam =
         ("team" in params) ? params.team : 0;
 
+    if ("NIDE_StartCash_OnPlayerTeam" in getroottable())
+        ::NIDE_StartCash_OnPlayerTeam(player, newTeam);
+
     if ("NIDE_Mode_OnPlayerTeam" in getroottable())
         ::NIDE_Mode_OnPlayerTeam(player, newTeam, params.userid);
 
@@ -3676,6 +3724,9 @@ if (!("NIDE_callbacks" in getroottable()))
 
 ::NIDE_callbacks.OnGameEvent_round_start <- function(params)
 {
+    if ("NIDE_StartCash_BeginRound" in getroottable())
+        ::NIDE_StartCash_BeginRound();
+
     if ("NIDE_Tombstone_OnRoundStart" in getroottable())
         ::NIDE_Tombstone_OnRoundStart();
 
@@ -3730,6 +3781,9 @@ if (!("NIDE_callbacks" in getroottable()))
 
 ::NIDE_callbacks.OnGameEvent_player_spawn <- function(params)
 {
+    if ("NIDE_StartCash_OnPlayerSpawn" in getroottable())
+        ::NIDE_StartCash_OnPlayerSpawn(params);
+
     if ("NIDE_Mode_OnPlayerSpawn" in getroottable())
         ::NIDE_Mode_OnPlayerSpawn(params);
 };
@@ -16524,7 +16578,7 @@ EntFireByHandle(
     ClientPrint(
         player,
         3,
-        "\x0700FFFF[Juggernog] SURVIVE 3 KNIFE HITS"
+        "\x0700FFFF[Juggernog] SURVIVE 2 KNIFE HITS"
     );
 
     ::NIDE_Juggernog_StartThink();
@@ -16863,7 +16917,7 @@ EntFireByHandle(
     data.lastHitTime = Time();
     data.hits++;
 
-    if (data.hits >= 4)
+    if (data.hits >= ::NIDE_JUGGERNOG_MAX_HITS)
     {
 
         ::NIDE_Juggernog_KillPlayer(
@@ -16973,7 +17027,7 @@ EntFireByHandle(
     }
 
     // ------------------------------------------------------------------------
-    // RÃ‰CUPÃ‰RATION APRÃˆS 5 SECONDES
+    // RÃ‰CUPÃ‰RATION APRÃˆS LE DELAI CONFIGURE
     // ------------------------------------------------------------------------
 
     local perkPlayersToRemove = [];
@@ -17131,8 +17185,54 @@ EntFireByHandle(
     ::NIDE_juggernogThinkRunning = false;
 };
 
-::NIDE_SetRoundStartCash <- function()
+::NIDE_SetPlayerStartCash <- function(
+    player,
+    humanTeamConfirmed = false
+)
 {
+    if (!::NIDE_startCashWindowOpen
+        || !::NIDE_IsValidPlayer(player))
+    {
+        return false;
+    }
+
+    if (!humanTeamConfirmed && player.GetTeam() != 3)
+        return false;
+
+    local playerIndex = player.entindex();
+
+    if (::NIDE_startCashPlayers.rawin(playerIndex)
+        && ::NIDE_startCashPlayers[playerIndex] == player)
+    {
+        return false;
+    }
+
+    try
+    {
+        NetProps.SetPropInt(
+            player,
+            "m_iAccount",
+            ::NIDE_START_CASH
+        );
+    }
+    catch (error)
+    {
+        return false;
+    }
+
+    ::NIDE_startCashPlayers[playerIndex] <- player;
+    return true;
+};
+
+
+::NIDE_SetRoundStartCash <- function(token)
+{
+    if (token != ::NIDE_startCashRoundToken
+        || !::NIDE_startCashWindowOpen)
+    {
+        return;
+    }
+
     local player = null;
 
     while ((player = Entities.FindByClassname(
@@ -17140,21 +17240,110 @@ EntFireByHandle(
         "player"
     )) != null)
     {
-        if (player == null || !player.IsValid())
+        if (!::NIDE_IsValidPlayer(player)
+            || player.GetTeam() != 3)
+        {
             continue;
+        }
 
-        try
-        {
-            NetProps.SetPropInt(
-                player,
-                "m_iAccount",
-                ::NIDE_START_CASH
-            );
-        }
-        catch (error)
-        {
-        }
+        ::NIDE_SetPlayerStartCash(player, true);
     }
+};
+
+
+::NIDE_StartCash_ApplyUserID <- function(userid, token)
+{
+    if (token != ::NIDE_startCashRoundToken
+        || !::NIDE_startCashWindowOpen)
+    {
+        return;
+    }
+
+    local player = GetPlayerFromUserID(userid);
+
+    if (!::NIDE_IsValidPlayer(player)
+        || player.GetTeam() != 3)
+    {
+        return;
+    }
+
+    ::NIDE_SetPlayerStartCash(player, true);
+};
+
+
+::NIDE_StartCash_OnPlayerTeam <- function(
+    player,
+    newTeam
+)
+{
+    if (!::NIDE_startCashWindowOpen
+        || newTeam != 3
+        || !::NIDE_IsValidPlayer(player))
+    {
+        return;
+    }
+
+    // Le game event confirme deja la nouvelle equipe, meme si la NetProp
+    // n'a pas encore ete mise a jour pendant cette frame.
+    ::NIDE_SetPlayerStartCash(player, true);
+};
+
+
+::NIDE_StartCash_OnPlayerSpawn <- function(params)
+{
+    if (!::NIDE_startCashWindowOpen
+        || !("userid" in params))
+    {
+        return;
+    }
+
+    local token = ::NIDE_startCashRoundToken;
+
+    EntFire(
+        ::NIDE_SCRIPT_NAME,
+        "RunScriptCode",
+        "NIDE_StartCash_ApplyUserID(" +
+            params.userid + "," +
+            token + ");",
+        0.05,
+        null
+    );
+};
+
+
+::NIDE_StartCash_CloseWindow <- function(token)
+{
+    if (token != ::NIDE_startCashRoundToken)
+        return;
+
+    ::NIDE_startCashWindowOpen = false;
+};
+
+
+::NIDE_StartCash_BeginRound <- function()
+{
+    ::NIDE_startCashRoundToken++;
+    ::NIDE_startCashPlayers.clear();
+    ::NIDE_startCashWindowOpen = true;
+
+    local token = ::NIDE_startCashRoundToken;
+
+    // Petit delai pour laisser le moteur terminer les spawns du round.
+    EntFire(
+        ::NIDE_SCRIPT_NAME,
+        "RunScriptCode",
+        "NIDE_SetRoundStartCash(" + token + ");",
+        0.10,
+        null
+    );
+
+    EntFire(
+        ::NIDE_SCRIPT_NAME,
+        "RunScriptCode",
+        "NIDE_StartCash_CloseWindow(" + token + ");",
+        ::NIDE_START_CASH_WINDOW,
+        null
+    );
 };
 
 // --------------------------------------------------------------------------
@@ -17291,22 +17480,22 @@ EntFireByHandle(
     switch (modeId)
     {
         case ::NIDE_MODE_MONEY_BOOST:
-            return "+5% CASH FROM DAMAGE";
+            return "SHOOT THE ZOMBIES: 100% CASHBACK";
 
         case ::NIDE_MODE_LENNY_PAYDAY:
-            return "$500 PER LENNY FACE";
+            return "( ͡° ͜ʖ ͡°) : $500 BITCH!";
 
         case ::NIDE_MODE_PROMOTION_DAY:
-            return "PERKS AND MYSTERY BOXES: 50% OFF";
+            return "PROMOTION DAY! 50% OFF";
 
         case ::NIDE_MODE_ZOMBIE_FURY:
-            return "ZOMBIE MOVEMENT SPEED INCREASED";
+            return "ZOMBIE MOVEMENT SPEED GREATLY INCREASED";
 
         case ::NIDE_MODE_ZOMBIE_INVISIBLE:
-            return "ZOMBIES ARE NOW INVISIBLE";
+            return "ZOMBIES INVISIBLE!!";
 
         case ::NIDE_MODE_DARK:
-            return "HUMAN VISION HAS BEEN REDUCED";
+            return "DARK MODE!!";
     }
 
     return "";
