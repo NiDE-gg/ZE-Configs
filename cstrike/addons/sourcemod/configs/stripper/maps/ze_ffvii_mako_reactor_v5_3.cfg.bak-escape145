@@ -10621,8 +10621,7 @@ add:
 	"OnTrigger" "extreme_props,EnableCollision,,0,1"
 	"OnTrigger" "extremedanyo,Enable,,0,1"
 	"OnTrigger" "extremedanyo,Trigger,,2,1"
-	; longer escape (145s instead of 130s): EX4ZeddysEscape replaces huida_e
-	"OnTrigger" "comienza_huida,AddOutput,OnStartTouch EX4ZeddysEscape:Trigger::0.50:1,0,1"
+	"OnTrigger" "huida_e,Enable,,0,1"
 	"OnTrigger" "huida2_d,Enable,,0,1"
 	"OnTrigger" "medio_breakable,Break,,0,1"
 	"OnTrigger" "nubes_secundarias,TurnOn,,0,1"
@@ -10694,51 +10693,6 @@ add:
 	"OnCase02" "ItemSpawnerMaker,AddOutput,EntityTemplate ItemUltimaTemp,0,1"
 	"OnCase02" "ItemSpawnerMaker,AddOutput,origin -9359.7 4212 -564,0,1"
 	"OnCase02" "ItemSpawnerMaker,ForceSpawn,,0.05,1"
-}
-
-; copy of the map's huida_e (hammerid 2326) with 15 more seconds
-add:
-{
-	"classname" "logic_relay"
-	"targetname" "EX4ZeddysEscape"
-	"origin" "-3584 -3584 1088"
-	"OnTrigger" "consola,Command,say ** EXPLOSION IN 145 SECONDS **,0,1"
-	"OnTrigger" "consola,Command,say ** 140 SECONDS LEFT **,5,1"
-	"OnTrigger" "consola,Command,say ** 130 SECONDS LEFT **,15,1"
-	"OnTrigger" "consola,Command,say ** 120 SECONDS LEFT **,25,1"
-	"OnTrigger" "consola,Command,say ** 110 SECONDS LEFT **,35,1"
-	"OnTrigger" "consola,Command,say ** 100 SECONDS LEFT **,45,1"
-	"OnTrigger" "consola,Command,say ** 90 SECONDS LEFT **,55,1"
-	"OnTrigger" "consola,Command,say ** 80 SECONDS LEFT **,65,1"
-	"OnTrigger" "consola,Command,say ** 70 SECONDS LEFT **,75,1"
-	"OnTrigger" "consola,Command,say ** 60 SECONDS LEFT **,85,1"
-	"OnTrigger" "consola,Command,say ** 50 SECONDS LEFT **,95,1"
-	"OnTrigger" "consola,Command,say ** 40 SECONDS LEFT **,105,1"
-	"OnTrigger" "consola,Command,say ** 30 SECONDS LEFT **,115,1"
-	"OnTrigger" "consola,Command,say ** 20 SECONDS LEFT **,125,1"
-	"OnTrigger" "consola,Command,say ** 10 SECONDS LEFT **,135,1"
-	"OnTrigger" "BombTimer1,FireUser1,,0,1"
-	"OnTrigger" "BombTimer2,FireUser1,,0,1"
-	"OnTrigger" "puertaZM,Disable,,2.5,1"
-	"OnTrigger" "props_extreme,Toggle,,2.5,1"
-	"OnTrigger" "puertas_1,Lock,,0,1"
-	"OnTrigger" "puertas_2,Lock,,0,1"
-	"OnTrigger" "xix,StartForward,,135,1"
-	"OnTrigger" "sin_zombis,Enable,,144,1"
-	"OnTrigger" "finalf,Trigger,,144.5,1"
-}
-modify:
-{
-	match:
-	{
-		"hammerid" "883420"
-		"classname" "logic_relay"
-		"targetname" "finalf"
-	}
-	insert:
-	{
-		"OnTrigger" "EX4ZeddysEscape,CancelPending,,0.25,-1"
-	}
 }
 
 ;*************************

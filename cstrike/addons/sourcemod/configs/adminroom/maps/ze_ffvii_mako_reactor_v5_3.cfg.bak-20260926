@@ -178,32 +178,5 @@
 				"0"     "#100009:FireUser1"
 			}
 		}
-		"13"
-		{
-			"name"      "Extreme 4: Zeddys cmer"
-			"triggers"
-			{
-				"0"     "12"
-				"1"     "zeddys"
-				"2"     "zeddyscmer"
-			}
-			"actions"
-			{
-				"0"     "#100010:FireUser1"
-			}
-		}
-		"14"
-		{
-			"name"      "Extreme 3: RMZS cmer"
-			"triggers"
-			{
-				"0"     "13"
-				"1"     "rmzscmer"
-			}
-			"actions"
-			{
-				"0"     "#100011:FireUser1"
-			}
-		}
 	}
 }
