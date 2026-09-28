@@ -182,7 +182,7 @@ if (!("NIDE_doubleTapThinkRunning" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_START_CASH" in getroottable()))
-    ::NIDE_START_CASH <- 7000;
+    ::NIDE_START_CASH <- 8000;
 
 if (!("NIDE_START_CASH_WINDOW" in getroottable()))
     ::NIDE_START_CASH_WINDOW <- 25.0;
