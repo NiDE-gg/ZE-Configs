@@ -19,7 +19,7 @@ if (!("NIDE_SCRIPT_NAME" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_TRAP_ACTIVATION_COST" in getroottable()))
-    ::NIDE_TRAP_ACTIVATION_COST <- 500;
+    ::NIDE_TRAP_ACTIVATION_COST <- 25;
 
 
 // ============================================================================
@@ -55,10 +55,7 @@ if (!("NIDE_trapKillHurt" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_JUGGERNOG_COST" in getroottable()))
-    ::NIDE_JUGGERNOG_COST <- 10000;
-
-if (!("NIDE_JUGGERNOG_PROMOTION_COST" in getroottable()))
-    ::NIDE_JUGGERNOG_PROMOTION_COST <- 7500;
+    ::NIDE_JUGGERNOG_COST <- 1500;
 
 if (!("NIDE_JUGGERNOG_MAX_HITS" in getroottable()))
     ::NIDE_JUGGERNOG_MAX_HITS <- 3;
@@ -130,7 +127,7 @@ catch (error)
 // ============================================================================
 
 if (!("NIDE_SPEEDCOLA_COST" in getroottable()))
-    ::NIDE_SPEEDCOLA_COST <- 5000;
+    ::NIDE_SPEEDCOLA_COST <- 700;
 
 if (!("NIDE_SPEEDCOLA_RELOAD_MULTIPLIER" in getroottable()))
     ::NIDE_SPEEDCOLA_RELOAD_MULTIPLIER <- 2.0;
@@ -156,7 +153,7 @@ if (!("NIDE_speedColaThinkRunning" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_DOUBLETAP_COST" in getroottable()))
-    ::NIDE_DOUBLETAP_COST <- 5000;
+    ::NIDE_DOUBLETAP_COST <- 800;
 
 if (!("NIDE_DOUBLETAP_FIRE_RATE_MULTIPLIER" in getroottable()))
     ::NIDE_DOUBLETAP_FIRE_RATE_MULTIPLIER <- 1.50;
@@ -182,7 +179,7 @@ if (!("NIDE_doubleTapThinkRunning" in getroottable()))
 // ============================================================================
 
 if (!("NIDE_START_CASH" in getroottable()))
-    ::NIDE_START_CASH <- 8000;
+    ::NIDE_START_CASH <- 1000;
 
 if (!("NIDE_START_CASH_WINDOW" in getroottable()))
     ::NIDE_START_CASH_WINDOW <- 25.0;
@@ -200,7 +197,7 @@ if (!("NIDE_TOMBSTONE_Z_OFFSET" in getroottable()))
     ::NIDE_TOMBSTONE_Z_OFFSET <- -64.0;
 
 if (!("NIDE_TOMBSTONE_COST" in getroottable()))
-    ::NIDE_TOMBSTONE_COST <- 13000;
+    ::NIDE_TOMBSTONE_COST <- 1000;
 
 if (!("NIDE_TOMBSTONE_MODEL" in getroottable()))
     ::NIDE_TOMBSTONE_MODEL <- "models/props_custom/tombstone.mdl";
@@ -288,13 +285,13 @@ if (!("NIDE_POWERED_WEAPON_SOUND_RADIUS" in getroottable()))
 if (!("NIDE_poweredWeaponSoundEmitters" in getroottable()))
     ::NIDE_poweredWeaponSoundEmitters <- {};
 
-
+    
 // ============================================================================
 // MYSTERY BOX CONFIG
 // ============================================================================
 
 if (!("NIDE_MYSTERY_BOX_COST" in getroottable()))
-    ::NIDE_MYSTERY_BOX_COST <- 3000;
+    ::NIDE_MYSTERY_BOX_COST <- 300;
 
 if (!("NIDE_MYSTERY_BOX_ROLL_STEPS" in getroottable()))
     ::NIDE_MYSTERY_BOX_ROLL_STEPS <- 24;
@@ -2244,7 +2241,7 @@ if (!("NIDE_MODE_PROMOTION_DURATION" in getroottable()))
 if (!("NIDE_MODE_FURY_DURATION" in getroottable()))
     ::NIDE_MODE_FURY_DURATION <- 15.0;
 if (!("NIDE_MODE_INVISIBLE_DURATION" in getroottable()))
-    ::NIDE_MODE_INVISIBLE_DURATION <- 15.0;
+    ::NIDE_MODE_INVISIBLE_DURATION <- 10.0;
 if (!("NIDE_MODE_DARK_DURATION" in getroottable()))
     ::NIDE_MODE_DARK_DURATION <- 15.0;
 
@@ -2399,9 +2396,6 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
 {
     if (::NIDE_modeCurrent == ::NIDE_MODE_PROMOTION_DAY)
     {
-        if (baseCost == ::NIDE_JUGGERNOG_COST)
-            return ::NIDE_JUGGERNOG_PROMOTION_COST;
-
         return (baseCost * ::NIDE_MODE_PROMOTION_MULTIPLIER).tointeger();
     }
 
@@ -3477,7 +3471,10 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     }
 
     ::NIDE_Mode_Start(
-        RandomInt(::NIDE_MODE_ZOMBIE_FURY, ::NIDE_MODE_DARK),
+        RandomInt(
+            ::NIDE_MODE_ZOMBIE_FURY,
+            ::NIDE_MODE_ZOMBIE_INVISIBLE
+        ),
         token
     );
 };
@@ -3491,23 +3488,13 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     ::NIDE_modePowerPending = false;
 
     local token = ::NIDE_modeRoundToken;
-    local firstFunction = "NIDE_Mode_StartRandomHuman";
-    local secondFunction = "NIDE_Mode_StartRandomZombie";
-    local thirdFunction = "NIDE_Mode_StartRandomHuman";
-    local fourthFunction = "NIDE_Mode_StartRandomZombie";
-
-    if (RandomInt(0, 1) == 1)
-    {
-        firstFunction = "NIDE_Mode_StartRandomZombie";
-        secondFunction = "NIDE_Mode_StartRandomHuman";
-        thirdFunction = "NIDE_Mode_StartRandomZombie";
-        fourthFunction = "NIDE_Mode_StartRandomHuman";
-    }
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
         "RunScriptCode",
-        firstFunction + "(" + token + ");",
+        "NIDE_Mode_Start(" +
+            ::NIDE_MODE_MONEY_BOOST + "," +
+            token + ");",
         ::NIDE_MODE_FIRST_DELAY,
         null
     );
@@ -3515,7 +3502,9 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     EntFire(
         ::NIDE_SCRIPT_NAME,
         "RunScriptCode",
-        secondFunction + "(" + token + ");",
+        "NIDE_Mode_Start(" +
+            ::NIDE_MODE_ZOMBIE_FURY + "," +
+            token + ");",
         ::NIDE_MODE_SECOND_DELAY,
         null
     );
@@ -3523,7 +3512,9 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     EntFire(
         ::NIDE_SCRIPT_NAME,
         "RunScriptCode",
-        thirdFunction + "(" + token + ");",
+        "NIDE_Mode_Start(" +
+            ::NIDE_MODE_LENNY_PAYDAY + "," +
+            token + ");",
         ::NIDE_MODE_THIRD_DELAY,
         null
     );
@@ -3531,7 +3522,9 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
     EntFire(
         ::NIDE_SCRIPT_NAME,
         "RunScriptCode",
-        fourthFunction + "(" + token + ");",
+        "NIDE_Mode_Start(" +
+            ::NIDE_MODE_ZOMBIE_INVISIBLE + "," +
+            token + ");",
         ::NIDE_MODE_FOURTH_DELAY,
         null
     );
@@ -3540,7 +3533,7 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
 
 // Local test helper:
 // 1 Money Boost, 2 Lenny Payday, 4 Promotion Day,
-// 5 Zombie Fury, 6 Zombie Invisibility, 7 Dark Mode.
+// 5 Zombie Fury, 6 Zombie Invisibility.
 ::NIDE_Mode_Test <- function(modeId)
 {
     local validMode =
@@ -3548,8 +3541,7 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
         || modeId == ::NIDE_MODE_LENNY_PAYDAY
         || modeId == ::NIDE_MODE_PROMOTION_DAY
         || modeId == ::NIDE_MODE_ZOMBIE_FURY
-        || modeId == ::NIDE_MODE_ZOMBIE_INVISIBLE
-        || modeId == ::NIDE_MODE_DARK;
+        || modeId == ::NIDE_MODE_ZOMBIE_INVISIBLE;
 
     if (!validMode)
         return;
@@ -8020,7 +8012,7 @@ reserve =
             (reserve < required)
                 ? reserve
                 : required;
-
+                
         if (transferred > 0)
         {
             clip += transferred;
@@ -17841,7 +17833,11 @@ EntFireByHandle(
         ClientPrint(
             player,
             3,
-            "\x07FF0000[" + trapName + "] You need $500."
+            "\x07FF0000[" +
+                trapName +
+                "] You need $" +
+                ::NIDE_TRAP_ACTIVATION_COST.tostring() +
+                "."
         );
 
         return false;
@@ -17880,7 +17876,11 @@ EntFireByHandle(
     ClientPrint(
         player,
         3,
-        "\x0700FFFF[" + trapName + "] Trap activated for $500."
+        "\x0700FFFF[" +
+            trapName +
+            "] Trap activated for $" +
+            ::NIDE_TRAP_ACTIVATION_COST.tostring() +
+            "."
     );
 
     return true;
@@ -17917,3 +17917,5 @@ EntFireByHandle(
         "Trap 3"
     );
 };
+
+
