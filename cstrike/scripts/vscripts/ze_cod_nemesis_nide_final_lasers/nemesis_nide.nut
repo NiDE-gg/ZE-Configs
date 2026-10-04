@@ -2314,6 +2314,7 @@ if (!("NIDE_MODE_PROMOTION_TEXTS" in getroottable()))
         { name = "mystery_box_price_1", cost = ::NIDE_MYSTERY_BOX_COST },
         { name = "mystery_box_price_2", cost = ::NIDE_MYSTERY_BOX_COST },
         { name = "speed_cola_text", cost = ::NIDE_SPEEDCOLA_COST },
+        { name = "double_tap_worldtext", cost = ::NIDE_DOUBLETAP_COST },
         { name = "tombstone_worldtext", cost = ::NIDE_TOMBSTONE_COST }
     ];
 }
