@@ -1,0 +1,21 @@
+"bosses"
+{
+	"0"
+	{
+		"name"              ""      // Name of boss that appears in HUD
+		"method"            ""      // Type of boss: "counter", "hpbar", or "breakable"
+		"counter"           ""      // HP counter entity if counter/hpbar method
+		"backup"            ""      // HP backup entity if hpbar method
+		"iterator"          ""      // HP iterator entity if hpbar method
+		"breakable"         ""      // Boss entity if breakable method
+		"timeout"           ""      // Time before boss health is hidden
+		"trigger"           ""      // Output that starts the boss ("entity:output:delay")
+		"killtrigger"       ""      // Output that kills the boss ("entity:output")
+		"hurttrigger"       ""      // Output that counts as damaging boss ("entity:output")
+		"showtrigger"       ""      // Output that starts displaying the boss ("entity:output:delay")
+		"multitrigger"      "0"     // Whether boss can be triggered multiple times from "trigger"
+		"namefixup"         "0"     // Whether boss has namefixup if spawned from a template
+		"showbeaten"        "1"     // Whether top boss damage is displayed upon boss death (Nide only)
+		"showhealth"        "1"     // Whether boss health is displayed when hit (Nide only)
+	}
+}

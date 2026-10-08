@@ -17,6 +17,7 @@ function SetBonusStatus()
 	if ( !BONUS_PLAYED )
 	{
 		BONUS_PLAYED = true;
+		BONUS_ENABLED = false;
 	}
 }
 
@@ -59,6 +60,7 @@ function SetBonusMode()
 }
 
 // Anti-troll protection
+/*
 function AntiTroll()
 {
 	EntFire("Staff_Holy_Particle_1", "Stop", "", 0.0, null);
@@ -71,3 +73,4 @@ function AntiTroll()
 	EntFire("Staff_Electro_Particle_1", "Kill", "", 0.0, null);
 	EntFireByHandle(self, "CallScriptFunction", "AntiTroll", 0.1, null, null);
 }
+*/
