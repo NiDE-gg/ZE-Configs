@@ -154,15 +154,22 @@ if (!("humanItemChanceList" in getroottable()))
         return 0.05;
     }
 
+    // This think can run every tick: read the root table and the team once
+    local root = getroottable();
     local key = self;
-    if ("portal_playerKey" in sc && sc.portal_playerKey != null && sc.portal_playerKey.IsValid() && sc.portal_playerKey.IsPlayer())
-        key = sc.portal_playerKey;
+    if ("portal_playerKey" in sc)
+    {
+        local playerKey = sc.portal_playerKey;
+        if (playerKey != null && playerKey.IsValid() && playerKey.IsPlayer())
+            key = playerKey;
+    }
 
-    local hasHuman  = ("portalTouchedPlayers" in getroottable()) && ::portalTouchedPlayers.rawin(key);
-    local hasZombie = ("portalTouchedZombies" in getroottable()) && ::portalTouchedZombies.rawin(key);
+    local hasHuman  = ("portalTouchedPlayers" in root) && ::portalTouchedPlayers.rawin(key);
+    local hasZombie = ("portalTouchedZombies" in root) && ::portalTouchedZombies.rawin(key);
 
+    local team = self.GetTeam();
     local inPoisonZone = false;
-    if (self.GetTeam() == 2 && ("zmPoisonZonePlayers" in getroottable()))
+    if (team == 2 && ("zmPoisonZonePlayers" in root))
         inPoisonZone = ::zmPoisonZonePlayers.rawin(self.entindex());
 
     if (!hasHuman && !hasZombie && !inPoisonZone)
@@ -177,12 +184,12 @@ if (!("humanItemChanceList" in getroottable()))
 
     if ((pressed & 2048) != 0)
     {
-        if (self.GetTeam() == 2)
+        if (team == 2)
         {
             local id = self.entindex();
-            if (("zmPoisonZonePlayers" in getroottable()) && ::zmPoisonZonePlayers.rawin(id))
+            if (("zmPoisonZonePlayers" in root) && ::zmPoisonZonePlayers.rawin(id))
             {
-                if ("TryUseZonePoison" in getroottable())
+                if ("TryUseZonePoison" in root)
                     ::TryUseZonePoison(self);
 
                 sc.portal_buttonsLast = buttons;
@@ -194,22 +201,22 @@ if (!("humanItemChanceList" in getroottable()))
         local fromHuman = false;
         local fromZombie = false;
 
-        if (("portalPlayerItem" in getroottable()) && ::portalPlayerItem.rawin(key))
+        if (("portalPlayerItem" in root) && ::portalPlayerItem.rawin(key))
         {
             itemName = ::portalPlayerItem[key];
             fromHuman = true;
         }
-        else if (("portalZombieItem" in getroottable()) && ::portalZombieItem.rawin(key))
+        else if (("portalZombieItem" in root) && ::portalZombieItem.rawin(key))
         {
             itemName = ::portalZombieItem[key];
             fromZombie = true;
         }
 
-        if (fromHuman && self.GetTeam() != 3)
+        if (fromHuman && team != 3)
         {
-            if (("portalTouchedPlayers" in getroottable()) && ::portalTouchedPlayers.rawin(key))
+            if (("portalTouchedPlayers" in root) && ::portalTouchedPlayers.rawin(key))
                 ::portalTouchedPlayers.rawdelete(key);
-            if (("portalPlayerItem" in getroottable()) && ::portalPlayerItem.rawin(key))
+            if (("portalPlayerItem" in root) && ::portalPlayerItem.rawin(key))
                 ::portalPlayerItem.rawdelete(key);
 
             ClientPrint(self, 3, "\x07FF0000[Portal] Human item removed (you are not CT).");
@@ -217,11 +224,11 @@ if (!("humanItemChanceList" in getroottable()))
             return -1;
         }
 
-        if (fromZombie && self.GetTeam() != 2)
+        if (fromZombie && team != 2)
         {
-            if (("portalTouchedZombies" in getroottable()) && ::portalTouchedZombies.rawin(key))
+            if (("portalTouchedZombies" in root) && ::portalTouchedZombies.rawin(key))
                 ::portalTouchedZombies.rawdelete(key);
-            if (("portalZombieItem" in getroottable()) && ::portalZombieItem.rawin(key))
+            if (("portalZombieItem" in root) && ::portalZombieItem.rawin(key))
                 ::portalZombieItem.rawdelete(key);
 
             ClientPrint(self, 3, "\x07FF0000[Portal] Zombie item removed (you are not T).");
@@ -233,9 +240,9 @@ if (!("humanItemChanceList" in getroottable()))
 
         if (itemName != null)
         {
-            if (itemName in getroottable())
+            if (itemName in root)
             {
-                getroottable()[itemName](self);
+                root[itemName](self);
                 ClientPrint(self, 3, "\x0700FF00You used your item!");
                 used = true;
             }
@@ -253,23 +260,23 @@ if (!("humanItemChanceList" in getroottable()))
 
         if (fromHuman)
         {
-            if (("portalTouchedPlayers" in getroottable()) && ::portalTouchedPlayers.rawin(key))
+            if (("portalTouchedPlayers" in root) && ::portalTouchedPlayers.rawin(key))
                 ::portalTouchedPlayers.rawdelete(key);
-            if (("portalPlayerItem" in getroottable()) && ::portalPlayerItem.rawin(key))
+            if (("portalPlayerItem" in root) && ::portalPlayerItem.rawin(key))
                 ::portalPlayerItem.rawdelete(key);
         }
         else if (fromZombie)
         {
-            if (("portalTouchedZombies" in getroottable()) && ::portalTouchedZombies.rawin(key))
+            if (("portalTouchedZombies" in root) && ::portalTouchedZombies.rawin(key))
                 ::portalTouchedZombies.rawdelete(key);
-            if (("portalZombieItem" in getroottable()) && ::portalZombieItem.rawin(key))
+            if (("portalZombieItem" in root) && ::portalZombieItem.rawin(key))
                 ::portalZombieItem.rawdelete(key);
         }
 
         ::DisableHoldThemThinks(self);
 
         local uid = NetProps.GetPropInt(self, "m_iUserID");
-        if (("holdThem_userIdToIdStr" in getroottable()) && ::holdThem_userIdToIdStr.rawin(uid))
+        if (("holdThem_userIdToIdStr" in root) && ::holdThem_userIdToIdStr.rawin(uid))
             ::holdThem_userIdToIdStr.rawdelete(uid);
 
         return -1;
@@ -3572,11 +3579,10 @@ if (!("portalEntwatchZombieShort" in getroottable()))
     if (needClearCT) ctText.__KeyValueFromString("message", " ");
     if (needClearZM) zmText.__KeyValueFromString("message", " ");
 
+    // every handle returned by FindByClassname("player") is a valid player
     local p = null;
     while ((p = Entities.FindByClassname(p, "player")) != null)
     {
-        if (p == null || !p.IsValid() || !p.IsPlayer()) continue;
-
         if (ctMsg != "") EntFireByHandle(ctText, "Display", "", 0.0, p, p);
         else if (needClearCT) EntFireByHandle(ctText, "Display", "", 0.0, p, p);
 
@@ -3725,8 +3731,7 @@ if (!("tmp_running" in getroottable())) ::tmp_running <- false;
         if (!::tmp_lastPos.rawin(idx))
         { ::tmp_lastPos[idx] <- cur; continue; }
         local prev = ::tmp_lastPos[idx];
-        local d = cur - prev;
-        local dist2 = d.x*d.x + d.y*d.y + d.z*d.z;
+        local dist2 = (cur - prev).LengthSqr();
         if (voluntaryMove && dist2 >= (::TMP_MOVE_EPS * ::TMP_MOVE_EPS))
         {
             local now = Time();
@@ -4496,27 +4501,27 @@ if (!getroottable().rawin("breakableWeaponCaseToClass"))
         return;
 
     local player = null;
+    // Runs every tick: IsValidSwapPlayer() is always true for a handle returned by
+    // FindByClassname("player"), and the small helpers are inlined
+    local checkZone = TEAM_SWAP_USE_POSITION_CHECK;
 
     while ((player = Entities.FindByClassname(player, "player")) != null)
     {
-        if (!IsValidSwapPlayer(player))
-            continue;
-
         local team = player.GetTeam();
         if (team != 2 && team != 3)
         {
-            SetUsePressedState(player, false);
+            teamSwapUseState[player] <- false;
             continue;
         }
 
-        if (!IsPlayerInSwapZone(player))
+        if (checkZone && !IsPlayerInSwapZone(player))
         {
-            SetUsePressedState(player, false);
+            teamSwapUseState[player] <- false;
             continue;
         }
 
-        local pressed = IsUsePressed(player);
-        local wasPressed = WasUsePressed(player);
+        local pressed = (NetProps.GetPropInt(player, "m_nButtons") & IN_USE) != 0;
+        local wasPressed = (player in teamSwapUseState) ? teamSwapUseState[player] : false;
 
         if (pressed && !wasPressed)
         {
@@ -4527,7 +4532,7 @@ if (!getroottable().rawin("breakableWeaponCaseToClass"))
             }
         }
 
-        SetUsePressedState(player, pressed);
+        teamSwapUseState[player] <- pressed;
     }
 
     EntFire("hold_them_script", "RunScriptCode", "TeamSwapThink();", 0.01, null);

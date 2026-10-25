@@ -140,9 +140,11 @@ function actionManager(a, fromUpdate) {
 			updateTime = -1;
 		} else {
 			if (updAngleRotation[1] == true) {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) + QAngle(0, anglePerUpdate, 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) + QAngle(0, anglePerUpdate, 0));
 			} else {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) - QAngle(0, anglePerUpdate, 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) - QAngle(0, anglePerUpdate, 0));
 			}
 			updAngleRotation[0] -= 1;
 			if (updAngleRotation[0] == 0) {
@@ -163,15 +165,19 @@ function actionManager(a, fromUpdate) {
 		rotateForward = (diff[0] <= 180) ? true : false;
 		if (rotateForward) {
 			if (diff[0] > anglePerUpdate) {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) + QAngle(0, anglePerUpdate, 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) + QAngle(0, anglePerUpdate, 0));
 			} else {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) + QAngle(0, diff[0], 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) + QAngle(0, diff[0], 0));
 			}
 		} else {
 			if (diff[1] > anglePerUpdate) {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) - QAngle(0, anglePerUpdate, 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) - QAngle(0, anglePerUpdate, 0));
 			} else {
-				self.SetAbsAngles(QAngle(self.GetAbsAngles().x, self.GetAbsAngles().y, 0) - QAngle(0, diff[1], 0));
+				local ang = self.GetAbsAngles();
+				self.SetAbsAngles(QAngle(ang.x, ang.y, 0) - QAngle(0, diff[1], 0));
 			}
 		}
 	}
@@ -206,9 +212,9 @@ function actionManager(a, fromUpdate) {
 				// repeat node search 20 times. If no nearby node is found, then a random one picked
 				if (repeatNodeSearch == 0) {
 					repeatNodeSearch = 20;
-					if (nodeGroup = 1) targetNode = nodeGroup1[RandomInt(0, nodeGroup1.len() - 1)];
-					else if (nodeGroup = 2) targetNode = nodeGroup2[RandomInt(0, nodeGroup1.len() - 1)];
-					else if (nodeGroup = 3) targetNode = nodeGroup3[RandomInt(0, nodeGroup1.len() - 1)];
+					if (nodeGroup == 1) targetNode = nodeGroup1[RandomInt(0, nodeGroup1.len() - 1)];
+					else if (nodeGroup == 2) targetNode = nodeGroup2[RandomInt(0, nodeGroup2.len() - 1)];
+					else if (nodeGroup == 3) targetNode = nodeGroup3[RandomInt(0, nodeGroup3.len() - 1)];
 					targetNodeFound = true;
 					calcUpdAngleRot = true;
 					updateTime = -1;
@@ -373,7 +379,9 @@ function angleDifference(target) {
 
 // Returs the distance between two vectors
 function distance(origin1, origin2) {
-	return sqrt(pow(origin1.x - origin2.x, 2) + pow(origin1.y - origin2.y, 2) + pow(origin1.z - origin2.z, 2));
+	// d * d is what pow(d, 2) returns for a float, without the 3 function calls
+	local dx = origin1.x - origin2.x, dy = origin1.y - origin2.y, dz = origin1.z - origin2.z;
+	return sqrt(dx * dx + dy * dy + dz * dz);
 }
 
 // Used to determine if Pushup entity shall be enabled or disabled

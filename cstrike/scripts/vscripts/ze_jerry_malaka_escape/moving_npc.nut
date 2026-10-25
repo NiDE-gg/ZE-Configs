@@ -53,7 +53,7 @@ function Stop(){if(ticking){ticking = false;}}
 function Tick()
 {
 	if(ticking)
-		EntFireByHandle(self,"RunScriptCode","Tick();",TICKRATE,null,null);
+		EntFireByHandle(self,"CallScriptFunction","Tick",TICKRATE,null,null);
 	else
 	{
 		EntFireByHandle(tf,"Deactivate","",0.00,null,null);
@@ -76,8 +76,6 @@ function Tick()
 	while(angdif>360){angdif-=180;}
 	while(angdif< -180){angdif+=360;}
 	angdif=abs(angdif);
-	local tdist = GetDistance(self.GetOrigin(),target.GetOrigin());
-	local tdistz = (target.GetOrigin().z-self.GetOrigin().z);
 	EntFireByHandle(tf,"AddOutput","force "+(3000*SPEED_FORWARD).tostring(),0.00,null,null);
 	EntFireByHandle(ts,"AddOutput","force "+((3*SPEED_TURNING)*angdif).tostring(),0.00,null,null);	
 }
@@ -85,17 +83,36 @@ function SearchTarget()
 {
 	ttime = 0.00;
 	target = null;
-	local h = null;
 	local candidates = [];
-	while(null!=(h=Entities.FindInSphere(h,self.GetOrigin(),TARGET_DISTANCE)))
+	local o = self.GetOrigin();
+	local ox = o.x, oy = o.y, oz = o.z;
+	local eye = o+Vector(0,0,40);
+	local r = TARGET_DISTANCE.tofloat();
+	local r2 = r*r;
+	// Only players can be candidates, so walk the players instead of every entity in the sphere.
+	// The sphere test below is the same box/sphere test Entities.FindInSphere does (player boxes are world aligned).
+	for(local h;h=Entities.FindByClassname(h,"player");)
 	{
 		//check if target is a valid player + CT team(3) + health above 0 (not dead)
-		if(h.GetClassname()=="player"&&h.GetTeam()==3&&h.GetHealth()>0)
+		if(h.GetTeam()!=3||h.GetHealth()<=0)
+			continue;
+		local p = h.GetOrigin();
+		local cx = ox-p.x, cy = oy-p.y, cz = oz-p.z;
+		// A live player's origin is inside its box, so the box touches the sphere whenever the origin is in it
+		if(cx*cx+cy*cy+cz*cz>=r2)
 		{
-			//check if the target is in sight of the npc (this physbox origin+48 height)
-			if(TraceLine(self.GetOrigin()+Vector(0,0,40),h.GetOrigin()+Vector(0,0,48),self)==1.00)
-				candidates.push(h);//if everything required is OK, add the target to the list of candidates
+			local mins = h.GetBoundingMins();
+			local maxs = h.GetBoundingMaxs();
+			local d = 0.0, f;
+			if(cx<mins.x){f=cx-mins.x;d+=f*f;}else if(cx>maxs.x){f=maxs.x-cx;d+=f*f;}
+			if(cy<mins.y){f=cy-mins.y;d+=f*f;}else if(cy>maxs.y){f=maxs.y-cy;d+=f*f;}
+			if(cz<mins.z){f=cz-mins.z;d+=f*f;}else if(cz>maxs.z){f=maxs.z-cz;d+=f*f;}
+			if(d>=r2)
+				continue;
 		}
+		//check if the target is in sight of the npc (this physbox origin+48 height)
+		if(TraceLine(eye,p+Vector(0,0,48),self)==1.00)
+			candidates.push(h);//if everything required is OK, add the target to the list of candidates
 	}
 	if(candidates.len()==0)return;
 	target = candidates[RandomInt(0,candidates.len()-1)];
@@ -103,10 +120,10 @@ function SearchTarget()
 function GetTargetYaw(start,target)
 {
 	local yaw = 0.00;
-	local v = Vector(start.x-target.x,start.y-target.y,start.z-target.z);
-	local vl = sqrt(v.x*v.x+v.y*v.y);
-	yaw = 180*acos(v.x/vl)/3.14159;
-	if(v.y<0)
+	local vx = start.x-target.x, vy = start.y-target.y;
+	local vl = sqrt(vx*vx+vy*vy);
+	yaw = 180*acos(vx/vl)/3.14159;
+	if(vy<0)
 		yaw=-yaw;
 	return yaw;
 }

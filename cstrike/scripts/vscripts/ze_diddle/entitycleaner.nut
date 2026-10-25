@@ -15,6 +15,50 @@
 //
 //===================================\\
 
+// Classnames that are never cleaned (looked up in one step instead of one comparison per name)
+local g_KeepClassnames = {
+	func_areaportalwindow = true,
+	weaponworldmodel = true,
+	wearable_item = true,
+	func_areaportal = true,
+	env_cubemap = true,
+	cs_gamerules = true,
+	cs_team_manager = true,
+	cs_player_manager = true,
+	env_soundscape = true,
+	env_soundscape_proxy = true,
+	env_soundscape_triggerable = true,
+	env_sun = true,
+	env_wind = true,
+	env_fog_controller = true,
+	func_brush = true,
+	func_wall = true,
+	func_buyzone = true,
+	func_illusionary = true,
+	func_bomb_target = true,
+	infodecal = true,
+	info_projecteddecal = true,
+	info_node = true,
+	info_target = true,
+	info_node_hint = true,
+	info_player_counterterrorist = true,
+	info_player_terrorist = true,
+	info_map_parameters = true,
+	keyframe_rope = true,
+	move_rope = true,
+	info_ladder = true,
+	player = true,
+	point_viewcontrol = true,
+	scene_manager = true,
+	shadow_control = true,
+	sky_camera = true,
+	soundent = true,
+	trigger_soundscape = true,
+	predicted_viewmodel = true,
+	worldspawn = true,
+	point_devshot_camera = true,
+};
+
 function CleanEntities()
 {
 	local h = Entities.First();
@@ -23,47 +67,7 @@ function CleanEntities()
 		local cn = h.GetClassname();
 		local isweapon = false;
 		if(cn.len()>6&&cn.slice(0,7)=="weapon_")isweapon = true;
-		if(h!=null&&h.IsValid()&&h!=self&&!isweapon
-		&&cn!="func_areaportalwindow"
-		&&cn!="weaponworldmodel"
-		&&cn!="wearable_item"
-		&&cn!="func_areaportal"
-		&&cn!="env_cubemap"
-		&&cn!="cs_gamerules"
-		&&cn!="cs_team_manager"
-		&&cn!="cs_player_manager"
-		&&cn!="env_soundscape"
-		&&cn!="env_soundscape_proxy"
-		&&cn!="env_soundscape_triggerable"
-		&&cn!="env_sun"
-		&&cn!="env_wind"
-		&&cn!="env_fog_controller"
-		&&cn!="func_brush"
-		&&cn!="func_wall"
-		&&cn!="func_buyzone"
-		&&cn!="func_illusionary"
-		&&cn!="func_bomb_target"
-		&&cn!="infodecal"
-		&&cn!="info_projecteddecal"
-		&&cn!="info_node"
-		&&cn!="info_target"
-		&&cn!="info_node_hint"
-		&&cn!="info_player_counterterrorist"
-		&&cn!="info_player_terrorist"
-		&&cn!="info_map_parameters"
-		&&cn!="keyframe_rope"
-		&&cn!="move_rope"
-		&&cn!="info_ladder"
-		&&cn!="player"
-		&&cn!="point_viewcontrol"
-		&&cn!="scene_manager"
-		&&cn!="shadow_control"
-		&&cn!="sky_camera"
-		&&cn!="soundent"
-		&&cn!="trigger_soundscape"
-		&&cn!="predicted_viewmodel"
-		&&cn!="worldspawn"
-		&&cn!="point_devshot_camera")
+		if(h!=null&&h.IsValid()&&h!=self&&!isweapon&&!(cn in g_KeepClassnames))
 		//fix stacking
 		{
             NetProps.SetPropBool(h, "m_bForcePurgeFixedupStrings", true);

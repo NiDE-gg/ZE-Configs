@@ -236,11 +236,13 @@
     if (ent == null || !ent.IsValid())
         return;
 
+    // Handles returned by FindByClassname(p, "player") are always valid players,
+    // so the IsValidPlayer() part of the helpers is skipped in this loop.
     local p = null;
 
     while ((p = Entities.FindByClassname(p, "player")) != null)
     {
-        if (!this.IsHumanPlayer(p))
+        if (p.GetTeam() != 3)
             continue;
 
         EntFireByHandle(ent, "Display", "", 0.00, p, null);
@@ -252,15 +254,12 @@
     if (ent == null || !ent.IsValid())
         return;
 
+    // Handles returned by FindByClassname(p, "player") are always valid players,
+    // so the IsValidPlayer() part of the helpers is skipped in this loop.
     local p = null;
 
     while ((p = Entities.FindByClassname(p, "player")) != null)
-    {
-        if (!this.IsValidPlayer(p))
-            continue;
-
         EntFireByHandle(ent, "Display", "", 0.00, p, null);
-    }
 }
 
 ::SelectionPortal.ShortName <- function(name, maxLen)
@@ -2875,14 +2874,16 @@ if (!("RaDodgeTrial" in getroottable()))
 {
     this.lastKnownHumanUserIDs = {};
 
+    // Handles returned by FindByClassname(p, "player") are always valid players,
+    // so the IsValidPlayer() part of the helpers is skipped in this loop.
     local p = null;
 
     while ((p = Entities.FindByClassname(p, "player")) != null)
     {
-        if (!this.IsAliveHuman(p))
+        if (p.GetTeam() != 3 || !p.IsAlive())
             continue;
 
-        local uid = this.GetUserID(p);
+        local uid = NetProps.GetPropInt(p, "m_iUserID");
 
         if (uid > 0)
             this.lastKnownHumanUserIDs[uid] <- true;
@@ -2931,11 +2932,13 @@ if (!("RaDodgeTrial" in getroottable()))
     if (this.hudEnt == null || !this.hudEnt.IsValid())
         return;
 
+    // Handles returned by FindByClassname(p, "player") are always valid players,
+    // so the IsValidPlayer() part of the helpers is skipped in this loop.
     local p = null;
 
     while ((p = Entities.FindByClassname(p, "player")) != null)
     {
-        if (!this.IsHumanPlayer(p))
+        if (p.GetTeam() != 3)
             continue;
 
         EntFireByHandle(this.hudEnt, "Display", "", 0.00, p, null);

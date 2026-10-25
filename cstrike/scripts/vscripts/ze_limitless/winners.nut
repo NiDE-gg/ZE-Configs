@@ -65,13 +65,13 @@ if (!("initialWinners" in getroottable())) {
         "[U:1:388761421]": 3,       //  Kempa
         "[U:1:42158862]": 3,        //  Mr.Frodo
         "[U:1:127474597]": 3,       //  V POISKAH GOBLINOV
-        "[[U:1:1030847131]": 3,     //  Frenchie
+        "[U:1:1030847131]": 3,      //  Frenchie
         "[U:1:1023222981]": 3,      //  *Subaru Natsuki*
         "[U:1:252742160]": 1,       //  atom.ic
         "[U:1:1044875192]": 1,      //  Luz Noceda
         "[U:1:118380909]": 1,       //  Momo-ayo
         "[U:1:325883778]": 1,       //  MYASS
-        "[U:1:161678896": 1,        //  RykadeR_CruiseR
+        "[U:1:161678896]": 1,       //  RykadeR_CruiseR
         "[U:1:107170794]": 1,       //  Imma
     };
 }

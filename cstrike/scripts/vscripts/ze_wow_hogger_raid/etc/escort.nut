@@ -310,6 +310,6 @@ function EscortThink()
 
     if (escortActive)
     {
-        EntFireByHandle(self, "RunScriptCode", "EscortThink()", ESCORT_MOVE_INTERVAL, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "EscortThink", ESCORT_MOVE_INTERVAL, null, null);
     }
 }

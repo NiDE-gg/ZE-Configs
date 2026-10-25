@@ -43,7 +43,7 @@ function SpawnCosmeticProjectile(mdl, startPos, endPos, speed) {
 
     if (!cosmeticThinkRunning) {
         cosmeticThinkRunning = true;
-        EntFireByHandle(self, "RunScriptCode", "TickCosmeticProjectiles()", PROJ_INTERVAL, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "TickCosmeticProjectiles", PROJ_INTERVAL, null, null);
     }
 }
 
@@ -63,7 +63,7 @@ function TickCosmeticProjectiles() {
     }
     cosmeticProjectiles = alive;
     if (cosmeticProjectiles.len() > 0) {
-        EntFireByHandle(self, "RunScriptCode", "TickCosmeticProjectiles()", PROJ_INTERVAL, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "TickCosmeticProjectiles", PROJ_INTERVAL, null, null);
     } else {
         cosmeticThinkRunning = false;
     }

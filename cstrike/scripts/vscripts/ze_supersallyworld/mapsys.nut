@@ -11,7 +11,7 @@ if (g_iStripperVersion == 0.0) {
 	} else {
 		m_szStripper <- ""
 	}
-} 
+}
 
 // ⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⡀⠄⢀⠄⠄⡀⠄⡀⢀⠄⡀⢀⠄⡀⢀⠄⡀⢀⠄⢀⠄⢀⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
 // ⠄⠄⠐⠈⠄⢈⠄⠈⠄⠁⠈⡀⠁⠈⠄⠁⢀⠠⠄⠄⠂⠄⠄⠠⠄⠠⡠⢠⠠⠠⡀⠄⡠⠠⡐⠄⠠⠄⡀⠈⡀⠈⠄⠐⠄⠐⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄⠄
@@ -183,7 +183,7 @@ IncludeScript("ze_supersallyworld/strippersys.nut", this);
 // STAGE 1: FINISHED!!!!
 // STAGE 2: CHECK PLEASE - MOSTLY FINISHED!!! BROKEN TPS
 // STAGE 3: MY THERAPIST SAYS THERE'S STILL A LOT OF WORK TO BE DONE.
- 
+
 // POTENTIAL CRASHES WITH ITEMS
 // MAYBE CAUSES: - CROWBAR VIEWMODEL. LESHAWNA. PLAYERMODEL.
 // note: the crashes DID stop after disabling the crowbar, but let's try enabling it again via different method to be certain.
@@ -369,7 +369,7 @@ function CleanSkyboxModels() {
 	if (toggle == true) {
 		ClientPrint(player, EConstants.EHudNotify.HUD_PRINTTALK, "\x07FFFFFFELTRA MAP SETTINGS: CRT Filter has been enabled. Type '!nofilter' to disable it.")
 		SetPlayerSetting(player, "m_bNoFilter", false)
-		
+
 		return
 	}
 	ClientPrint(player, EConstants.EHudNotify.HUD_PRINTTALK, "\x07FFFFFFELTRA MAP SETTINGS: CRT Filter has been disabled. Type '!showfilter' to re-enable it.")
@@ -382,17 +382,17 @@ function CleanSkyboxModels() {
 	},
 	"!showfilter" : function(player) {
 		SetVisFilter(player, true)
-	}, 
+	},
 	"!nofilter" : function(player) {
 		SetVisFilter(player, false)
 	},
 	"!adminroom" : function(player) {
 		if (GetSteamID(player) == ELTRA_STEAMID) {
-			player.SetOrigin(Entities.FindByName(null, "sally_admin_dest").GetOrigin())		
+			player.SetOrigin(Entities.FindByName(null, "sally_admin_dest").GetOrigin())
 		}
 		// TO-DO : Go to admin room
 	}
-	
+
 }
 
 
@@ -403,13 +403,13 @@ function CleanSkyboxModels() {
 
 	OnGameEvent_player_say = function(params) {
 		local hPlayer = GetPlayerFromUserID(params.userid)
-		
+
 		foreach (sz_setting, p_function in g_pSettingsFunctions) {
 			if (params.text.tolower().find(sz_setting) != null) {
 				p_function.call(this, hPlayer)
 			}
 		}
-		
+
 	}
 
 }
@@ -459,14 +459,14 @@ const SALLY_WARNING_MESSAGE = "Super Sally:\nYour game is about to freeze while 
 			EntFireByHandle(g_hSallyAlarmSound, "PlaySound", "", i*2.0+1, null, null);
 		}
 	}
-	
+
 	// for (local ambi; ambi = Entities.FindByClassname(ambi, "ambient_generic");) {
 	// 	ambi.AcceptInput("Volume", "0", null, null)
 	// }
 
 	EntFire("mapsys", "RunScriptCode", "DoWinnerFMV("+params.winner+")", 0, null)
 	// for (local i=0; i<5; i++) {
-		
+
 	// 	EntFire("worldspawn", "RunScriptCode", "ClientPrint(null, 4, SALLY_WARNING_MESSAGE)", i, null)
 	// 	EntFireByHandle("worldspawn", "RunScriptCode", "", i, null)
 	// }
@@ -475,9 +475,9 @@ const SALLY_WARNING_MESSAGE = "Super Sally:\nYour game is about to freeze while 
 ::MAPSYS_EVENTS.OnGameEvent_player_death <- function(params) {
 	// try { // i dont have time to debug these contest ends in 3 days !!!!!
 		// printl("Fuck you Diane")
-		
+
 		local ply = GetPlayerFromUserID(params.userid)
-		
+
 		if ((ply != null && ply.IsValid()) == false) {
 			return;
 		}
@@ -526,7 +526,7 @@ function SpawnSkyboxModel(modelname = "", origin_name = Vector(0 0 0), origin_of
 			if (origin_name.len() > 0) {
 				local e = Entities.FindByName(null, origin_name)
 				if (ValidEntity(e)) {
-					origin_pos = e.GetOrigin();			
+					origin_pos = e.GetOrigin();
 				} else {
 					dprintl("ERROR SPAWNING SKY MODEL: Origin "+origin_name+" DOES NOT EXIST!!!!!!!!!!")
 					return;
@@ -689,11 +689,11 @@ IncludeScript("eltrasnag/nide26/misc/guy_names.nut", this) // the names dictiona
 			local pscope = ply.GetScriptScope()
 			EntFireByHandle(ply, "RunScriptFile", "ze_supersallyworld/player.nut", 0, null, null)
 			// pscope.IncludeScript("sallyworld/player.nut", pscope)
-			
-			
+
+
 
 			// SURELY THIS ISNT GOING TO GIVE ZOMBIES WEAPONS.
-			// EnablePlayerWeapons(ply)// FUCK YOU 
+			// EnablePlayerWeapons(ply)// FUCK YOU
 			// pscope.SetUp()
 			// if ("DoPlayerModel" in pscope) {
 			// 	pscope.DoPlayerModel()
@@ -721,7 +721,7 @@ const EPILEPSY_WARN_DURATION = 5
 
 function OnPostSpawn() {
 
-	
+
 
 
 	ClientPrint(null, 3, m_szStripper)
@@ -741,10 +741,10 @@ function OnPostSpawn() {
 	EntFire("cmd", "Command", "sv_airaccelerate 3", 0.1, null) // Rape Bhop
 	EntFire("cmd", "Command", "sm_force_shake 1", 0.1, null) // you WILL look at the map shakes and you WILL like it
 	EntFire("cmd", "Command", "mp_flashlight 1", 0.1, null) // incase
-	
+
 	g_pServerCommand.AcceptInput("Command", "mp_roundtime 60", null, null)
 	g_pServerCommand.AcceptInput("Command", "sv_turbophysics 0", null, null)
-	
+
 
 	// roll maria jumpscare to keep in line with other eltra maps
 	if (RandomInt(0,10000) == 14) {
@@ -811,7 +811,7 @@ function OnPostSpawn() {
 
 		if (m_bIsReleaseMap == true && PermaVars.i_MapStage == 0) {
 			PermaVars.i_MapStage = 3
-			
+
 
 		}
 		// printl("meow")
@@ -864,8 +864,8 @@ function OnPostSpawn() {
 	RunScriptCode(self, "TitleCard()", EpilepsyWarnTime)
 	RunScriptCode(self, "StageAction(PermaVars.i_MapStage)", 6+EpilepsyWarnTime)
 	ze_map_say("*** IF YOU CANNOT TRUE SALLY IMMERSION, TYPE !NOFILTER IN THE CHAT TO DISABLE THE VHS FILTER. ***", 20+EpilepsyWarnTime)
-	
-	
+
+
 
 
 	// if (PermaVars.iRoundCount == 1 && developer() == 0) {
@@ -893,7 +893,7 @@ function StageAction(mapstage) {
 			RunScriptCode(self, "DoSlidesIntro()",3);
 			RunScriptCode(self, "CSRounds.RoundWin(EConstants.ECSRoundEndReasons.Game_Commencing)", 36)
 			PermaVars.i_MapStage = 1;
-			
+
 			// AddThinkToEnt(self, "WaitingThink")
 
 		break;
@@ -926,7 +926,7 @@ function StageAction(mapstage) {
 		case 3: // stage 3 start
 			Entities.FindByName(null, "tem_stage3").AcceptInput("ForceSpawn", "", null, null)
 			SetSky(PREG_SKY.NIGHT)
-			
+
 			// SpawnSkyboxModel("models/eltra/propper/stage3_sky/stage3_sky.mdl")
 			QFire("s3_sky", "Color", "50 50 50", 0.1)
 
@@ -970,10 +970,10 @@ function FruitsPart1() {
 		if (i < 4) {
 			RunScriptCode(self, "FruitTalk()", delay + 2)
 		} else {
-			
+
 
 		}
-		
+
 		delay += FRUIT_INTERVAL
 	}
 }
@@ -1077,23 +1077,24 @@ function OpilaWater(activator, toggle = false) {
 
 
 function MapThink() {
-	foreach (i, ply in a_Drowners) {
+	for (local i = a_Drowners.len() - 1; i >= 0; i--) {
+		local ply = a_Drowners[i];
+
 		if (P_UTILS.ValidTeam(ply) == false) {
-			a_Drowners.remove(ply)
-			return
+			a_Drowners.remove(i);
+			continue;
 		}
 
-		ScreenFade(ply, 0, 0, 255, 255, 0.25, 0, FFADE_IN)
+		ScreenFade(ply, 0, 0, 255, 255, 0.25, 0, FFADE_IN);
+
 		if (ply.GetTeam() == TEAMS.HUMANS) {
-			ply.TakeDamage(99999, DMG_DROWN, ply)
-			continue;
+			ply.TakeDamage(99999, DMG_DROWN, ply);
 		} else {
-			ZTele(ply) // bad idea?
-			// ply.TakeDamage(99999999, DMG_DROWN, ply)
+			ZTele(ply);
 		}
-		// ply.TakeDamage(100000, DMG_DROWN, ply)
 	}
-	return 0.5
+
+	return 0.5;
 }
 
 ::Rape <- function(activator) {
@@ -1301,7 +1302,7 @@ function DoEndingFMV() {
 	// beef up ending fmv volume to the point of distortion
 	// PlaySoundGlobal("eltra/fmv/leshawna_ending_fmv.mp3")
 	PlaySoundGlobal("eltra/fmv/leshawna_ending_fmv.mp3")
-	
+
 	g_bStaminaEnabled = false
 
 	// FAILED EXPERIMENT
@@ -1326,7 +1327,7 @@ function StartTransitionToFinalBoss() {
 
 	local hHumanDest = Entities.FindByName(null, "final_boss_dest").GetOrigin();
 	local hZombieDest = Entities.FindByName(null, "final_boss_dest_zm").GetOrigin();
-	
+
 	ScreenFade(null, 0,0,0,255, 0, -1, FFADE_STAYOUT)
 	for (local hPlayer; hPlayer = Entities.FindByClassname(hPlayer, "player");) {
 		if (hPlayer.GetTeam() == TEAMS.HUMANS) {
@@ -1338,10 +1339,10 @@ function StartTransitionToFinalBoss() {
 		}
 		DoEntFire("point_clientcommand", "command", "soundfade 100 10 1 1", 0, hPlayer, null);
 	}
-	
+
 	QFire("d_dream_master", "CallScriptFunction", "StartDreamIntro", 11, null)
 	// RunScriptCode(self, "StartFinalBoss()", 10)
-	
+
 }
 
 function SendPlayersToDarkRoom() {
@@ -1376,7 +1377,7 @@ DoWinnerFMV <- function(winner) {
 		}
 
 		local p;
-		
+
 		while (p = Entities.FindByClassname(p, "player")) {
 			EntFire("point_clientcommand", "Command", "speak \"level "+STAGE_STRING+". clear\"",1, p)
 		}
@@ -1409,7 +1410,7 @@ function TitleCard() {
 	// set player title card
 	// QFireByHandle(self,)
 	// SetViewControlAll("TitleCamera", true)
-	
+
 	Spawn("ambient_generic", {
 		targetname = "sf_title"
 		message = "eltra/cic_titlecard.mp3",
@@ -1476,7 +1477,7 @@ function TitleCard() {
 
 ::ZTele <- function(activator) {
 	if (ValidEntity(activator)) {
-		
+
 		activator.ValidateScriptScope() // ripped directly from mccm so if this causess buigs? Well i guess thats it
 
 		local scope = activator.GetScriptScope()
@@ -1485,7 +1486,7 @@ function TitleCard() {
 			scope.vehicle.ValidateScriptScope()
 			scope.vehicle.GetScriptScope().Exit(false, false)
 		}
-		
+
 		activator.SetOrigin(g_vMapTeleport)
 	}
 }
@@ -1522,7 +1523,7 @@ function TeleportTest() {
 	if (ent != null) {
 		hEnt = ent
 	}
-	
+
 	AddThinkToEnt(hEnt, null)
 	DoExplosion(hEnt)
 
@@ -1537,7 +1538,7 @@ function TeleportTest() {
 // *hopefully* this overrides the legacy CiC Explode() in common.nut... surely !!!!!!!
 ::Explode <- function(ent= null) {
 	local hEnt = self
-	
+
 	if (ent != null) {
 		hEnt = ent
 	}

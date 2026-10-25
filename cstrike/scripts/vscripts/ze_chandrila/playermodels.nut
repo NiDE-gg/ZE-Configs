@@ -11,10 +11,11 @@ function ApplyMapSkin()
 		if (h==null||!h.IsValid()||h.GetTeam()!=3||h.IsAlive()==false)
 			continue;
 
-		if (h.GetModelName()=="models/player/4echo/rebel_viktor.mdl" ||
-			h.GetModelName()=="models/player/4echo/rebel_anton.mdl" ||
-			h.GetModelName()=="models/player/4echo/rebel_eli.mdl" ||
-			h.GetModelName()=="models/player/4echo/rebel_nils.mdl"
+		local model=h.GetModelName();
+		if (model=="models/player/4echo/rebel_viktor.mdl" ||
+			model=="models/player/4echo/rebel_anton.mdl" ||
+			model=="models/player/4echo/rebel_eli.mdl" ||
+			model=="models/player/4echo/rebel_nils.mdl"
 		)
 			continue;
 
@@ -33,6 +34,6 @@ function ApplyMapSkin()
 				break;
 		}
 	}
-	EntFireByHandle(self,"RunScriptCode","ApplyMapSkin()",10,null,null);
+	EntFireByHandle(self,"CallScriptFunction","ApplyMapSkin",10,null,null);
 }
-EntFireByHandle(self,"RunScriptCode","ApplyMapSkin()",0.1,null,null);
+EntFireByHandle(self,"CallScriptFunction","ApplyMapSkin",0.1,null,null);

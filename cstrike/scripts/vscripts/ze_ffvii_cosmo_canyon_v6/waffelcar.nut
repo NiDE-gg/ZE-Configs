@@ -809,29 +809,32 @@ function UnSetDriver(car_class)
 
 function Tick()
 {
-    foreach(car_class in g_Array_CheckCar)
-	{
-        if(!car_class.driver == null    ||
-            !car_class.driver.IsValid() ||
-            car_class.driver.GetHealth() <= 0.00 ||
-            car_class.driver.GetTeam() != car_class.invalid.GetTeam())
+    for (local i = g_Array_CheckCar.len() - 1; i >= 0; i--)
+    {
+        local car_class = g_Array_CheckCar[i];
+        local driver = car_class.driver;
+
+        if (driver == null ||
+            !driver.IsValid() ||
+            driver.GetHealth() <= 0.00 ||
+            driver.GetTeam() != car_class.invalid.GetTeam())
         {
             UnSetDriver(car_class);
+            continue;
         }
-        else
-        {
-            //CS:S FIX PLAYER POSITION
-            //car_class.invalid == The guy who have the car
-            //car_class.driver == the user who pressed E
-            car_class.invalid.SetOrigin(car_class.driver.GetOrigin() + car_class.driver.GetForwardVector() * forwarddist); //STRIPPER RE-ENABLED
-            //car_class.invalid.SetOrigin(car_class.driver.GetOrigin() + car_class.driver.GetUpVector() * forwarddist);
-            //////////
-            //car_class.model.SetAngles(0, car_class.driver.GetAngles().y, 0); //CS:GO DISABLED
-            car_class.SetLastPos(car_class.driver.GetOrigin());
-        }
-	}
-    if(ticking)
-        EntFireByHandle(self, "CallScriptFunction", "Tick", tickrate, null, null);
+
+        local driver_origin = driver.GetOrigin();
+        car_class.invalid.SetOrigin(
+            driver_origin + driver.GetForwardVector() * forwarddist
+        );
+        car_class.SetLastPos(driver_origin);
+    }
+
+    if (ticking)
+        EntFireByHandle(
+            self, "CallScriptFunction", "Tick",
+            tickrate, null, null
+        );
 }
 
 function Toggle(car_class)

@@ -193,6 +193,8 @@ function startgame1()
     EntFire("map_gText", "AddOutput", "message Last SHREK standing");
     EntFire("map_gText", "FireUser1", "", 0.1);
     EntFire("Teleport_Minigame_Builder", "Enable", "", 15);
+
+
     EntFireByHandle(temp,"ForceSpawn","",0,null,null); 
     EntFireByHandle(self,"RunScriptCode","init_mg1();",1.0,null,null);
     
@@ -449,7 +451,7 @@ function Tick_mg1()
             }
         }
 
-        EntFire("builder_nuke", "Enable", "", 5);
+        EntFire("builder_nuke", "Enable", "", 2);
 
         Win();
         return;
@@ -460,7 +462,7 @@ function Tick_mg1()
         mg1_ticking = false;
         ServerChat(Chat_pref + "HUMANS WIN");
 
-        EntFire("builder_nuke", "Enable", "", 5);
+        EntFire("builder_nuke", "Enable", "", 2);
 
         Win();
 
@@ -592,7 +594,7 @@ function hurt_mg2()
         Win();
 
         // Enable the nuke brushwork here
-        EntFire("nuke_rotate", "Enable", "", 5);
+        EntFire("nuke_rotate", "Enable", "", 1);
 
         handle = null;
 
@@ -610,7 +612,7 @@ function hurt_mg2()
 
         ServerChat(Chat_pref + "T WIN");
 
-        EntFire("Map_Fade","FireUser1","",2);
+        EntFire("Map_Fade","FireUser1","",1);
 
         handle = null;
 
@@ -662,10 +664,12 @@ function startgame3()
     }
 
     EntFireByHandle(self,"RunScriptCode","Tick_mg3();",17,null,null);
-    EntFire("MGw_move*","Open","",5);    
+    EntFire("MGw_move*", "Open", "", 35);
     EntFire("Teleport_Minigame_Lava", "Enable", "", 15);
+
+
     EntFireByHandle(self,"RunScriptCode","TeleportTeam(2);",15,null,null);
-    EntFireByHandle(self,"RunScriptCode","RandomWind();",70,null,null);
+    EntFireByHandle(self,"RunScriptCode","RandomWind();",65,null,null);
     EntFireByHandle(self,"RunScriptCode","MoveDown_mg3();",100,null,null);
     EntFire("Music","RunScriptCode","SetMusic(mg3);",0);
 }
@@ -845,7 +849,7 @@ function Tick_mg3()
     {
         mg3_ticking = false;
         ServerChat(Chat_pref + "T WIN");
-        EntFire("Map_Fade","FireUser1","",2);
+        EntFire("Map_Fade","FireUser1","",1);
         handle = null;
 
         while((handle = Entities.FindByClassname(handle,"player")) != null)
@@ -893,7 +897,7 @@ function Tick_mg3()
         Win();
 
         // Enable the lava nuke brushwork here
-        EntFire("nuke_lava", "Enable", "", 5);
+        EntFire("nuke_lava", "Enable", "", 2);
 
         handle = null;
 
@@ -911,7 +915,7 @@ function Tick_mg3()
     {
         mg3_ticking = false;
         ServerChat(Chat_pref + "T WIN");
-        EntFire("Map_Fade","FireUser1","",2);
+        EntFire("Map_Fade","FireUser1","",1);
         handle = null;
 
         while((handle = Entities.FindByClassname(handle,"player")) != null)
@@ -935,8 +939,8 @@ function Tick_mg3()
 
 function Win()
 {
-    EntFire("Fade_White","Fade","",4);
-    EntFireByHandle(self,"RunScriptCode","SlayT();",5,null,null);
+    EntFire("Fade_White","Fade","",1);
+    EntFireByHandle(self,"RunScriptCode","SlayT();",2,null,null);
 }
 
 function SlayT() 

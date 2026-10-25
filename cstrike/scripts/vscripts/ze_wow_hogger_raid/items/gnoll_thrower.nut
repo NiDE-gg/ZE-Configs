@@ -131,7 +131,7 @@ function SpearThink() {
     sc.gnt_spears <- alive;
 
     if (alive.len() > 0) {
-        EntFireByHandle(self, "RunScriptCode", "SpearThink()", SPEAR_THINK_INTERVAL, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "SpearThink", SPEAR_THINK_INTERVAL, null, null);
     } else {
         sc.gnt_thinking <- false;
     }
@@ -197,6 +197,6 @@ function ThrowSpear() {
 
     if (!sc.gnt_thinking) {
         sc.gnt_thinking <- true;
-        EntFireByHandle(self, "RunScriptCode", "SpearThink()", SPEAR_THINK_INTERVAL, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "SpearThink", SPEAR_THINK_INTERVAL, null, null);
     }
 }

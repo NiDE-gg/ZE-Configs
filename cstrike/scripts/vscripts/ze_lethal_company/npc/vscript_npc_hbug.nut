@@ -158,7 +158,7 @@ function actionManager(a, fromUpdate) {
 			makeSound(8, 5000.0);
 			updateTime = 0.5;
 			attackPhase = 2;
-		} else if (attackPhase = 2) {
+		} else if (attackPhase == 2) {
 			local alive = null;
 			if (targetPlayer.IsValid()) {
 				alive = (targetPlayer.IsAlive()

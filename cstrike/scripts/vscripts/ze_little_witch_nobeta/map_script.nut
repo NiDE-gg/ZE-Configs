@@ -174,11 +174,13 @@ class Player {
 		if (double_jump_enabled) {
 			// Test if player is high enough for a double jump.
 			local can_doublejump = false
+			local origin = self.GetOrigin()
+			local flags = self.GetFlags()
 
-			if (TraceLine(self.GetOrigin(), self.GetOrigin() + Vector(0, 0, -36), self) >= 1) 
+			if (TraceLine(origin, origin + Vector(0, 0, -36), self) >= 1) 
 				can_doublejump = true
 
-			if ((buttons_pressed & BTN_JUMP) && !(self.GetFlags() & 1) && !info.has_doublejumped && can_doublejump) {
+			if ((buttons_pressed & BTN_JUMP) && !(flags & 1) && !info.has_doublejumped && can_doublejump) {
 				info.has_doublejumped = true
 
 				local new_velocity = self.GetAbsVelocity()
@@ -188,7 +190,7 @@ class Player {
 				self.SetAbsVelocity(new_velocity)
 			}
 
-			if (self.GetFlags() & 1) {
+			if (flags & 1) {
 				info.has_doublejumped = false
 			}
 		}

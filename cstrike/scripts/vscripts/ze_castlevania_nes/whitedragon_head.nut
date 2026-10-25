@@ -550,13 +550,13 @@ function SpawnSegments(){
         segments[i] <- wd_spine;
 
     }
-    EntFireByHandle(self,"RunScriptCode"," SegmentMoveThink(); ",0.01,null,null);
+    EntFireByHandle(self,"CallScriptFunction","SegmentMoveThink",0.01,null,null);
 };
 
 
 function SegmentMoveThink(){
 
-    EntFireByHandle(self,"RunScriptCode"," SegmentMoveThink(); ",0.01,null,null);
+    EntFireByHandle(self,"CallScriptFunction","SegmentMoveThink",0.01,null,null);
     local chain = [];
     local chain_distance = 42;
     local chain_distance_first = 32;
@@ -575,10 +575,12 @@ function SegmentMoveThink(){
         // local newpos = chain[i].GetOrigin();
         // chain[i].SetOrigin(newpos);
 
-        local dist = ::GetDistance(chain[i].GetOrigin(),chain[i-1].GetOrigin());
-        local dir = chain[i].GetOrigin() - chain[i-1].GetOrigin();
+        local cur = chain[i].GetOrigin();
+        local prev = chain[i-1].GetOrigin();
+        local dist = ::GetDistance(cur,prev);
+        local dir = cur - prev;
         dir.Norm();
-        if(dist > chain_distance)chain[i].SetOrigin(chain[i-1].GetOrigin() + (dir * chain_distance));
+        if(dist > chain_distance)chain[i].SetOrigin(prev + (dir * chain_distance));
         chain[i].SetForwardVector(dir);
     }
 

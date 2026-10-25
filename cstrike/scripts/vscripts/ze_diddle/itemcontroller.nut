@@ -30,8 +30,9 @@ function SyncWeaponAngles() {
 	else
 	{
     player_angles = player.EyeAngles();
-	weapon_angles = item_base.SetAbsAngles(player_angles)
-    item_base.SetAbsAngles(player_angles);
+	// SetAbsAngles returns nothing; setting the same angles a second time did nothing either
+	item_base.SetAbsAngles(player_angles);
+	weapon_angles = null;
     EntFireByHandle(self, "CallScriptFunction", "SyncWeaponAngles", 0.10, null, null);
 	}
 }
@@ -83,9 +84,10 @@ function TickCooldown()
 function Tick()
 {
 	try {
-	dist <- sqrt((player.GetOrigin().x-distcheck.GetOrigin().x)*(player.GetOrigin().x-distcheck.GetOrigin().x) +
-				(player.GetOrigin().y-distcheck.GetOrigin().y)*(player.GetOrigin().y-distcheck.GetOrigin().y) +
-				(player.GetOrigin().z-distcheck.GetOrigin().z)*(player.GetOrigin().z-distcheck.GetOrigin().z));
+	local po = player.GetOrigin();
+	local dc = distcheck.GetOrigin();
+	local dx = po.x-dc.x, dy = po.y-dc.y, dz = po.z-dc.z;
+	dist <- sqrt(dx*dx + dy*dy + dz*dz);
 	if(player.GetHealth() <= 0 || dist > 100)
 	{
 		Drop();

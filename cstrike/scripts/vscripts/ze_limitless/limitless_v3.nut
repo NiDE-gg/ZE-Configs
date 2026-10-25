@@ -29,7 +29,6 @@ const MAX_HP = 500;
     local player = null;
     while ((player = Entities.FindByClassname(player, "player")) != null)
     {
-        if (!player.IsValid()) continue;
         if (player.GetTeam() != 3) continue;
 
         local money = NetProps.GetPropInt(player, "m_iAccount");
@@ -46,13 +45,7 @@ function ClampCTMoneyThink()
 }
 AddThinkToEnt(self, "ClampCTMoneyThink");
 
-::IsWinner <- function(player)
-{
-    if (player == null || !player.IsValid())
-        return false;
-    local steamid = NetProps.GetPropString(player, "m_szNetworkIDString");
-    return steamid in ::winners;
-}
+// ::IsWinner and ::GetWinnerLevel are defined in winners.nut
 //parenting with item_parent.nut
 if (!("itemState" in getroottable())) {
     ::itemState <- {};
@@ -200,6 +193,7 @@ if (soundEnt != null)
 ::shootlistener <- {
 
     function OnGameEvent_player_hurt(params) {
+        if (::shootActivePlayers.len() == 0) return; // no life steal running
         local attacker = GetPlayerFromUserID(params.attacker);
         if (attacker == null || !attacker.IsValid()) return;
         if (!(attacker in ::shootActivePlayers)) return;
@@ -927,10 +921,10 @@ __CollectGameEventCallbacks(::chatListener);
 // ===========================
 ::FinalClickThink <- function()
 {
-    if (!self.IsPlayer() || !self.IsValid() || !self.IsAlive() || self.GetTeam() <= 1) {
+    if (!self.IsPlayer() || !self.IsAlive() || self.GetTeam() <= 1) {
         return -1;
     }
-    local scope   = self.GetScriptScope();
+    local scope   = this; // think: this is self's script scope
     local buttons = NetProps.GetPropInt(self, "m_nButtons");
     local changed = buttons ^ scope.final_buttonsLast;
     local pressed = changed & buttons;
@@ -961,10 +955,10 @@ __CollectGameEventCallbacks(::chatListener);
 // ===========================
 ::BossClickThink <- function()
 {
-    if (!self.IsPlayer() || !self.IsValid() || !self.IsAlive() || self.GetTeam() <= 1) {
+    if (!self.IsPlayer() || !self.IsAlive() || self.GetTeam() <= 1) {
         return -1;
     }
-    local scope    = self.GetScriptScope();
+    local scope    = this; // think: this is self's script scope
     local buttons  = NetProps.GetPropInt(self, "m_nButtons");
     local changed  = buttons ^ scope.boss_buttonsLast;
     local pressed  = changed & buttons;
@@ -1314,7 +1308,7 @@ foreach (idx, owner in ::triggerKillOwners)
         scope.rawdelete("ItemClickThink");
     scope.boss_lastTeleport <- 0.0;
     scope.boss_lastSpawn <- 0.0;
-    scope.boss_buttonsLast <- 0;
+    scope.boss_buttonsLast <- NetProps.GetPropInt(player, "m_nButtons");
     scope.BossClickThink <- ::BossClickThink;
     AddThinkToEnt(player, "BossClickThink");
 };
@@ -1356,7 +1350,7 @@ foreach (idx, owner in ::triggerKillOwners)
     local scope = player.GetScriptScope();
     scope.final_lastTeleport <- 0.0;
     scope.final_lastSpawn <- 0.0;
-    scope.final_buttonsLast <- 0;
+    scope.final_buttonsLast <- NetProps.GetPropInt(player, "m_nButtons");
     scope.FinalClickThink <- ::FinalClickThink;
     AddThinkToEnt(player, "FinalClickThink");
 };
@@ -2220,7 +2214,7 @@ if (text != null) {
 
 ::ItemClickThink <- function()
 {
-    if (!self.IsPlayer() || !self.IsValid() || !self.IsAlive()) {
+    if (!self.IsPlayer() || !self.IsAlive()) {
         AddThinkToEnt(self, "");
         return -1;
     }
@@ -2231,7 +2225,7 @@ if (text != null) {
         return -1;
     }
 
-    local scope   = self.GetScriptScope();
+    local scope   = this; // think: this is self's script scope
     local buttons = NetProps.GetPropInt(self, "m_nButtons");
     local changed = buttons ^ scope.item_buttonsLast;
     local pressed = changed & buttons;
@@ -2240,8 +2234,11 @@ if (text != null) {
     local index = isZombie
         ? (::selectedZombieItemFunction.rawin(self) ? ::selectedZombieItemFunction[self] : null)
         : (::selectedItemFunction.rawin(self) ? ::selectedItemFunction[self] : null);
-    if (typeof index != "integer" || index < 1 || index > 5)
+    if (typeof index != "integer" || index < 1 || index > 5) {
+        // keep tracking the buttons, or a key held when the item gets selected counts as a new press
+        scope.item_buttonsLast = buttons;
         return -1;
+    }
 
     local lastClickKey = isZombie ? "itemZ_lastClick" : "item_lastClick";
     local lastClick = scope.rawin(lastClickKey) ? scope.rawget(lastClickKey) : 0.0;
@@ -2306,12 +2303,11 @@ if (text != null) {
         local globalCD = (timeNow >= lastClick + 10.0);
         local ultimaCD = !(scope.rawin("ultima_cooldown") && timeNow < scope.ultima_cooldown);
         if (globalCD && ultimaCD) {
-        if (!scope.rawin("item_readyNotified") || !scope.item_readyNotified) {
-        ClientPrint(self, 3, "\x0700FF00Item charged");
-        scope.item_readyNotified <- true;
-    }
-}
-
+            if (!scope.rawin("item_readyNotified") || !scope.item_readyNotified) {
+                ClientPrint(self, 3, "\x0700FF00Item charged");
+                scope.item_readyNotified <- true;
+            }
+        }
     }
 
     scope.item_buttonsLast = buttons;
@@ -2324,7 +2320,7 @@ if (text != null) {
     local scope = player.GetScriptScope();
     scope.item_lastClick <- 0.0;
     scope.itemZ_lastClick <- 0.0;
-    scope.item_buttonsLast <- 0;
+    scope.item_buttonsLast <- NetProps.GetPropInt(player, "m_nButtons");
     scope.ItemClickThink <- ::ItemClickThink;
     AddThinkToEnt(player, "ItemClickThink");
 };
@@ -2533,7 +2529,6 @@ if (!("_otd_guard" in getroottable()))
     if (sound == null || !sound.IsValid()) return;
     local pos = player.GetOrigin();
     sound.SetOrigin(pos);
-    EntFireByHandle(sound, "CallScriptFunction", "SetOrigin(Vector(" + pos.x + ", " + pos.y + ", " + pos.z + "))", 0.2, null, null);
     EntFireByHandle(sound, "PlaySound", "", 0.1, null, null);
 }
 ::PlayWinSoundAtPlayer <- function(player)
@@ -2543,7 +2538,6 @@ if (!("_otd_guard" in getroottable()))
     if (sound == null || !sound.IsValid()) return;
     local pos = player.GetOrigin();
     sound.SetOrigin(pos);
-    EntFireByHandle(sound, "CallScriptFunction", "SetOrigin(Vector(" + pos.x + ", " + pos.y + ", " + pos.z + "))", 0.2, null, null);
     EntFireByHandle(sound, "PlaySound", "", 0.1, null, null);
 }
 
@@ -2634,12 +2628,14 @@ if (!("_otd_guard" in getroottable()))
     local extraLevel = (::winnerLevelDelta.rawin(steamid)) ? ::winnerLevelDelta[steamid] : 0;
     local totalLevel = baseLevel + extraLevel;
     if (totalLevel >= 50) return;
+    // +10 levels, without going over the max level (50)
+    local gain = (totalLevel + 10 > 50) ? (50 - totalLevel) : 10;
     if (typeof ::winnerLevelDelta != "table") ::winnerLevelDelta <- {};
-    ::winnerLevelDelta[steamid] <- extraLevel + 10;
+    ::winnerLevelDelta[steamid] <- extraLevel + gain;
     ::RefreshWinners();
     local cmd = Entities.FindByName(null, "cmd");
     if (cmd != null) {
-        EntFireByHandle(cmd, "Command", "say Arena Winners rewarded: +10 levels", 0.0, null, null);
+        EntFireByHandle(cmd, "Command", "say Arena Winners rewarded: +" + gain + " levels", 0.0, null, null);
     }
-    ClientPrint(player, 3, "\x07FFFF00[Arena Winners] " + pname + " +10 levels! Total = " + (totalLevel + 10) + "/50");
+    ClientPrint(player, 3, "\x07FFFF00[Arena Winners] " + pname + " +" + gain + " levels! Total = " + (totalLevel + gain) + "/50");
 };

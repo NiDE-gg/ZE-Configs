@@ -444,7 +444,7 @@ function Think() {
         default:           { TickAlive();                break; }
     }
 
-    EntFireByHandle(self, "RunScriptCode", "Think()", thinkInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Think", thinkInterval, null, null);
 }
 
 // -----------------------------------------------------------------------
@@ -473,5 +473,5 @@ function Start() {
     state = STATE_FOLLOW;
     WARCRAFTSetAnimation(self, "stand", "stand");
 
-    EntFireByHandle(self, "RunScriptCode", "Think()", thinkInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Think", thinkInterval, null, null);
 }

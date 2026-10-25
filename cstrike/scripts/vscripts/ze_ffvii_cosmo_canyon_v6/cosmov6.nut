@@ -260,7 +260,7 @@ function MoveToPathNode(train_name, path_name, train_direction = "StartForward")
         }
         else
         {
-            EntFireByHandle(self, "RunScriptCode", "CheckTrain()", 0.01, null, null);
+            EntFireByHandle(self, "CallScriptFunction", "CheckTrain", 0.01, null, null);
         }
     }
     CheckTrain();

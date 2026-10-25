@@ -474,7 +474,7 @@ function UpdateCachedTuning() {
 
 function ScheduleThink(delay) {
     currentThinkInterval = delay;
-    EntFireByHandle(self, "RunScriptCode", "Think()", delay, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Think", delay, null, null);
 }
 
 // Starts the NPC controller and schedules the first think.

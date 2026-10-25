@@ -203,11 +203,11 @@ function spawnNpc(npcType, node) {
 		}
 		else if (node == 1) 
 		{
-			spawnNode = nodeGroup2[RandomInt(0, nodeGroup1.len() -1)];
+			spawnNode = nodeGroup2[RandomInt(0, nodeGroup2.len() -1)];
 		} 
 		else if (node == 2) 
 		{
-			spawnNode = nodeGroup3[RandomInt(0, nodeGroup1.len() -1)];
+			spawnNode = nodeGroup3[RandomInt(0, nodeGroup3.len() -1)];
 		} 
 		else 
 		{

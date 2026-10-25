@@ -107,7 +107,7 @@ function ItemPickUp() {
 		printl("[Item] Retrying Pickup")
 		if (!button_spawned && item_pickup_retry_count < item_pickup_retry_max) {
 			item_pickup_retry_count++
-			EntFireByHandle(self, "RunScriptCode", "ItemPickUp()", 0.05, null, null)
+			EntFireByHandle(self, "CallScriptFunction", "ItemPickUp", 0.05, null, null)
 		}
 	}
 	if (errored) return
@@ -198,7 +198,7 @@ function Tick() {
 		item_script.Tick()
 
 	// Loop
-	if (!use_think) EntFireByHandle(self, "RunScriptCode", "Tick()", FrameTime(), null, null)
+	if (!use_think) EntFireByHandle(self, "CallScriptFunction", "Tick", FrameTime(), null, null)
 
 	return -1
 }

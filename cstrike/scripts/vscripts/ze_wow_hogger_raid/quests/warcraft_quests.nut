@@ -199,13 +199,13 @@ IncludeScript("warcraft/common.nut");
 };
 
 // -----------------------------------------------------------------------
-// Display think loop  (relay scope — scheduled via RunScriptCode)
+// Display think loop  (relay scope — started via RunScriptCode, re-scheduled via CallScriptFunction)
 // -----------------------------------------------------------------------
 
 function WARCRAFTQuestDisplayThink() {
     if (!::WARCRAFT_QUEST_DISPLAY_ACTIVE || !WARCRAFTIsValidEntity(self)) { return; }
     ::WARCRAFTQuestRefreshDisplay();
-    EntFireByHandle(self, "RunScriptCode", "WARCRAFTQuestDisplayThink()", 30.0, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "WARCRAFTQuestDisplayThink", 30.0, null, null);
 }
 
 // -----------------------------------------------------------------------

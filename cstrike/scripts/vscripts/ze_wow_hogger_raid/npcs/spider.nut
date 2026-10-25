@@ -752,7 +752,7 @@ function Think() {
 
     if (deathHandled) {
         TickDeath(currentThinkInterval);
-        EntFireByHandle(self, "RunScriptCode", "Think()", currentThinkInterval, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "Think", currentThinkInterval, null, null);
         return;
     }
 
@@ -768,7 +768,7 @@ function Think() {
         TickShoot(currentThinkInterval);
     }
 
-    EntFireByHandle(self, "RunScriptCode", "Think()", currentThinkInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Think", currentThinkInterval, null, null);
 }
 
 // -----------------------------------------------------------------------
@@ -792,7 +792,7 @@ function Start() {
 
     ResolveCeilingPosition();
     WARCRAFTSetAnimation(self, ANIM_HANG, ANIM_HANG);
-    EntFireByHandle(self, "RunScriptCode", "Think()", currentThinkInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Think", currentThinkInterval, null, null);
 }
 
 function OnPostSpawn() {}

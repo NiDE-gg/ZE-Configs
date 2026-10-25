@@ -39,6 +39,8 @@ function Init()
 	g_hSound = Entities.FindByName(null, "awp_sound");
 	g_hSound1 = Entities.FindByName(null, "doll_song");
 	g_hSound.ValidateScriptScope()
+	// Called on g_hSound with the killed player as activator (was a RunScriptCode string compiled on every kill)
+	g_hSound.GetScriptScope().MoveToActivator <- function() { self.SetOrigin(activator.GetOrigin()); }
 
 	g_fTimer_Killing = 0.00 + g_fTimer_Killing;
 	g_fTimer_Check = 0.00 + g_fTimer_Check;
@@ -93,37 +95,50 @@ function Tick()
 			g_bPreKilling = true;
 			SetForward();
 			EntFireByHandle(g_hSound1, "StopSound", "", 1.0, null, null);
-			EntFireByHandle(self, "RunScriptCode", "SaveAngles();g_bKilling = true;g_bPreKilling = false;", 1.5, null, null);
+			EntFireByHandle(self, "CallScriptFunction", "StartKilling", 1.5, null, null);
 		}
 		else
 			g_fTimer_Check += TICKRATE;
 	}
-	EntFireByHandle(self, "RunScriptCode", "Tick()", TICKRATE, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Tick", TICKRATE, null, null);
+}
+
+function StartKilling()
+{
+	SaveAngles();
+	g_bKilling = true;
+	g_bPreKilling = false;
 }
 
 function SaveAngles()
 {
-	for (local i = 0; i < g_hPlayers.len(); i++)
+	local players = g_hPlayers;
+	for (local i = 0; i < players.len(); i++)
 	{
-		if (g_hPlayers[i].handle.IsValid() && g_hPlayers[i].handle.GetHealth() > 0)
+		local player = players[i];
+		local handle = player.handle;
+		if (handle.IsValid() && handle.GetHealth() > 0)
 		{
-			g_hPlayers[i].angles = g_hPlayers[i].handle.GetAngles();
+			player.angles = handle.GetAngles();
 			continue;
 		}
-		g_hPlayers.remove(i);
+		players.remove(i);
+		i--;
 	}
 }
 
 function TickKillMovingPlayers()
 {
-	for (local i = 0; i < g_hPlayers.len(); i++)
+	local players = g_hPlayers;
+	for (local i = 0; i < players.len(); i++)
 	{
-		if (g_hPlayers[i].handle.IsValid() && g_hPlayers[i].handle.GetHealth() > 0)
+		local handle = players[i].handle;
+		if (handle.IsValid() && handle.GetHealth() > 0)
 		{
-			local vVelocity = g_hPlayers[i].handle.GetVelocity();
-			local vAngles1 = g_hPlayers[i].handle.GetAngles();
-			local vAngles2 = g_hPlayers[i].angles;
-			local iButtons = NetProps.GetPropInt(g_hPlayers[i].handle, "m_nButtons");
+			local vVelocity = handle.GetVelocity();
+			local vAngles1 = handle.GetAngles();
+			local vAngles2 = players[i].angles;
+			local iButtons = NetProps.GetPropInt(handle, "m_nButtons");
 
 			if ((vVelocity.x == 0 && vVelocity.y == 0 && vVelocity.z == 0) && (vAngles1.x == vAngles2.x && vAngles1.y == vAngles2.y && vAngles1.z == vAngles2.z) && !(iButtons & (1 | 2048)))
 				continue;
@@ -131,11 +146,12 @@ function TickKillMovingPlayers()
 			local timetokill = RandomFloat(0, TICKRATE);
 
 			EntFire("models_guard", "FireUser1");
-			EntFireByHandle(g_hPlayers[i].handle, "SetHealth", "0", timetokill, null, null);
-			EntFireByHandle(g_hSound, "RunScriptCode", "self.SetOrigin(activator.GetOrigin());", timetokill, g_hPlayers[i].handle, g_hPlayers[i].handle);
+			EntFireByHandle(handle, "SetHealth", "0", timetokill, null, null);
+			EntFireByHandle(g_hSound, "CallScriptFunction", "MoveToActivator", timetokill, handle, handle);
 			EntFireByHandle(g_hSound, "PlaySound", "", timetokill, null, null);
 		}
-		g_hPlayers.remove(i);
+		players.remove(i);
+		i--;
 	}
 }
 

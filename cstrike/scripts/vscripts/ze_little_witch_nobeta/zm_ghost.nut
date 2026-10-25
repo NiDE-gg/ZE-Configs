@@ -68,7 +68,7 @@ function NPCOnTakeDamage(activator) {
 	if (speed > 2)
 		speed -= 0.5
 
-	EntFireByHandle(self, "RunScriptCode", "DisplayHealth();", 0.01, activator, null)
+	EntFireByHandle(self, "CallScriptFunction", "DisplayHealth", 0.01, activator, null)
 }
 
 function DisplayHealth() {

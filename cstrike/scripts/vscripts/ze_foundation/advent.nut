@@ -28,10 +28,6 @@ function Cutscene(){
 	EntFire("Cutscene_Thordan", "SetAnimation", "advent")
 	EntFire("Cutscene_Thordan", "Alpha", "255")
 
-	for (local i=0;i>27;i++){
-		self.SetBodygroup(i,0);
-	}
-
 	EntFireByHandle(self, "RunScriptCode", "advent()", 13.3, null, null)
 
 	util_emitsound_global("jaek/advent/1.mp3")

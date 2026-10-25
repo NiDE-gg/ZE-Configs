@@ -185,35 +185,40 @@ function OnPostSpawn(){
     }
 
     MODEL.GetScriptScope().ThinkHurt <- function(){
-		local checkpos = self.GetOrigin()+Vector(0, 0, 24)+self.GetForwardVector()*48;
-		local checktouch = self.GetOrigin()+Vector(0, 0, 24)
+		local origin = self.GetOrigin()
+		local checkpos = origin+Vector(0, 0, 24)+self.GetForwardVector()*48;
+		local checktouch = origin+Vector(0, 0, 24)
 		local scope = baseent.GetScriptScope()
 
 		if(active){
 			DebugDrawCircle(checkpos, Vector(255, 0, 0), 100, damage_range, true, 0.1);
 		}
 
-		for(local h;h=Entities.FindInSphere(h,checkpos,damage_range);){
-			if(scope.DEAD) return 60;
-			if(!h.IsPlayer()) continue;
-			if(!h.IsAlive()) continue;
-			if(!active) continue;
-			if(h.GetTeam()!=3) continue;    //<---- ignore players by team, if you want
-			if(h in touchers) continue;    //touching player is in damage-cooldown, ignore for now
+		// When not active (and not dead) every entity of this loop is skipped with "continue":
+		// don't walk the sphere at all then (this think runs every tick)
+		if (active || scope.DEAD) {
+			for(local h;h=Entities.FindInSphere(h,checkpos,damage_range);){
+				if(scope.DEAD) return 60;
+				if(!h.IsPlayer()) continue;
+				if(!h.IsAlive()) continue;
+				if(!active) continue;
+				if(h.GetTeam()!=3) continue;    //<---- ignore players by team, if you want
+				if(h in touchers) continue;    //touching player is in damage-cooldown, ignore for now
 
-			DebugDrawCircle(checkpos, Vector(255, 0, 0), 100, damage_range, true, 0.1);
-			touchers[h] <- h;
-			EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
-			h.TakeDamageEx(self, self, self, Vector(0, 0, 0), h.GetOrigin(), damage, 8)
+				DebugDrawCircle(checkpos, Vector(255, 0, 0), 100, damage_range, true, 0.1);
+				touchers[h] <- h;
+				EntFireByHandle(self,"CallScriptFunction","ClearCD",damage_cooldown,h,null);
+				h.TakeDamageEx(self, self, self, Vector(0, 0, 0), h.GetOrigin(), damage, 8)
 
-			local radius = 1024
-			local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
-			EmitSoundEx({
-				sound_name = "npc/fast_zombie/claw_strike1.wav",
-				origin = self.GetOrigin(),
-				sound_level = soundlevel,
-				volume = 1,
-			});
+				local radius = 1024
+				local soundlevel = (40 + (20 * log10(radius / 36.0))).tointeger(); 
+				EmitSoundEx({
+					sound_name = "npc/fast_zombie/claw_strike1.wav",
+					origin = self.GetOrigin(),
+					sound_level = soundlevel,
+					volume = 1,
+				});
+			}
 		}
 
 		for(local j;j=Entities.FindInSphere(j,checktouch,32);){ // TOUCH DAMAGE
@@ -374,8 +379,9 @@ function Think(){
 
 	if(once_wakeup == false){
 		local target = null;
+		local center = self.GetCenter();
 		while (target=Entities.FindByClassname(target, "player")){
-		if (target.IsValid() && (target.GetCenter()-self.GetCenter()).LengthSqr() < WAKEUP_RANGE_SQR && target.GetTeam() == 3 && target.GetHealth() > 0 && IsLOS(target)){
+		if (target.IsValid() && (target.GetCenter()-center).LengthSqr() < WAKEUP_RANGE_SQR && target.GetTeam() == 3 && target.GetHealth() > 0 && IsLOS(target)){
 			once_wakeup = true
 			return
 			}

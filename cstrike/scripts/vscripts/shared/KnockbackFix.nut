@@ -16,16 +16,12 @@ function ApplyFixedKnockback(push_scale = 50)
 		return;
 
 	// Compute the direction vector from player to knockback_target
-	local a = knockback_target.GetCenter();
-	local b = activator.GetCenter();
-	local dir = Vector(a.x - b.x, a.y - b.y, a.z - b.z);
+	// (Vector operators instead of reading x/y/z one by one: each component access is a metamethod call)
+	local dir = knockback_target.GetCenter() - activator.GetCenter();
 
 	// Normalize the direction
 	dir.Norm();
 
-	// Scale appropiately to get the velocity
-	local vel = Vector(push_scale * dir.x, push_scale * dir.y, push_scale * dir.z);
-
-	// Apply onto the knockback_target
-	knockback_target.__KeyValueFromVector("basevelocity", vel);
+	// Scale appropiately to get the velocity and apply onto the knockback_target
+	knockback_target.__KeyValueFromVector("basevelocity", dir * push_scale);
 }

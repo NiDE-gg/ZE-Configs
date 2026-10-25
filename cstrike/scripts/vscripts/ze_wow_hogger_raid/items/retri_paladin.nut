@@ -55,7 +55,7 @@ function TickViewLocks() {
     }
     viewLockedPlayers = alive;
     if (viewLockedPlayers.len() > 0) {
-        EntFireByHandle(self, "RunScriptCode", "TickViewLocks()",
+        EntFireByHandle(self, "CallScriptFunction", "TickViewLocks",
             CRUSADER_VIEWLOCK_INTERVAL, null, null);
     } else {
         viewLockThinkRunning = false;
@@ -71,7 +71,7 @@ function ApplyViewLock(target) {
     };
     if (!viewLockThinkRunning) {
         viewLockThinkRunning = true;
-        EntFireByHandle(self, "RunScriptCode", "TickViewLocks()",
+        EntFireByHandle(self, "CallScriptFunction", "TickViewLocks",
             CRUSADER_VIEWLOCK_INTERVAL, null, null);
     }
 }

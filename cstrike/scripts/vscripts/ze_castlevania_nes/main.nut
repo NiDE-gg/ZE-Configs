@@ -104,11 +104,11 @@ function player_hp() {
                         sound_level = soundlevel,
                         volume = 0.5,
                     });
-                    EntFireByHandle(self,"RunScriptCode","RegenToFull()",0.05,null,null);
+                    EntFireByHandle(self,"CallScriptFunction","RegenToFull",0.05,null,null);
                 }
             }
 
-            EntFireByHandle(player,"RunScriptCode","RegenToFull()",0,null,null);
+            EntFireByHandle(player,"CallScriptFunction","RegenToFull",0,null,null);
         }
     }
 }

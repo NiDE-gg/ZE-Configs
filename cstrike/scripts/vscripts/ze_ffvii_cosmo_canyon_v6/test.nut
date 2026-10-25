@@ -1098,15 +1098,17 @@ function Movement()
         return SearchTarget();
     }
 	ttime += tickrate;
-    local tdist = GetDistance2D(self.GetOrigin(),p.GetOrigin());
-	local tdistz = (p.GetOrigin().z-self.GetOrigin().z);
+    local selforigin = self.GetOrigin();
+    local porigin = p.GetOrigin();
+    local tdist = GetDistance2D(selforigin,porigin);
+	local tdistz = (porigin.z-selforigin.z);
     if (tdist > 75)
     {
 
         EntFireByHandle(tf,"Activate","",0.02,null,null);
         EntFireByHandle(ts,"Activate","",0.02,null,null);
         local sa = self.GetAngles().y;
-        local ta = GetTargetYaw(self.GetOrigin(),p.GetOrigin());
+        local ta = GetTargetYaw(selforigin,porigin);
         local ang = abs((sa-ta+360)%360);
         if(ang>=180)EntFireByHandle(ts,"AddOutput","angles 0 270 0",0.00,null,null);
         else EntFireByHandle(ts,"AddOutput","angles 0 90 0",0.00,null,null);

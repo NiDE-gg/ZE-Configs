@@ -103,11 +103,12 @@ function AntiSafeSpot() {
 	local ent = null
 	while ((ent = Entities.FindByClassname(ent, "player"))) {
 		if (ent != null && ent.IsValid() && ent.GetTeam() == 3 && ent.GetHealth() > 0) {
-			local vec_b = ent.GetOrigin() - Vector(-5784, -10760, ent.GetOrigin().z)
+			local origin = ent.GetOrigin()
+			local vec_b = origin - Vector(-5784, -10760, origin.z)
 			local dis = vec_b.Length()
 
 			if (dis <= 220.0) {
-				ent.SetOrigin(vec_b * (640 / dis) + Vector(-5784, -10760, ent.GetOrigin().z))
+				ent.SetOrigin(vec_b * (640 / dis) + Vector(-5784, -10760, origin.z))
 			}
 		}
 	}

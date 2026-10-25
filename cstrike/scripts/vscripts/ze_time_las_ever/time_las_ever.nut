@@ -51,11 +51,15 @@ function scaleIcedHealth() {
 /** Scales the health of newly spawned NPC (with active scaler math_counter) */
 function scaleNPCHealthIfNew() {
     local scaler = null;
+    local scalerPattern = NPC_SCALER_ENT_STRING + "*";
+    local scaledHealth = null; // same for every scaler: counted once, on the first one
 
     // Iterate through all active NPC scalers
-    while ((scaler = Entities.FindByName(scaler, NPC_SCALER_ENT_STRING + "*")) != null) {
+    while ((scaler = Entities.FindByName(scaler, scalerPattern)) != null) {
         if (scaler.IsValid()) { // valid new entity
-            local scaledHealth = NPC_HP_MULTI * BULLET_BIAS * _countAlivePlayers(CT) - BASE_HEALTH * 0.5;
+            if (scaledHealth == null) {
+                scaledHealth = NPC_HP_MULTI * BULLET_BIAS * _countAlivePlayers(CT) - BASE_HEALTH * 0.5;
+            }
             EntFireByHandle(scaler, "Add", "" + scaledHealth, 0, null, null);
         }
     }

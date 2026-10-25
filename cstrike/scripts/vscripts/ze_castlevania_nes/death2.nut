@@ -136,7 +136,7 @@ function OnPostSpawn(){
     self.SetSize(Vector(-16,-16,0), Vector(16,16,64)); // Custom bounding box
     EntFireByHandle(MODEL, "SetAnimation", "emerge", 0, null, null);
     for (local i = 0; i < 1; i += 0.05) {
-        EntFireByHandle(self,"RunScriptCode","SpawnAfterImage()",i,null,null);
+        EntFireByHandle(self,"CallScriptFunction","SpawnAfterImage",i,null,null);
     }
     EntFireByHandle(MODEL, "SetDefaultAnimation", "run", 0.1, null, null);
     EntFireByHandle(self, "AddOutput", "movetype 4", FrameTime(), null, null); // Re-enable movement
@@ -365,7 +365,7 @@ function SpawnAfterImage(){
         self.SetCycle(mainmodel.GetCycle())
     }
 
-    EntFireByHandle(afterimage,"RunScriptCode","DelayedFade()",0.1,null,null);
+    EntFireByHandle(afterimage,"CallScriptFunction","DelayedFade",0.1,null,null);
 
 }
 
@@ -399,7 +399,7 @@ function SpawnAfterImageScale(){
         self.SetCycle(mainmodel.GetCycle())
     }
 
-    EntFireByHandle(afterimage,"RunScriptCode","DelayedFade()",0.1,null,null);
+    EntFireByHandle(afterimage,"CallScriptFunction","DelayedFade",0.1,null,null);
 
 }
 
@@ -438,7 +438,7 @@ function Attack(){
         EntFireByHandle(MODEL, "SetDefaultAnimation", "special2", 0.1, null, null);
         EntFireByHandle(MODEL, "SetModelScale", "0 2", 2, null, null)
         for (local i = 2; i < 3.8; i += 0.05) {
-            EntFireByHandle(self,"RunScriptCode","SpawnAfterImageScale()",i,null,null);
+            EntFireByHandle(self,"CallScriptFunction","SpawnAfterImageScale",i,null,null);
         }
         EntFireByHandle(MODEL, "Disable", "", 4, null, null);
         EntFireByHandle(self,"RunScriptCode","SpawnSprite()",4,null,null);
@@ -448,7 +448,7 @@ function Attack(){
     if (Time() - last_hit_time >= 1.75) {
 
         for(local i = 0; i <= 1; i += 0.1){
-            EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+            EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
         }
 
         ATTACKING <- true;
@@ -456,7 +456,7 @@ function Attack(){
         EntFireByHandle(HURT, "Enable", "", 0.75, null, null);
         EntFireByHandle(MODEL, "SetAnimation", "attack", 0, null, null);
         for (local i = 0.5; i < 1; i += 0.05) {
-            EntFireByHandle(self,"RunScriptCode","SpawnAfterImage()",i,null,null);
+            EntFireByHandle(self,"CallScriptFunction","SpawnAfterImage",i,null,null);
         }
 
         EntFireByHandle(self, "RunScriptCode", "ShootBulletSpecial()", 0.75, null, null);
@@ -473,7 +473,7 @@ function AttackRanged(){
     if (Time() - last_hit_time >= 1.75) {
 
         for(local i = 0; i <= 0.7; i += 0.1){
-            EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+            EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
         }
 
         ATTACKING <- true;
@@ -481,7 +481,7 @@ function AttackRanged(){
         EntFireByHandle(HURT, "Enable", "", 0.75, null, null);
         EntFireByHandle(MODEL, "SetAnimation", "attack", 0, null, null);
         for (local i = 0.5; i < 1; i += 0.05) {
-            EntFireByHandle(self,"RunScriptCode","SpawnAfterImage()",i,null,null);
+            EntFireByHandle(self,"CallScriptFunction","SpawnAfterImage",i,null,null);
         }
 
         local pattern = RandomInt(1,4)
@@ -670,7 +670,7 @@ function FireBossClone(angle){
             self.SetCycle(mainmodel.GetCycle())
         }
 
-        EntFireByHandle(afterimage,"RunScriptCode","DelayedFade()",0.02,null,null);
+        EntFireByHandle(afterimage,"CallScriptFunction","DelayedFade",0.02,null,null);
 
     }
 
@@ -678,7 +678,7 @@ function FireBossClone(angle){
     AddThinkToEnt(deathclone,"Think");
 
     for (local i = 0; i < 4.9; i += 0.1) {
-        EntFireByHandle(deathclone,"RunScriptCode","SpawnAfterImage()",i,null,null);
+        EntFireByHandle(deathclone,"CallScriptFunction","SpawnAfterImage",i,null,null);
     }
 
     EntFireByHandle(deathclone,"Kill","",5.00,null,null);
@@ -689,7 +689,7 @@ function ReturnToNormal(){
     EntFireByHandle(MODEL, "Enable", "", 0, null, null);
     EntFireByHandle(MODEL, "SetModelScale", "0.75 2", 0, null, null)
     for (local i = 0; i < 1.8; i += 0.05) {
-        EntFireByHandle(self,"RunScriptCode","SpawnAfterImageScale()",i,null,null);
+        EntFireByHandle(self,"CallScriptFunction","SpawnAfterImageScale",i,null,null);
     }
     holywater_received = 0
     EntFireByHandle(MODEL, "SetAnimation", "special3", 2, null, null);
@@ -827,10 +827,10 @@ function SpawnSprite(){
             }
         }
 
-        EntFireByHandle(self,"RunScriptCode","DrainHealth()",0.05,null,null);
+        EntFireByHandle(self,"CallScriptFunction","DrainHealth",0.05,null,null);
 
     }
-    EntFireByHandle(cursed,"RunScriptCode","DrainHealth()",0,null,null);
+    EntFireByHandle(cursed,"CallScriptFunction","DrainHealth",0,null,null);
     EntFireByHandle(self,"RunScriptCode","CheckCursedPlayer(activator)",0.1,cursed,null);
 }
 

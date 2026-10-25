@@ -72,7 +72,7 @@ function UpdateAnimation()
         }
     }
 
-    EntFireByHandle(self, "RunScriptCode", "UpdateAnimation()", updateAnimInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "UpdateAnimation", updateAnimInterval, null, null);
 }
 
 // Temporarily blocks movement animation transitions during attack playback.
@@ -106,7 +106,7 @@ function UpdatePlayer() {
 
     player.KeyValueFromInt("rendermode", 10);
     player.KeyValueFromInt("renderfx", 6);
-    EntFireByHandle(self, "RunScriptCode", "UpdatePlayer()", updatePlayerInterval, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "UpdatePlayer", updatePlayerInterval, null, null);
 }
 
 // Applies proximity damage to the holder while honoring ZE team-side damage rules.

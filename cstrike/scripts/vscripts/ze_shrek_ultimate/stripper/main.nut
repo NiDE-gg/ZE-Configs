@@ -371,8 +371,8 @@ function Final()
     {
         text = "SOLO WIN";
         ServerChat(Chat_pref + text);
-        EntFire("Fade_White", "Fade", "", 4);
-        EntFireByHandle(self, "RunScriptCode", "SlayT();", 5, null, null);
+        EntFire("Fade_White", "Fade", "", 1);
+        EntFireByHandle(self, "RunScriptCode", "SlayT();", 2, null, null);
         return;
     }
 

@@ -957,7 +957,7 @@ function DisplayHealth() {
 	
 	ClientPrint(null, 4, format("Tania | Phase %d - %d/%d\n%s", current_phase, base_script.hp, base_script.max_hp, HpBarString(base_script.hp, base_script.max_hp)))
 
-	EntFireByHandle(self, "RunScriptCode", "DisplayHealth();", 0.1, null, null)
+	EntFireByHandle(self, "CallScriptFunction", "DisplayHealth", 0.1, null, null)
 }
 
 function NPCOnDeath(activator) {

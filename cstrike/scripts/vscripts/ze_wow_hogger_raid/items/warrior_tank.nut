@@ -38,7 +38,7 @@ function ApplyBleed(target, caster) {
                            dmg = REND_BLEED_DAMAGE, caster = caster };
     if (!bleedThinkRunning) {
         bleedThinkRunning = true;
-        EntFireByHandle(self, "RunScriptCode", "TickBleeds()",
+        EntFireByHandle(self, "CallScriptFunction", "TickBleeds",
             REND_BLEED_INTERVAL, null, null);
     }
 }
@@ -72,7 +72,7 @@ function TickBleeds() {
     bleedTargets = alive;
 
     if (bleedTargets.len() > 0) {
-        EntFireByHandle(self, "RunScriptCode", "TickBleeds()",
+        EntFireByHandle(self, "CallScriptFunction", "TickBleeds",
             REND_BLEED_INTERVAL, null, null);
     } else {
         bleedThinkRunning = false;

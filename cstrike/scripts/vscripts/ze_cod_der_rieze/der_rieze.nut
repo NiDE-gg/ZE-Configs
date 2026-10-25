@@ -615,6 +615,7 @@ if (!("DRL_TEXT" in getroottable())) ::DRL_TEXT <- null;
     ::DRZS_StopRoundSound();
     ::DR_specialTeleportReturnTokens.clear();
     DR_Fire("mainframetpbutton*", "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(null);
     foreach (data in ::DRTP_Teleporters)
     {
         DR_Fire(data.activationRelay, "CancelPending", "", 0.0, null);
@@ -622,10 +623,55 @@ if (!("DRL_TEXT" in getroottable())) ::DRL_TEXT <- null;
         local trigger = ::DRTP_Escape_GetTrigger(data.id);
         if (trigger != null) DR_FireHandle(trigger, "Disable", "", 0.0, null, null);
     }
+    // Linking is already refused from here, so the lock can never be undone
+    // by a last-moment teleporter link.
+    ::DRZS_LockZombiesForEnd();
     DR_Fire("tp_final_fail", "Enable", "", 0.0, null);
     DR_Fire("tp_final_fail", "TouchTest", "", 0.05, null);
     ::DRL_GameOver();
     DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DRL_CageThink(" + token + ");", 0.1, null);
+};
+
+
+// Lost round (link deadline missed, or escape closed): everybody left is
+// sent to the waiting room before trigger_hurt "nuke". Zombies become
+// unkillable so humans cannot win the round by killing them all (the nuke
+// damage still kills everyone). Reset at the next round (DRZS_Reset).
+::DRZS_END_ZOMBIE_HEALTH <- 99999;
+if (!("DRZS_END_LOCK" in getroottable())) ::DRZS_END_LOCK <- false;
+
+::DRZS_ApplyEndHealth <- function(zombie)
+{
+    DR_FireHandle(zombie, "AddOutput", "max_health " + ::DRZS_END_ZOMBIE_HEALTH,
+        0.0, null, null);
+    zombie.SetHealth(::DRZS_END_ZOMBIE_HEALTH);
+};
+
+::DRZS_LockZombiesForEnd <- function()
+{
+    ::DRZS_END_LOCK = true;
+
+    // Insta-Kill and pending Wunderwaffe deaths must not bypass the lock.
+    ::DR_BONUS_LOW_HP_UNTIL = 0.0;
+    ::DR_BONUS_LOW_HP_GUARD = null;
+    ::DR_BONUS_LOW_HP_SNAPSHOT.clear();
+    ::DR_Wunderwaffe_CancelPendingEffects();
+
+    local zombie = null;
+    while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
+    {
+        if (::DRZS_IsValidZombie(zombie))
+            ::DRZS_ApplyEndHealth(zombie);
+    }
+
+    // Zombie:Reloaded applies this to humans infected from now on.
+    local command = Entities.FindByName(null, "server_command");
+    if (command != null && command.IsValid())
+    {
+        DR_FireHandle(command, "Command",
+            "zr_class_modify zombies health " + ::DRZS_END_ZOMBIE_HEALTH,
+            0.0, null, null);
+    }
 };
 
 
@@ -819,6 +865,11 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 ::DRUSE_PLAYERS <- {};
 ::DRUSE_RUNNING <- false;
 ::DRUSE_INTERVAL <- 0.01;
+// A door trigger is killed and a mainframe trigger disabled by the press that
+// uses it: the carried item, which reads the same press a tick later, must
+// stay blocked for that press.
+::DRUSE_LAST_USE <- {};
+::DRUSE_USE_GRACE <- 0.2;
 
 ::DRUSE_Reset <- function()
 {
@@ -826,9 +877,12 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
     ::DRUSE_RUNNING = false;
     ::DRUSE_PLAYERS.clear();
     ::DRUSE_ZONES.clear();
+    ::DRUSE_LAST_USE.clear();
 };
 
-::DRUSE_Register <- function(trigger, kind, key)
+// refresh = false keeps the trigger's current Enable state (doors and
+// mainframe triggers stay disabled until the script enables them).
+::DRUSE_Register <- function(trigger, kind, key, refresh = true)
 {
     if (trigger == null || !trigger.IsValid()
         || trigger.GetClassname() != "trigger_multiple") return false;
@@ -842,6 +896,7 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         mins = mins, maxs = maxs, center = (mins + maxs) * 0.5};
     ::DRSAFE_Bind(trigger, "OnStartTouch", "DRUSE_OnEnter()");
     ::DRSAFE_Bind(trigger, "OnEndTouch", "DRUSE_OnExit()");
+    if (!refresh) return true;
     // Refresh contacts after installing outputs, including a player already
     // standing here at round start. All shops now work without power.
     DR_FireHandle(trigger, "Disable", "", 0.0, null, null);
@@ -904,10 +959,119 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         && NetProps.GetPropInt(entry.trigger, "m_bDisabled") == 0;
 };
 
+// Mystery Box and wall buys share their zone with item use: E goes to the
+// shop only when the player looks at it, otherwise to the carried item.
+// Box: cone of DRUSE_AIM_TOLERANCE degrees around the box model. Wall buy:
+// same cone around the weapon picture (DRUSE_WALL_AIM_POINTS). Perks keep
+// the zone-only rule.
+// Only evaluated on an E press inside a zone.
+::DRUSE_AIM_TOLERANCE <- 40.0;
+::DRUSE_AIM_COS <- cos(::DRUSE_AIM_TOLERANCE * 3.14159265 / 180.0);
+
+::DRUSE_NeedsAim <- function(entry)
+{
+    return entry.kind == "box" || entry.kind == "wall";
+};
+
+::DRUSE_AimTarget <- function(entry)
+{
+    // A box zone is wider than the box: aim at the box model itself.
+    if (entry.kind == "box")
+    {
+        local data = ::DR_MysteryBox_GetBox(entry.key);
+        if (data != null)
+        {
+            local box = Entities.FindByName(null, data.boxName);
+            if (box != null && box.IsValid())
+                return box.GetOrigin()
+                    + (box.GetBoundingMins() + box.GetBoundingMaxs()) * 0.5;
+        }
+    }
+    return entry.center;
+};
+
+// Wall buys have no model. Aim point: center of the func_detail showing the
+// weapon (DER_RIEZE/<weapon> texture), read from ze_cod_der_riese_v1c.vmf.
+::DRUSE_WALL_AIM_POINTS <- {
+    he_grenade_button = Vector(-1229.5, -1196.5, 224.0),
+    deagle_button     = Vector(112.13, 118.5, 0.38),
+    mac10_button      = Vector(-97.88, -850.0, 25.12),
+    flashbang_button  = Vector(1129.88, -1709.0, 172.41),
+    g3sg1_button      = Vector(273.5, -2930.88, 95.78),
+    awp_button        = Vector(-9.5, -1403.88, 65.7),
+    m4_button         = Vector(-971.88, -610.0, 67.5),
+    tmp_button        = Vector(-1497.5, -1196.13, 218.57),
+    mp5_button        = Vector(-803.5, -1507.88, 92.6),
+    p90_button        = Vector(798.13, 692.5, 193.5),
+    ump45_button      = Vector(485.5, -377.88, 83.22),
+    sg552_button      = Vector(683.88, -3623.0, 164.26),
+    m4a1_button       = Vector(1.88, -3061.0, 51.0),
+    ak47_button       = Vector(1717.88, 660.5, 181.53),
+    m249_button       = Vector(1179.88, -597.0, 66.0)
+};
+
+// Fallback for a wall buy missing from the table: the view ray must hit the
+// wall inside the trigger volume (plus a small margin).
+::DRUSE_AIM_WALL_RANGE <- 160.0;
+::DRUSE_AIM_WALL_MARGIN <- 12.0;
+
+::DRUSE_IsAimingAtWall <- function(player, entry)
+{
+    local eye = player.EyePosition();
+    local end = eye + player.EyeAngles().Forward() * ::DRUSE_AIM_WALL_RANGE;
+    local hit = eye + (end - eye) * TraceLine(eye, end, player);
+    local margin = ::DRUSE_AIM_WALL_MARGIN;
+    return hit.x >= entry.mins.x - margin && hit.x <= entry.maxs.x + margin
+        && hit.y >= entry.mins.y - margin && hit.y <= entry.maxs.y + margin
+        && hit.z >= entry.mins.z - margin && hit.z <= entry.maxs.z + margin;
+};
+
+::DRUSE_WallAimPoint <- function(entry)
+{
+    local name = entry.trigger.GetName();
+    if (name in ::DRUSE_WALL_AIM_POINTS)
+        return ::DRUSE_WALL_AIM_POINTS[name];
+    return null;
+};
+
+::DRUSE_IsAimingAtPoint <- function(player, point)
+{
+    local toTarget = point - player.EyePosition();
+    local distance = toTarget.Length();
+    if (distance < 1.0)
+        return true;
+    local forward = player.EyeAngles().Forward();
+    local dot = (forward.x * toTarget.x + forward.y * toTarget.y
+        + forward.z * toTarget.z) / distance;
+    return dot >= ::DRUSE_AIM_COS;
+};
+
+::DRUSE_IsAimingAt <- function(player, entry)
+{
+    if (entry.kind == "wall")
+    {
+        // Not in the table: the view ray on the wall decides.
+        local point = ::DRUSE_WallAimPoint(entry);
+        if (point == null)
+            return ::DRUSE_IsAimingAtWall(player, entry);
+        return ::DRUSE_IsAimingAtPoint(player, point);
+    }
+
+    return ::DRUSE_IsAimingAtPoint(player, ::DRUSE_AimTarget(entry));
+};
+
+// True when an E press in this zone belongs to the shop.
+::DRUSE_WantsShop <- function(player, entry)
+{
+    return !::DRUSE_NeedsAim(entry) || ::DRUSE_IsAimingAt(player, entry);
+};
+
 ::DRUSE_Buy <- function(player, entry)
 {
     if (!::DRSAFE_CanBuy(player) || !::DRUSE_Ready(entry)) return;
-    if (entry.kind == "wall") ::DRWB_Buy(player, entry.key);
+    if (entry.kind == "door") ::DRDOOR_Buy(player, entry.key);
+    else if (entry.kind == "mainframe") ::DRTP_MainframeUseBy(player, entry.key);
+    else if (entry.kind == "wall") ::DRWB_Buy(player, entry.key);
     else if (entry.kind == "box") ::DR_MysteryBox_Use(player, entry.key);
     else if (entry.key == "juggernog") ::DR_Juggernog_Buy(player);
     else if (entry.key == "speed_cola") ::DR_SpeedCola_Buy(player);
@@ -942,7 +1106,8 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
                     || !::DRUSE_ZONES.rawin(zoneIndex) || ::DRUSE_ZONES[zoneIndex] != entry
                     || !::DRUSE_Overlaps(entry, mins, maxs))
                 { stale.append(zoneIndex); continue; }
-                if (!pressed || !::DRUSE_Ready(entry)) continue;
+                if (!pressed || !::DRUSE_Ready(entry)
+                    || !::DRUSE_WantsShop(player, entry)) continue;
                 local distance = (entry.center - center).Length();
                 if (nearest == null || distance < best
                     || (distance == best && zoneIndex < nearest.trigger.entindex()))
@@ -950,7 +1115,11 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
             }
             foreach (zoneIndex in stale) state.zones.rawdelete(zoneIndex);
             // One E edge, one selected shop: overlaps cannot double-charge.
-            if (nearest != null) ::DRUSE_Buy(player, nearest);
+            if (nearest != null)
+            {
+                ::DRUSE_LAST_USE[index] <- {player = player, time = Time()};
+                ::DRUSE_Buy(player, nearest);
+            }
             if (state.zones.len() == 0) removed.append(index);
         }
         catch (error)
@@ -967,7 +1136,8 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 
 
 // V15: mother-infection population is the reference for this server round.
-// Each 10% lost reduces HP by 5%, capped at a 30% total reduction.
+// Each 10% lost reduces HP by 5%, capped at DRZS_HEALTH_MAX_REDUCTION.
+::DRZS_HEALTH_MAX_REDUCTION <- 0.15;
 ::DRZS_HEALTH_POPULATION_FACTOR <- 1.0;
 ::DRZS_HEALTH_INITIAL_HUMANS <- 0;
 ::DRZS_HEALTH_LOWEST_HUMANS <- 0;
@@ -977,7 +1147,7 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 {
     if (initialHumans <= 0 || humans >= initialHumans) return 1.0;
     local reduction = 0.5 * (initialHumans - humans).tofloat() / initialHumans;
-    if (reduction > 0.30) reduction = 0.30;
+    if (reduction > ::DRZS_HEALTH_MAX_REDUCTION) reduction = ::DRZS_HEALTH_MAX_REDUCTION;
     return 1.0 - reduction;
 };
 ::DRZS_CapturePopulation <- function()
@@ -1063,6 +1233,11 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 ::DRUSE_ItemInputBlocked <- function(player)
 {
     local index = player.entindex();
+    if (::DRUSE_LAST_USE.rawin(index))
+    {
+        local use = ::DRUSE_LAST_USE[index];
+        if (use.player == player && Time() - use.time < ::DRUSE_USE_GRACE) return true;
+    }
     if (::DRUSE_PLAYERS.rawin(index))
     {
         local state = ::DRUSE_PLAYERS[index];
@@ -1073,7 +1248,8 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
             local maxs = origin + player.GetBoundingMaxs();
             foreach (id, entry in state.zones)
                 if (entry.trigger != null && entry.trigger.IsValid()
-                    && ::DRUSE_Overlaps(entry, mins, maxs) && ::DRUSE_Ready(entry)) return true;
+                    && ::DRUSE_Overlaps(entry, mins, maxs) && ::DRUSE_Ready(entry)
+                    && ::DRUSE_WantsShop(player, entry)) return true;
         }
     }
     if ("DRTP_Inside" in getroottable() && ::DRTP_Inside.rawin(index))
@@ -1172,11 +1348,11 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
                 local ammoType = NetProps.GetPropInt(weapon, "m_iPrimaryAmmoType");
                 if (ammoType < 0) throw "Special weapon ammo unavailable";
                 local reserve = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType);
+                // Same reserve as the wall weapon, never below the current one.
                 local standard = ::DR_Bonus_GetNormalReserve(tx.classname);
                 if (reserve < standard) reserve = standard;
-                local increased = (reserve * 3) / 2;
-                NetProps.SetPropIntArray(player, "m_iAmmo", increased, ammoType);
-                success = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) == increased;
+                NetProps.SetPropIntArray(player, "m_iAmmo", reserve, ammoType);
+                success = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) == reserve;
             }
         }
         else
@@ -1241,11 +1417,22 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         reserve = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType);
     }
     catch (error) { ::DRSAFE_Log("Ammo preparation: " + error); return false; }
+    local next = (reserve < 0 ? 0 : reserve) + data.reserve;
+    // Pack-a-Punch: refills up to the PaP reserve instead of adding the
+    // normal one, and charges nothing when it is already full.
+    if (::DRWB_GetAmmoPrice(data, weapon).isPap)
+    {
+        if (reserve >= ::DR_PAP_RESERVE_AMMO)
+        {
+            ClientPrint(player, 3, "\x07FFAA00[Wall Ammo] " + data.label + ": ammo already full");
+            return false;
+        }
+        next = ::DR_PAP_RESERVE_AMMO;
+    }
     if (!::DRTP_SetMoney(player, current - cost)) return false;
     local success = false;
     try
     {
-        local next = (reserve < 0 ? 0 : reserve) + data.reserve;
         NetProps.SetPropIntArray(player, "m_iAmmo", next, ammoType);
         success = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) == next;
         if (!success) NetProps.SetPropIntArray(player, "m_iAmmo", reserve, ammoType);
@@ -1525,6 +1712,11 @@ if (!("DR_startCashWindowOpen" in getroottable()))
 
 if (!("DR_startCashPlayers" in getroottable()))
     ::DR_startCashPlayers <- {};
+
+// Money each human had at his death this round: a respawn gets it back, never
+// the server's start money (dying before the infection must not pay).
+if (!("DR_startCashDeaths" in getroottable()))
+    ::DR_startCashDeaths <- {};
 
 if (!("DR_TOMBSTONE_Z_OFFSET" in getroottable()))
     ::DR_TOMBSTONE_Z_OFFSET <- -64.0;
@@ -1942,9 +2134,6 @@ if (!("DR_tmpThinkToken" in getroottable()))
 if (!("DR_WUNDERWAFFE_CHAIN_RADIUS" in getroottable()))
     ::DR_WUNDERWAFFE_CHAIN_RADIUS <- 300.0;
 
-if (!("DR_WUNDERWAFFE_CHARGES" in getroottable()))
-    ::DR_WUNDERWAFFE_CHARGES <- 7;
-
 if (!("DR_WUNDERWAFFE_COOLDOWN" in getroottable()))
     ::DR_WUNDERWAFFE_COOLDOWN <- 0.25;
 
@@ -2024,9 +2213,6 @@ PrecacheModel(::DR_WUNDERWAFFE_CARRIER_MODEL);
 if (!("DR_MONKEYBOMB_PARTICLE_DURATION" in getroottable()))
     ::DR_MONKEYBOMB_PARTICLE_DURATION <- 3.0;
 
-if (!("DR_MONKEYBOMB_CHARGES" in getroottable()))
-    ::DR_MONKEYBOMB_CHARGES <- 3;
-
 if (!("DR_MONKEYBOMB_COOLDOWN" in getroottable()))
     ::DR_MONKEYBOMB_COOLDOWN <- 0.25;
 
@@ -2050,9 +2236,6 @@ if (!("DR_MONKEYBOMB_PULL_STRENGTH" in getroottable()))
 
 if (!("DR_MONKEYBOMB_HOLD_RADIUS" in getroottable()))
     ::DR_MONKEYBOMB_HOLD_RADIUS <- 80.0;
-
-if (!("DR_MONKEYBOMB_DAMAGE" in getroottable()))
-    ::DR_MONKEYBOMB_DAMAGE <- 1500.0;
 
 if (!("DR_MONKEYBOMB_MODEL" in getroottable()))
     ::DR_MONKEYBOMB_MODEL <-
@@ -2084,12 +2267,6 @@ PrecacheModel(
 
 if (!("DR_FREEZEGUN_PARTICLE_HEIGHT" in getroottable()))
     ::DR_FREEZEGUN_PARTICLE_HEIGHT <- 28.0;
-
-if (!("DR_FREEZEGUN_CHARGES" in getroottable()))
-    ::DR_FREEZEGUN_CHARGES <- 5;
-
-if (!("DR_FREEZEGUN_DAMAGE" in getroottable()))
-    ::DR_FREEZEGUN_DAMAGE <- 1500.0;
 
 if (!("DR_FREEZEGUN_COOLDOWN" in getroottable()))
     ::DR_FREEZEGUN_COOLDOWN <- 0.25;
@@ -2170,9 +2347,6 @@ if (!("DR_freezegunIceIndex" in getroottable()))
 // LASER TELEPORT CONFIG
 // --------------------------------------------------------------------------
 
-if (!("DR_LASER_TP_CHARGES" in getroottable()))
-    ::DR_LASER_TP_CHARGES <- 6;
-
 if (!("DR_LASER_TP_COOLDOWN" in getroottable()))
     ::DR_LASER_TP_COOLDOWN <- 0.25;
 
@@ -2199,11 +2373,17 @@ if (!("DR_specialTeleportReturnTokens" in getroottable()))
 if (!("DR_SPECIAL_WEAPON_DAMAGE" in getroottable()))
     ::DR_SPECIAL_WEAPON_DAMAGE <- 2500.0;
 
-// Damage per hit of each item (Winter's Howl: DR_FREEZEGUN_DAMAGE,
-// Monkey Bomb: DR_MONKEYBOMB_DAMAGE).
-::DR_LASER_TP_DAMAGE <- 5500.0;
-::DR_THUNDERGUN_DAMAGE <- 4000.0;
-::DR_WUNDERWAFFE_DAMAGE <- 4000.0;
+// Charges and damage per hit of each item.
+::DR_LASER_TP_CHARGES <- 4;         // Ray Gun
+::DR_LASER_TP_DAMAGE <- 4500.0;
+::DR_THUNDERGUN_CHARGES <- 4;
+::DR_THUNDERGUN_DAMAGE <- 3000.0;
+::DR_WUNDERWAFFE_CHARGES <- 4;
+::DR_WUNDERWAFFE_DAMAGE <- 3000.0;
+::DR_FREEZEGUN_CHARGES <- 4;        // Winter's Howl
+::DR_FREEZEGUN_DAMAGE <- 1500.0;
+::DR_MONKEYBOMB_CHARGES <- 3;
+::DR_MONKEYBOMB_DAMAGE <- 2000.0;
 
 if (!("DR_LASER_TP_TRIGGER_MODEL" in getroottable()))
     ::DR_LASER_TP_TRIGGER_MODEL <- "*28";
@@ -2224,9 +2404,6 @@ if (!("DR_LASER_TP_CARRIER_MODEL" in getroottable()))
 // ============================================================================
 // THUNDERGUN CONFIG
 // ============================================================================
-
-if (!("DR_THUNDERGUN_CHARGES" in getroottable()))
-    ::DR_THUNDERGUN_CHARGES <- 7;
 
 if (!("DR_THUNDERGUN_COOLDOWN" in getroottable()))
     ::DR_THUNDERGUN_COOLDOWN <- 1.0;
@@ -2392,6 +2569,19 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
 
     local healthBefore = zombie.GetHealth();
 
+    // The bullet that triggers an MP5/AK/Deagle bonus may already have
+    // killed the zombie: it is still "alive" during that bullet's event.
+    // Nothing is left to damage, and nothing must be paid.
+    if (healthBefore <= 0)
+        return true;
+
+    // The server pays the shooter each point of damage: a hit never deals
+    // more than the target's remaining health, so a kill pays that health,
+    // not the item's full damage. Lower damage is applied unchanged.
+    local lethal = damage >= healthBefore;
+    if (lethal)
+        damage = healthBefore.tofloat();
+
     ::DR_SCRIPT_DAMAGE_DEPTH++;
     try
     {
@@ -2400,6 +2590,14 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
             0,
             attacker
         );
+
+        // Armor can absorb part of an exact lethal hit: finish with what is
+        // left, still never more than the remaining health.
+        for (local pass = 0; lethal && pass < 3
+            && zombie.IsValid() && zombie.IsAlive(); pass++)
+        {
+            zombie.TakeDamage(zombie.GetHealth().tofloat(), 0, attacker);
+        }
     }
     catch (error)
     {
@@ -2910,6 +3108,36 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
 // ============================================================================
 // LASER TELEPORT - ITEM PROP
 // ============================================================================
+
+// Gives a knife through a short-lived game_player_equip (delivered next tick).
+::DR_GiveKnife <- function(player)
+{
+    local equip = null;
+
+    try
+    {
+        equip = DR_Spawn(
+            "game_player_equip",
+            {
+                targetname   = "dr_knife_equip",
+                spawnflags   = 1,
+                weapon_knife = 1
+            }
+        );
+    }
+    catch (error)
+    {
+        return false;
+    }
+
+    if (equip == null || !equip.IsValid())
+        return false;
+
+    // Removed even if the delivery is cancelled by a death or infection.
+    DR_FireHandle(equip, "Kill", "", 0.20, null, null);
+    return ::DRSAFE_QueueEquip(player, equip, 0.01);
+};
+
 
 ::DR_FindPlayerKnife <- function(player)
 {
@@ -4127,6 +4355,9 @@ if (!("DR_callbacks" in getroottable()))
 
     if (player == null || !player.IsValid())
         return;
+
+    if ("DR_StartCash_OnPlayerDeath" in getroottable())
+        ::DR_StartCash_OnPlayerDeath(player);
 
     // Capture the death position before any death/team processing can move
     // or invalidate the victim entity. Bonus drops use this fixed position.
@@ -10346,10 +10577,13 @@ if (equip == null || !equip.IsValid())
     zombie
 )
 {
+    // A zombie at 0 HP is still "alive" during the bullet's event: do not
+    // send a dying zombie (and its bonus drop) to the waiting room.
     if (zombie == null
         || !zombie.IsValid()
         || !zombie.IsPlayer()
         || !zombie.IsAlive()
+        || zombie.GetHealth() <= 0
         || zombie.GetTeam() != 2)
     {
         return;
@@ -11787,7 +12021,10 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
     ::DR_SpecialWeapon_ApplyDamage(zombie, attacker, ::DR_DEAGLE_BONUS_DAMAGE);
 
-    if (zombie.IsValid() && zombie.IsAlive() && zombie.GetTeam() == 2)
+    // A zombie killed by the opening bullet is still "alive" at 0 HP during
+    // that bullet's event: open the well at its position instead.
+    if (zombie.IsValid() && zombie.IsAlive() && zombie.GetHealth() > 0
+        && zombie.GetTeam() == 2)
         ::DR_DEAGLE_ActivateEffect(zombie);
     else
         ::DR_DEAGLE_ActivateEffectAt(origin);
@@ -16299,6 +16536,17 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
 // CLAIM
 // --------------------------------------------------------------------------
 
+// Second claim attempt after a knife was given (same box, same spin only).
+::DR_MysteryBox_ClaimRetry <- function(playerIndex, boxId, token)
+{
+    local data = ::DR_MysteryBox_GetBox(boxId);
+    if (data == null || data.token != token)
+        return;
+
+    ::DR_MysteryBox_Claim(EntIndexToHScript(playerIndex), boxId);
+};
+
+
 ::DR_MysteryBox_Claim <- function(player, boxId)
 {
     if (!::DRPOWER_CanUseBox(player) || ::DRSAFE_PURCHASES.rawin(player)) return false;
@@ -16334,7 +16582,20 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
                 if (!success) reason = "item could not be given";
             }
             else if (::DR_FindPlayerKnife(player) == null)
+            {
+                // The model needs a knife: give one, then claim again once
+                // (the box keeps waiting). Refund only if it still fails.
+                if (!("knifeRetryToken" in data) || data.knifeRetryToken != data.token)
+                {
+                    data.knifeRetryToken <- data.token;
+                    if (::DR_GiveKnife(player)
+                        && ::DRSAFE_QueueCode(player.entindex(),
+                            "DR_MysteryBox_ClaimRetry(" + player.entindex() + ","
+                                + boxId + "," + data.token + ");", 0.20))
+                        return false;
+                }
                 reason = "no knife found";
+            }
             else
                 reason = "item could not be created";
             if (success) data.paidCost <- 0;
@@ -17439,12 +17700,37 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
     ::DR_juggernogThinkRunning = false;
 };
 
+::DR_StartCash_Target <- function(player)
+{
+    local index = player.entindex();
+    if (::DR_startCashDeaths.rawin(index))
+    {
+        local saved = ::DR_startCashDeaths[index];
+        if (saved.player == player && saved.token == ::DR_startCashRoundToken)
+            return saved.money;
+    }
+    return ::DR_START_CASH;
+};
+
+::DR_StartCash_OnPlayerDeath <- function(player)
+{
+    if (!::DR_IsValidPlayer(player) || player.GetTeam() != 3)
+        return;
+    local money = 0;
+    try { money = NetProps.GetPropInt(player, "m_iAccount"); }
+    catch (error) { return; }
+    ::DR_startCashDeaths[player.entindex()] <- {player = player,
+        money = money < 0 ? 0 : money, token = ::DR_startCashRoundToken};
+};
+
+// anyTime: a spawn after the round-start window (respawn, late join).
 ::DR_SetPlayerStartCash <- function(
     player,
-    humanTeamConfirmed = false
+    humanTeamConfirmed = false,
+    anyTime = false
 )
 {
-    if (!::DR_startCashWindowOpen
+    if ((!anyTime && !::DR_startCashWindowOpen)
         || !::DR_IsValidPlayer(player))
     {
         return false;
@@ -17466,7 +17752,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         NetProps.SetPropInt(
             player,
             "m_iAccount",
-            ::DR_START_CASH
+            ::DR_StartCash_Target(player)
         );
     }
     catch (error)
@@ -17505,10 +17791,10 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 };
 
 
-::DR_StartCash_ApplyUserID <- function(userid, token)
+::DR_StartCash_ApplyUserID <- function(userid, token, anyTime = false)
 {
     if (token != ::DR_startCashRoundToken
-        || !::DR_startCashWindowOpen)
+        || (!anyTime && !::DR_startCashWindowOpen))
     {
         return;
     }
@@ -17521,7 +17807,28 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         return;
     }
 
-    ::DR_SetPlayerStartCash(player, true);
+    ::DR_SetPlayerStartCash(player, true, anyTime);
+};
+
+// Second pass in case a server plugin gives its start money a little later.
+// It only lowers the account, and leaves a Tombstone restore alone.
+::DR_StartCash_Recheck <- function(userid, token)
+{
+    if (token != ::DR_startCashRoundToken)
+        return;
+    local player = GetPlayerFromUserID(userid);
+    if (!::DR_IsValidHuman(player)
+        || ::DR_StartGlock_HasTombstoneRestore(player))
+        return;
+    local target = ::DR_StartCash_Target(player);
+    try
+    {
+        if (NetProps.GetPropInt(player, "m_iAccount") > target)
+            NetProps.SetPropInt(player, "m_iAccount", target);
+    }
+    catch (error)
+    {
+    }
 };
 
 
@@ -17545,11 +17852,15 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 
 ::DR_StartCash_OnPlayerSpawn <- function(params)
 {
-    if (!::DR_startCashWindowOpen
-        || !("userid" in params))
-    {
+    if (!("userid" in params))
         return;
-    }
+
+    // Every human spawn, not only the first one of the round and not only
+    // during the start window: a respawn must not keep the server's money.
+    local player = GetPlayerFromUserID(params.userid);
+    if (::DR_IsValidPlayer(player)
+        && ::DR_startCashPlayers.rawin(player.entindex()))
+        ::DR_startCashPlayers.rawdelete(player.entindex());
 
     local token = ::DR_startCashRoundToken;
 
@@ -17558,8 +17869,16 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         "RunScriptCode",
         "DR_StartCash_ApplyUserID(" +
             params.userid + "," +
-            token + ");",
+            token + ",true);",
         0.05,
+        null
+    );
+
+    DR_Fire(
+        ::DR_SCRIPT_NAME,
+        "RunScriptCode",
+        "DR_StartCash_Recheck(" + params.userid + "," + token + ");",
+        0.5,
         null
     );
 };
@@ -17578,6 +17897,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 {
     ::DR_startCashRoundToken++;
     ::DR_startCashPlayers.clear();
+    ::DR_startCashDeaths.clear();
     ::DR_startCashWindowOpen = true;
 
     local token = ::DR_startCashRoundToken;
@@ -17711,6 +18031,13 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
             }
             state.nextGive = Time() + 0.25;
         }
+    }
+    // Every human must own a knife: Wonder Weapon models attach to it. The
+    // Glock delivery above already includes one when it ran this pass.
+    if (::DR_FindPlayerKnife(player) == null && Time() >= state.nextGive)
+    {
+        ::DR_GiveKnife(player);
+        state.nextGive = Time() + 0.25;
     }
     if (attempts > 0)
         ::DRSAFE_QueueCode(playerIndex, "DR_StartGlock_Ensure(" + playerIndex + ","
@@ -17996,9 +18323,10 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
 };
 
 
-::DR_StartGlock_ApplyPlayer <- function(player, token)
+// anyTime: a spawn after the round-start window (respawn, late join).
+::DR_StartGlock_ApplyPlayer <- function(player, token, anyTime = false)
 {
-    if (!::DR_startGlockWindowOpen
+    if ((!anyTime && !::DR_startGlockWindowOpen)
         || token != ::DR_startGlockRoundToken
         || !::DR_IsValidPlayer(player)
         || !player.IsAlive()
@@ -18056,17 +18384,17 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
 };
 
 
-::DR_StartGlock_ApplyUserID <- function(userid, token)
+::DR_StartGlock_ApplyUserID <- function(userid, token, anyTime = false)
 {
     if (token != ::DR_startGlockRoundToken
-        || !::DR_startGlockWindowOpen)
+        || (!anyTime && !::DR_startGlockWindowOpen))
     {
         return;
     }
 
     local player = GetPlayerFromUserID(userid);
 
-    ::DR_StartGlock_ApplyPlayer(player, token);
+    ::DR_StartGlock_ApplyPlayer(player, token, anyTime);
 };
 
 
@@ -18089,11 +18417,22 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
 
 ::DR_StartGlock_OnPlayerSpawn <- function(params)
 {
-    if ("userid" in params) ::DR_StartGlock_StartDelivery(GetPlayerFromUserID(params.userid));
-    if (!::DR_startGlockWindowOpen
-        || !("userid" in params))
-    {
+    if (!("userid" in params))
         return;
+
+    local player = GetPlayerFromUserID(params.userid);
+    ::DR_StartGlock_StartDelivery(player);
+
+    // Every human spawn is cleaned, not only the first one of the round and
+    // not only during the start window: a respawn must not keep the server's
+    // loadout. Tombstone guns are claimed later and stay protected.
+    if (::DR_IsValidPlayer(player))
+    {
+        local index = player.entindex();
+        if (::DR_startGlockPlayers.rawin(index))
+            ::DR_startGlockPlayers.rawdelete(index);
+        if (::DR_startGlockPending.rawin(index))
+            ::DR_startGlockPending.rawdelete(index);
     }
 
     local token = ::DR_startGlockRoundToken;
@@ -18103,7 +18442,7 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
         "RunScriptCode",
         "DR_StartGlock_ApplyUserID(" +
             params.userid + "," +
-            token.tostring() + ");",
+            token.tostring() + ",true);",
         0.05,
         null
     );
@@ -19685,6 +20024,12 @@ if (!("DR_PAP_STATE" in getroottable()))
         damage * (data.damageMultiplier - 1.0)
     ).tointeger();
 
+    // Same rule as the items: the server pays each point of damage, so the
+    // bonus never exceeds the health left after the bullet.
+    local remaining = victim.GetHealth();
+    if (extraDamage > remaining)
+        extraDamage = remaining;
+
     local classname = weapon.GetClassname();
 
     if (extraDamage > 0)
@@ -19880,7 +20225,8 @@ if (!("DRTP_ESCAPE_FINAL_ACTIVE" in getroottable()))
 if (!("DRTP_ESCAPE_FINISHED" in getroottable()))
     ::DRTP_ESCAPE_FINISHED <- false;
 
-// 0 = choix aleatoire du teleporteur d'escape parmi les trois.
+// 0 = choix automatique du teleporteur d'escape : celui qui a le moins
+// d'humains a proximite (DRTP_Escape_PickTeleporter). 1-3 = force celui-ci.
 if (!("DRTP_ESCAPE_TELEPORTER_ID" in getroottable()))
     ::DRTP_ESCAPE_TELEPORTER_ID <- 0;
 
@@ -20067,20 +20413,9 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
 {
     if (::DRL_FAILED) return;
     ::DRTP_ObjectiveMarker("power", "576 -2264 65.21", !::DRTP_PowerEnabled);
-    local mainframeId = ::DRTP_Pending != null ? ::DRTP_Pending.id : 1;
-    local mainframe = Entities.FindByName(null, "mainframetpbutton" + mainframeId);
-    if (mainframe != null && mainframe.IsValid())
-    {
-        local origin = mainframe.GetOrigin()
-            + (mainframe.GetBoundingMins() + mainframe.GetBoundingMaxs()) * 0.5
-            + Vector(0, 0, 40);
-        ::DRTP_ObjectiveMarker("mainframe", origin, ::DRTP_Pending != null);
-        if (::DRTP_Pending != null && ::DRTP_ObjectiveSprites.rawin("mainframe"))
-        {
-            local marker = ::DRTP_ObjectiveSprites["mainframe"];
-            if (marker != null && marker.IsValid()) marker.SetOrigin(origin);
-        }
-    }
+    // Fixed point above the mainframe: center of the Stripper link triggers,
+    // and the raised button's center + 40 without Stripper.
+    ::DRTP_ObjectiveMarker("mainframe", "-16 -100 98", ::DRTP_Pending != null);
     foreach (data in ::DRTP_Teleporters)
     {
         local show = ::DRTP_PowerEnabled
@@ -20537,6 +20872,10 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
     ::DRTP_ESCAPE_FINAL_ACTIVE = false;
     ::DRTP_ESCAPE_FINISHED = true;
 
+    // The escape is closed: humans left behind can no longer win by killing
+    // every zombie before tp_final_fail and the nuke.
+    ::DRZS_LockZombiesForEnd();
+
     ::DRTP_Escape_ShowText(
         ::DRTP_ESCAPE_COUNTDOWN_TEXT,
         "ESCAPE CLOSED",
@@ -20781,6 +21120,67 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
 };
 
 
+// Escape teleporter with the fewest humans: each living human counts for the
+// teleporter nearest to him (positions read from the map). Ties: random.
+::DRTP_Escape_PickTeleporter <- function()
+{
+    local centers = {};
+
+    foreach (data in ::DRTP_Teleporters)
+    {
+        local entity = ::DRTP_Escape_GetTrigger(data.id);
+        if (entity == null)
+            entity = Entities.FindByName(null, data.zoneName);
+        if (entity == null || !entity.IsValid())
+            continue;
+
+        centers[data.id] <- entity.GetOrigin()
+            + (entity.GetBoundingMins() + entity.GetBoundingMaxs()) * 0.5;
+    }
+
+    if (centers.len() == 0)
+        return RandomInt(1, ::DRTP_Teleporters.len());
+
+    local counts = {};
+    foreach (id, center in centers)
+        counts[id] <- 0;
+
+    foreach (human in ::DRZS_GetLivingHumans())
+    {
+        local nearestId = -1;
+        local nearestDistance = 0.0;
+
+        foreach (id, center in centers)
+        {
+            local distance = (human.GetOrigin() - center).Length();
+            if (nearestId < 0 || distance < nearestDistance)
+            {
+                nearestId = id;
+                nearestDistance = distance;
+            }
+        }
+
+        counts[nearestId]++;
+    }
+
+    local fewest = -1;
+    local choices = [];
+
+    foreach (id, count in counts)
+    {
+        if (fewest < 0 || count < fewest)
+        {
+            fewest = count;
+            choices = [id];
+        }
+        else if (count == fewest)
+            choices.append(id);
+    }
+
+    return choices[RandomInt(0, choices.len() - 1)];
+};
+
+
 ::DRTP_Escape_Open <- function(token)
 {
     if (token != ::DRTP_ESCAPE_TOKEN
@@ -20798,7 +21198,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     if (::DRTP_ESCAPE_TELEPORTER_ID < 1
         || ::DRTP_ESCAPE_TELEPORTER_ID > ::DRTP_Teleporters.len())
     {
-        ::DRTP_ESCAPE_TELEPORTER_ID = RandomInt(1, ::DRTP_Teleporters.len());
+        ::DRTP_ESCAPE_TELEPORTER_ID = ::DRTP_Escape_PickTeleporter();
     }
 
     ::DRTP_ExitSprite_Show(::DRTP_ESCAPE_TELEPORTER_ID);
@@ -20905,6 +21305,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     ::DRTP_NextStatusUpdate = 0.0;
     ::DRTP_PendingToken++;
     DR_Fire("mainframetpbutton*", "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(null);
     ::DRTP_ExitSprite_Clear();
     ::DRTP_Escape_StopCountdownSound();
     ::DRTP_Escape_StopFinalEffects();
@@ -20961,6 +21362,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     ::DRTP_Mission_Reset();
     ::DRTP_PendingToken++;
     DR_Fire("mainframetpbutton*", "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(null);
     foreach (data in ::DRTP_Teleporters)
     {
         DR_Fire(data.activationRelay, "CancelPending", "", 0.0, null);
@@ -21064,6 +21466,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     ::DRTP_LinkRetryUntil[id] <- Time() + ::DRTP_LINK_RETRY_COOLDOWN;
     ::DRTP_SetModelSkin(id, 0);
     DR_Fire("mainframetpbutton" + id.tostring(), "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(null);
     ::DRTP_UpdateWorldTexts();
     ::DRTP_ShowLinkText(id, "TELEPORTER " + ::DRTP_LinkLabel(id)
         + ": LINK EXPIRED: RETRY IN: " + ::DRTP_LINK_RETRY_COOLDOWN.tointeger().tostring() + "s", 3.0);
@@ -21141,14 +21544,28 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     return true;
 };
 
+// Stripper replaces the 3 mainframe buttons with 3 triggers at the same place
+// ("mainframe_link_trigger<id>"). Only the trigger of the pending link is
+// enabled, so E there validates the link and the carried item does not fire.
+::DRTP_SetMainframeLink <- function(id)
+{
+    for (local i = 1; i <= 3; i++)
+        DR_Fire("mainframe_link_trigger" + i, i == id ? "Enable" : "Disable", "", 0.0, null);
+};
+
 ::DRTP_OnMainframeUse <- function()
 {
-    // VMF: mainframe OnPressed -> filter_t TestActivator -> OnFail.
+    // Without Stripper: mainframe OnPressed -> filter_t TestActivator -> OnFail.
     // filter_t allows zombies, so only its failure path reaches this handler.
-    local player = activator;
+    ::DRTP_MainframeUseBy(activator, null);
+};
+
+::DRTP_MainframeUseBy <- function(player, triggerId)
+{
     if (!::DRTP_IsValidHuman(player) || ::DRTP_Pending == null)
         return;
     local id = ::DRTP_Pending.id;
+    if (triggerId != null && triggerId != id) return;
     local data = ::DRTP_GetTeleporter(id);
     local relay = Entities.FindByName(null, data.validationRelay);
     if (relay == null || !relay.IsValid()) return;
@@ -21156,6 +21573,9 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     // The map's successful-link relay teleports after 2 seconds, then cools down.
     ::DRTP_CooldownUntil = Time() + 2.0 + ::DRTP_COOLDOWN;
     DR_Fire("mainframetpbutton*", "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(null);
+    // A linked teleporter never asks for a link again: free its trigger.
+    DR_Fire("mainframe_link_trigger" + id, "Kill", "", 0.0, null);
     DR_FireHandle(relay, "Trigger", "", 0.0, player, player);
     DR_Fire("mainframebuttontrain" + id.tostring(), "StartForward", "", 0.0, player);
     ::DRTP_StartTeleportImmunity(id, player);
@@ -21214,6 +21634,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
         expiresAt = Time() + ::DRTP_ACTIVATION_WINDOW
     };
     DR_Fire("mainframetpbutton*", "Lock", "", 0.0, null);
+    ::DRTP_SetMainframeLink(id);
     ::DRTP_UpdateWorldTexts();
     ::DRTP_ShowLinkText(id, "TELEPORTER " + ::DRTP_LinkLabel(id)
         + ": RETURN TO SPAWN: PRESS E: " + ::DRTP_ACTIVATION_WINDOW.tointeger().tostring() + "s");
@@ -21420,6 +21841,10 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
 
     if ("DR_Shops_Install" in getroottable())
         ::DR_Shops_Install();
+
+    for (local id = 1; id <= 3; id++)
+        ::DRUSE_Register(Entities.FindByName(null, "mainframe_link_trigger" + id),
+            "mainframe", id, false);
 
     ::DRTP_ESCAPE_COUNTDOWN_TEXT = ::DRTP_Escape_GetText(
         "dr_escape_countdown_text",
@@ -21911,6 +22336,16 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
     return roundNumber;
 };
 
+// Stripper adds one trigger_multiple per door ("door<id>_trigger"), disabled
+// until the door's round and killed when it opens. E inside it buys the door
+// and the carried item does not fire. Without that trigger (debris, or no
+// Stripper), E on the locked func_door itself still buys it.
+::DRDOOR_GetTrigger <- function(id)
+{
+    local trigger = Entities.FindByName(null, "door" + id + "_trigger");
+    return trigger != null && trigger.IsValid() ? trigger : null;
+};
+
 ::DRDOOR_UpdateTexts <- function()
 {
     local roundNumber = ::DRDOOR_GetAvailableRound();
@@ -21921,13 +22356,20 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
         local message = "Per player: " + group.cost + "$";
         if (!ready) message += "\nRound " + group.minRound;
         ::DR_Shops_SetText(group.priceText, message, ready ? "0 255 0" : "255 0 0");
+        local trigger = ::DRDOOR_GetTrigger(group.id);
+        if (ready && trigger != null)
+            DR_FireHandle(trigger, "Enable", "", 0.0, null, null);
     }
 };
 
 ::DRDOOR_OnLockedUse <- function(id)
 {
-    if (!::DRSAFE_CanBuy(activator)) return ;
-    local player = activator;
+    ::DRDOOR_Buy(activator, id);
+};
+
+::DRDOOR_Buy <- function(player, id)
+{
+    if (!::DRSAFE_CanBuy(player)) return;
     if (::DRL_FAILED || !::DRDOOR_IsValidHuman(player)) return;
     if (::DRDOOR_Opened.rawin(id) && ::DRDOOR_Opened[id]) return;
     local group = ::DRDOOR_GetGroup(id);
@@ -21990,6 +22432,8 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
         DR_FireHandle(door, "Unlock", "", 0.0, player, player);
     DR_FireHandle(openDoor, "Open", "", 0.01, player, player);
     DR_Fire(group.priceText, "Kill", "", 0.02, null);
+    local trigger = ::DRDOOR_GetTrigger(id);
+    if (trigger != null) DR_FireHandle(trigger, "Kill", "", 0.0, null, null);
     foreach (charge in charges)
         ClientPrint(charge.player, 3, "\x0700FF00[Der Riese] " + group.label
             + ": team purchase: you paid: " + charge.paid + "$");
@@ -22003,6 +22447,9 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
 
     foreach (group in ::DRDOOR_DoorGroups)
     {
+        local useTrigger = ::DRUSE_Register(::DRDOOR_GetTrigger(group.id),
+            "door", group.id, false);
+
         foreach (name in group.names)
         {
             local door = Entities.FindByName(null, name);
@@ -22019,7 +22466,8 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
                 null
             );
 
-            ::DRSAFE_Bind(door, "OnLockedUse", "DRDOOR_OnLockedUse(" + group.id + ")");
+            if (!useTrigger)
+                ::DRSAFE_Bind(door, "OnLockedUse", "DRDOOR_OnLockedUse(" + group.id + ")");
         }
     }
 
@@ -22083,7 +22531,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_mac10",
         cost     = 500,
         label    = "MAC-10",
-        reserve  = 450,
+        reserve  = 600,
         register = null
     },
     {
@@ -22128,7 +22576,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_tmp",
         cost     = 950,
         label    = "TMP",
-        reserve  = 450,
+        reserve  = 600,
         register = null
     },
     {
@@ -22137,7 +22585,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_mp5navy",
         cost     = 950,
         label    = "MP5",
-        reserve  = 450,
+        reserve  = 600,
         register = null
     },
     {
@@ -22146,7 +22594,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_p90",
         cost     = 950,
         label    = "P90",
-        reserve  = 450,
+        reserve  = 600,
         register = null
     },
     {
@@ -22155,7 +22603,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_ump45",
         cost     = 950,
         label    = "UMP-45",
-        reserve  = 450,
+        reserve  = 600,
         register = null
     },
     {
@@ -22164,7 +22612,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_sg552",
         cost     = 1200,
         label    = "SG552",
-        reserve  = 300,
+        reserve  = 850,
         register = null
     },
     {
@@ -22173,7 +22621,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_m4a1",
         cost     = 1200,
         label    = "M4A1",
-        reserve  = 600,
+        reserve  = 850,
         register = null
     },
     {
@@ -22182,7 +22630,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_ak47",
         cost     = 1200,
         label    = "AK-47",
-        reserve  = 600,
+        reserve  = 850,
         register = null
     },
     {
@@ -22191,7 +22639,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
         weapon   = "weapon_m249",
         cost     = 1200,
         label    = "M249",
-        reserve  = 600,
+        reserve  = 850,
         register = null
     }
 ];
@@ -23119,35 +23567,21 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 };
 
 
-// Reserve values used by wall buys and by Max Ammo for normal weapons.
+// Max Ammo reserve of weapons that are not sold on a wall. A wall weapon
+// uses its DRWB_Weapons reserve: one value for purchase, refill and Max Ammo.
 ::DR_BONUS_NORMAL_RESERVES <- {
     weapon_glock     = 300,
     weapon_glock18   = 300,
     weapon_usp       = 100,
     weapon_p228      = 52,
-    weapon_deagle    = 250,
     weapon_elite     = 120,
     weapon_fiveseven = 150,
-    weapon_m3        = 120,
     weapon_xm1014    = 32,
-    weapon_tmp       = 300,
-    weapon_mac10     = 300,
-    weapon_mp5navy   = 300,
-    weapon_ump45     = 300,
-    weapon_p90       = 300,
-    weapon_g3sg1     = 200,
-    weapon_awp       = 120,
-    weapon_sg552     = 400,
-    weapon_m4a1      = 400,
-    weapon_ak47      = 400,
-    weapon_m249      = 400,
     weapon_galil     = 90,
     weapon_famas     = 90,
     weapon_aug       = 90,
     weapon_scout     = 90,
-    weapon_sg550     = 90,
-    weapon_hegrenade = 2,
-    weapon_flashbang = 4
+    weapon_sg550     = 90
 };
 
 
@@ -23269,6 +23703,12 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 
 ::DR_Bonus_GetNormalReserve <- function(classname)
 {
+    foreach (data in ::DRWB_Weapons)
+    {
+        if (data.weapon == classname)
+            return data.reserve;
+    }
+
     if (::DR_BONUS_NORMAL_RESERVES.rawin(classname))
         return ::DR_BONUS_NORMAL_RESERVES[classname];
 
@@ -23417,12 +23857,17 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
         {
             try
             {
-                NetProps.SetPropIntArray(
-                    player,
-                    "m_iAmmo",
-                    reserve,
-                    ammoType
-                );
+                // Refills up to the reserve, never lowers a bigger stock
+                // (wall refills are cumulative).
+                if (NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) < reserve)
+                {
+                    NetProps.SetPropIntArray(
+                        player,
+                        "m_iAmmo",
+                        reserve,
+                        ammoType
+                    );
+                }
             }
             catch (error)
             {
@@ -23495,6 +23940,10 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 
 ::DR_Bonus_ApplyLowHP <- function()
 {
+    // Lost round: zombies stay unkillable, the bonus has no effect.
+    if (::DRZS_END_LOCK)
+        return;
+
     ::DR_BONUS_LOW_HP_SAFE_COMPENSATED = false;
     local oldHealth = ::DRZS_GetZombieHealth();
     local bonusAlreadyActive =
@@ -23999,6 +24448,24 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 };
 
 
+// Bonus type chances in percent; Double Points takes the rest (45 %).
+::DR_BONUS_LOW_HP_CHANCE <- 10;
+::DR_BONUS_MAX_AMMO_CHANCE <- 45;
+
+::DR_Bonus_RollKind <- function()
+{
+    local roll = RandomInt(1, 100);
+
+    if (roll <= ::DR_BONUS_LOW_HP_CHANCE)
+        return "low_hp";
+
+    if (roll <= ::DR_BONUS_LOW_HP_CHANCE + ::DR_BONUS_MAX_AMMO_CHANCE)
+        return "max_ammo";
+
+    return "x2";
+};
+
+
 ::DR_Bonus_SpawnTeleportRandom <- function()
 {
     if (::DR_BONUS_TELEPORT_PENDING != null)
@@ -24010,13 +24477,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
         return false;
     }
 
-    local roll = RandomInt(0, 2);
-    local kind = "max_ammo";
-
-    if (roll == 1)
-        kind = "x2";
-    else if (roll == 2)
-        kind = "low_hp";
+    local kind = ::DR_Bonus_RollKind();
 
     // Keep the pre-effect exactly on the same origin used by the teleport
     // bonus. This path intentionally does not apply the death-drop floor
@@ -24150,13 +24611,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
         return;
     }
 
-    local roll = RandomInt(0, 2);
-    local kind = "max_ammo";
-
-    if (roll == 1)
-        kind = "x2";
-    else if (roll == 2)
-        kind = "low_hp";
+    local kind = ::DR_Bonus_RollKind();
 
     ::DR_Bonus_Spawn(kind, dropOrigin);
 };
@@ -24211,8 +24666,8 @@ if (!("DRZS_DOG_MODEL" in getroottable()))
 if (!("DRZS_DOG_PARTICLE" in getroottable()))
     ::DRZS_DOG_PARTICLE <- "custom_particle_018";
 
-if (!("DRZS_DOG_MIN_ROUND" in getroottable()))
-    ::DRZS_DOG_MIN_ROUND <- 16;
+// First round where single random dogs (5 %) can appear in normal waves.
+::DRZS_DOG_MIN_ROUND <- 9;
 
 if (!("DRZS_DOG_CHANCE" in getroottable()))
     ::DRZS_DOG_CHANCE <- 0.05;
@@ -24223,9 +24678,9 @@ if (!("DRZS_DOG_HEALTH_RATIO" in getroottable()))
     ::DRZS_DOG_HEALTH_RATIO <- (1.0 / 3.0);
 
 if (!("DRZS_DOG_SPEED" in getroottable()))
-    ::DRZS_DOG_SPEED <- 1.30;
+    ::DRZS_DOG_SPEED <- 1.40;
 else
-    ::DRZS_DOG_SPEED = 1.30;
+    ::DRZS_DOG_SPEED = 1.40;
 
 if (!("DRZS_DOG_ATTACK_SOUND_COOLDOWN" in getroottable()))
     ::DRZS_DOG_ATTACK_SOUND_COOLDOWN <- 0.60;
@@ -24255,9 +24710,9 @@ else
     ::DRZS_ZOMBIE_MIN_HEALTH = 2500;
 
 if (!("DRZS_ZOMBIE_HEALTH_LINEAR" in getroottable()))
-    ::DRZS_ZOMBIE_HEALTH_LINEAR <- 175.0;
+    ::DRZS_ZOMBIE_HEALTH_LINEAR <- 400.0;
 else
-    ::DRZS_ZOMBIE_HEALTH_LINEAR = 175.0;
+    ::DRZS_ZOMBIE_HEALTH_LINEAR = 400.0;
 
 if (!("DRZS_ZOMBIE_HEALTH_QUADRATIC" in getroottable()))
     ::DRZS_ZOMBIE_HEALTH_QUADRATIC <- 0.0;
@@ -24290,9 +24745,9 @@ else
     ::DRZS_ZOMBIE_MAX_SPEED = 1.00;
 
 if (!("DRZS_ZOMBIE_SPEED_LINEAR" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.15 / 14.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.15 / 7.0);
 else
-    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.15 / 14.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.15 / 7.0);
 
 if (!("DRZS_ZOMBIE_SPEED_QUADRATIC" in getroottable()))
     ::DRZS_ZOMBIE_SPEED_QUADRATIC <- 0.0;
@@ -24300,9 +24755,9 @@ else
     ::DRZS_ZOMBIE_SPEED_QUADRATIC = 0.0;
 
 if (!("DRZS_ZOMBIE_SPEED_ROUND" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_ROUND <- 15.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND <- 8.0;
 else
-    ::DRZS_ZOMBIE_SPEED_ROUND = 15.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND = 8.0;
 
 if (!("DRZS_ROUND_KILLS" in getroottable()))
     ::DRZS_ROUND_KILLS <- 0;
@@ -25033,6 +25488,10 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 // par la salle d'attente) et l'utilise comme plafond de sa regen.
 ::DRZS_SyncZRClassHealth <- function()
 {
+    // Lost round: keep the end health given by DRZS_LockZombiesForEnd.
+    if (::DRZS_END_LOCK)
+        return;
+
     local command = Entities.FindByName(null, "server_command");
 
     if (command == null || !command.IsValid())
@@ -25054,6 +25513,9 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 // chaque zombie (utilisé par le bonus "Zombie HP halved").
 ::DRZS_RescaleAllZombieHealth <- function(oldHealth)
 {
+    if (::DRZS_END_LOCK)
+        return;
+
     local newHealth = ::DRZS_GetZombieHealth();
 
     if (oldHealth < 1)
@@ -25463,6 +25925,23 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
     ::DRZS_PlayRoundSound(::DR_SOUND_DOG_ROUND, ::DRZS_DOG_CUE_DURATION);
 };
 
+// Last round whose end skips the 15 s waiting-room pause.
+::DRZS_NO_PAUSE_LAST_ROUND <- 4;
+
+// No pause after the early waves and during the escape (50 s countdown and
+// final 10 s): the next wave starts at once and zombies stay on the map.
+// A dog wave always keeps its pause and announcement.
+::DRZS_SkipSafePhase <- function()
+{
+    if (::DRZS_IsDogRound(::DRZS_ROUND_NUMBER + 1))
+        return false;
+
+    if (::DRZS_ROUND_NUMBER <= ::DRZS_NO_PAUSE_LAST_ROUND)
+        return true;
+
+    return ::DRTP_ESCAPE_OPEN || ::DRTP_ESCAPE_FINAL_ACTIVE;
+};
+
 ::DRZS_EndRoundByQuota <- function()
 {
     if (::DRZS_ROUND_PHASE != "active")
@@ -25470,6 +25949,13 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 
     if (::DRZS_ROUND_KILLS < ::DRZS_ROUND_TARGET_KILLS)
         return;
+
+    if (::DRZS_SkipSafePhase())
+    {
+        ::DRZS_PlayRoundFade();
+        ::DRZS_AdvanceRound();
+        return;
+    }
 
     ::DRZS_ROUND_PHASE = "safe";
     ::DRDOOR_UpdateTexts();
@@ -25604,6 +26090,13 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 ::DRZS_ApplyZombieStats <- function(zombie, preserveRoundDamage = false)
 {
     if (!::DRZS_IsValidZombie(zombie)) return;
+    if (::DRZS_END_LOCK)
+    {
+        // Lost round: also covers zombies that spawn after the lock.
+        ::DRZS_ApplyEndHealth(zombie);
+        ::DRZS_ResetZombieSpeed(zombie);
+        return;
+    }
     local index = zombie.entindex();
     local isDog = ::DRZS_Dog_Ensure(zombie);
     local normalMaximum = ::DRZS_GetBaseHealthForRound(::DRZS_ROUND_NUMBER);
@@ -26604,7 +27097,7 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
                     maxHealth = 1;
             }
 
-            if (zombie.GetHealth() > maxHealth)
+            if (!::DRZS_END_LOCK && zombie.GetHealth() > maxHealth)
                 zombie.SetHealth(maxHealth);
         }
     }
@@ -26812,6 +27305,7 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
 
 ::DRZS_Reset <- function()
 {
+    ::DRZS_END_LOCK = false;
     ::DR_BONUS_LOW_HP_GUARD = null;
     ::DRZS_HEALTH_INITIAL_HUMANS = 0;
     ::DRZS_HEALTH_LOWEST_HUMANS = 0;

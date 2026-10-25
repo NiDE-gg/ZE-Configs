@@ -7,14 +7,13 @@ PrecacheScriptSound("ts_timeshift_residue");
 PrecacheScriptSound("ts_timeshift_zombie_vox");
 PrecacheScriptSound("ts_timeshift_human_vox");
 
-function PrecacheParticle(timeshift_activate)
+//Precaching Particles
+function PrecacheParticle(name)
 {
-    PrecacheEntityFromTable({ classname = "info_particle_system", effect_name = timeshift_activate })
+    PrecacheEntityFromTable({ classname = "info_particle_system", effect_name = name })
 }
-function PrecacheParticle(timeshift_residue)
-{
-    PrecacheEntityFromTable({ classname = "info_particle_system", effect_name = timeshift_residue })
-}
+PrecacheParticle("timeshift_activate");
+PrecacheParticle("timeshift_residue");
 
 if(!("shiftGameEventsArray" in this))
 {
@@ -56,7 +55,6 @@ if(!("shiftGameEventsArray" in this))
     local buttons = NetProps.GetPropInt(self, "m_nButtons");
     local buttons_changed = buttons_last ^buttons;
     local buttons_pressed = buttons_changed & buttons;
-    local buttons_released = buttons_changed & (~buttons);
 
     if (buttons_pressed & 32) // IN_USE
     {
@@ -67,10 +65,11 @@ if(!("shiftGameEventsArray" in this))
             shift_last = time;
 
             local current_origin = self.GetOrigin();
+            local particle_dir = QAngle(0, 0, 0).Forward();
             if (current_origin.z >= 0)
             {
                 //Spawning the Residue Particle
-                DispatchParticleEffect("timeshift_residue", current_origin, QAngle(0, 0, 0).Forward())
+                DispatchParticleEffect("timeshift_residue", current_origin, particle_dir)
 
                 //Teleporting the Player Down
                 self.SetAbsOrigin(current_origin + Vector(0, 0, -9184));
@@ -83,12 +82,12 @@ if(!("shiftGameEventsArray" in this))
                 EmitSoundOnClient("ts_timeshift_activate", self);
 
                 //Spawning the Activate Particle
-                DispatchParticleEffect("timeshift_activate", current_origin, QAngle(0, 0, 0).Forward())
+                DispatchParticleEffect("timeshift_activate", current_origin, particle_dir)
             }
             else
             {
                 //Spawning the Residue Particle
-                DispatchParticleEffect("timeshift_residue", current_origin, QAngle(0, 0, 0).Forward())
+                DispatchParticleEffect("timeshift_residue", current_origin, particle_dir)
 
                 //Set Overlay
                 EntFireByHandle(self, "SetScriptOverlayMaterial", "effects/shaders/overlay_timeshift_eyefx", 0.0, null, null)
@@ -101,7 +100,7 @@ if(!("shiftGameEventsArray" in this))
                 EmitSoundOnClient("ts_timeshift_activate", self);
 
                 //Spawning the Activate Particle
-                DispatchParticleEffect("timeshift_activate", current_origin, QAngle(0, 0, 0).Forward())
+                DispatchParticleEffect("timeshift_activate", current_origin, particle_dir)
             }
         }
     }

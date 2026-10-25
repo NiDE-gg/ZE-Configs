@@ -8,6 +8,10 @@ const CLAMP_UP = 500.0;
 const CLAMP_SIDE = 350.0;
 
 local g_iNadeBonusDamage = 0;
+// Handles cached between boss hits (re-fetched by name once the entity is gone)
+local g_hBossHPText = null;
+local g_hBossCritText = null;
+local g_hMinotaurHP = null;
 local g_iWindsPushes = [
 	54298, 54619, 54512, 216147, 215572, 222212, 220705, 220609, 220045, 218972,
 	53965, 59316, 58555, 58448, 58341, 58127, 55822, 55608, 54833, 62828, 62721, 62614, 62507
@@ -31,9 +35,10 @@ function InitHooks() {
 		adminButton.ConnectOutput("OnPressed", "AdminRoom_OnPressed");
 	}
 
+	local windPushes = FindEntitiesByHammerIDs(g_iWindsPushes);
 	foreach (hammerID in g_iWindsPushes) {
-		local windPush = FindEntityByHammerID(hammerID);
-		if (windPush != null) {
+		if (hammerID in windPushes) {
+			local windPush = windPushes[hammerID];
 			windPush.ValidateScriptScope();
 			windPush.ConnectOutput("OnEndTouch", "WindsPushes_OnEndTouch");
 		}
@@ -65,11 +70,15 @@ function Hooks_Minotaurgod() {
 }
 
 function Minotaurgod_OnHealthChanged() {
-	local gameText = Entities.FindByName(null, "text_boss_hp");
+	if (g_hBossHPText == null || !g_hBossHPText.IsValid())
+		g_hBossHPText = Entities.FindByName(null, "text_boss_hp");
+	local gameText = g_hBossHPText;
 	if (gameText == null)
 		return;
 
-	local minotaurHP = Entities.FindByName(null, "i_minotaurgod_hp");
+	if (g_hMinotaurHP == null || !g_hMinotaurHP.IsValid())
+		g_hMinotaurHP = Entities.FindByName(null, "i_minotaurgod_hp");
+	local minotaurHP = g_hMinotaurHP;
 	if (minotaurHP == null)
 		return;
 
@@ -82,7 +91,9 @@ function Minotaurgod_OnHealthChanged() {
 function AddNadeBonusDamage(amount) {
 	g_iNadeBonusDamage += amount;
 
-	local gameText = Entities.FindByName(null, "text_boss_crit");
+	if (g_hBossCritText == null || !g_hBossCritText.IsValid())
+		g_hBossCritText = Entities.FindByName(null, "text_boss_crit");
+	local gameText = g_hBossCritText;
 	if (gameText == null)
 		return;
 
@@ -122,6 +133,28 @@ function WindsPushes_OnEndTouch() {
 	if (setVelocity) {
 		activator.SetAbsVelocity(velocity);
 	}
+}
+
+// Same result as FindEntityByHammerID() for each id, with a single walk of the entity list
+function FindEntitiesByHammerIDs(hammerIDs) {
+	local wanted = {};
+	foreach (hammerID in hammerIDs) {
+		wanted[hammerID] <- true;
+	}
+
+	local found = {};
+	local remaining = wanted.len();
+	local entity = null;
+	while (remaining > 0 && (entity = Entities.FindByName(entity, "*")) != null) {
+		if (entity.GetName() == "")
+			continue;
+		local hammerID = NetProps.GetPropInt(entity, "m_iHammerID");
+		if (hammerID in wanted && !(hammerID in found)) {
+			found[hammerID] <- entity;
+			remaining--;
+		}
+	}
+	return found;
 }
 
 function FindEntityByHammerID(hammerID) {

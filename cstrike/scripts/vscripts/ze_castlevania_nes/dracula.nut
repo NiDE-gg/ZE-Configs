@@ -439,7 +439,7 @@ function SecondPhase(){
 
     attack_cd = 1
     for (local i = 5.0; i <= 7.05; i += 0.05) {
-        EntFireByHandle(self,"RunScriptCode","SpawnAfterImageScale()",i,null,null);
+        EntFireByHandle(self,"CallScriptFunction","SpawnAfterImageScale",i,null,null);
         if(i>=7){
             local bigmodelshrink = SpawnEntityFromTable("prop_dynamic",{
                 model = "models/hob_cv/hobcv_dracula2.mdl",
@@ -784,7 +784,7 @@ function SpawnAfterImageScale(){
         self.SetCycle(mainmodel.GetCycle())
     }
 
-    EntFireByHandle(afterimage,"RunScriptCode","DelayedFade()",0.1,null,null);
+    EntFireByHandle(afterimage,"CallScriptFunction","DelayedFade",0.1,null,null);
 
 }
 
@@ -947,7 +947,7 @@ function AttackMonster(){
     ATTACKING <- true;
 
     for(local i = 0; i <= 1.25; i += 0.1){
-        EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+        EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
     }
 
     local randompattern = RandomInt(1,1)
@@ -976,7 +976,7 @@ function AttackMonsterRanged(){
         case 1:
 
             for(local i = 0; i <= 4.5; i += 0.1){
-                EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+                EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
             }
 
             EntFireByHandle(MONSTER, "SetAnimation", "fireballstart", 0, null, null);
@@ -993,7 +993,7 @@ function AttackMonsterRanged(){
         case 2:
 
             for(local i = 0; i <= 3; i += 0.1){
-                EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+                EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
             }
 
             EntFireByHandle(MONSTER, "SetAnimation", "fireballstart", 0, null, null);
@@ -1022,7 +1022,7 @@ function AttackMonsterRanged(){
         case 3:
 
             for(local i = 0; i <= 1.3; i += 0.1){
-                EntFireByHandle(self,"RunScriptCode","MonsterLookat()",i,null,null);
+                EntFireByHandle(self,"CallScriptFunction","MonsterLookat",i,null,null);
             }
 
             EntFireByHandle(MONSTER, "SetAnimation", "shockwave", 0, null, null);
