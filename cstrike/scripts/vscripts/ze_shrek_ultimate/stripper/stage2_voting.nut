@@ -12,7 +12,7 @@ function StartVoteTimer()
     ServerChat(Chat_pref + "Voting has started! Choose wisely");
     EntFire("Item_Human_Br*", "Kill", "", 1);
     EntFire("moto*", "Kill", "", 5);
-    EntFireByHandle(self, "RunScriptCode", "EvaluateVotes();", 15.0, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "EvaluateVotes", 15.0, null, null);
 }
 
 function Touch_Builder()
@@ -196,7 +196,7 @@ function startgame1()
 
 
     EntFireByHandle(temp,"ForceSpawn","",0,null,null); 
-    EntFireByHandle(self,"RunScriptCode","init_mg1();",1.0,null,null);
+    EntFireByHandle(self,"CallScriptFunction","init_mg1",1.0,null,null);
     
 }
 
@@ -276,10 +276,10 @@ function init_mg1()
 
 
     EntFire("MGp_platform", "Break", "", 2);
-	EntFireByHandle(self,"RunScriptCode","BreakTimer();",5,null,null);
-	EntFireByHandle(self,"RunScriptCode","BreakTimer1();",10,null,null);
+	EntFireByHandle(self,"CallScriptFunction","BreakTimer",5,null,null);
+	EntFireByHandle(self,"CallScriptFunction","BreakTimer1",10,null,null);
     EntFire("Music","RunScriptCode","SetMusic(mg1);",0);
-    EntFireByHandle(self,"RunScriptCode","Tick_mg1();",3,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg1",3,null,null);
 }
 
 function build(temp)
@@ -348,7 +348,7 @@ function BreakTimer()
 
     PlatformBreak_mg1(floor_arr[rand]);
     floor_arr.remove(rand);
-    EntFireByHandle(self,"RunScriptCode","BreakTimer();",Floor_TicrateTime,null,null);
+    EntFireByHandle(self,"CallScriptFunction","BreakTimer",Floor_TicrateTime,null,null);
 }
 
 function BreakTimer1()
@@ -365,7 +365,7 @@ function BreakTimer1()
 
     floor_arr1.remove(rand);
 
-    EntFireByHandle(self,"RunScriptCode","BreakTimer1();",Floor_TicrateTime * 2,null,null
+    EntFireByHandle(self,"CallScriptFunction","BreakTimer1",Floor_TicrateTime * 2,null,null
 );
 }
 
@@ -387,9 +387,7 @@ function CountAliveSphere_mg1(TEAM)
     while((handle = Entities.FindInSphere(handle,origin_mg1,mg1_sphere_radius)) != null
     )
     {
-        if(handle == null || !handle.IsValid())
-            continue;
-
+        // handles returned by FindInSphere are never null and always valid
         if(handle.GetClassname() != "player")
             continue;
 
@@ -415,20 +413,19 @@ function Tick_mg1()
 
     while((handle = Entities.FindInSphere(handle,origin_mg1,mg1_sphere_radius)) != null)
     {
-        if(handle == null || !handle.IsValid())
-            continue;
-
+        // handles returned by FindInSphere are never null and always valid
         if(handle.GetClassname() != "player")
             continue;
 
         if(handle.GetHealth() <= 0)
             continue;
 
-        if(handle.GetTeam() == 2)
+        local team = handle.GetTeam();
+        if(team == 2)
         {
             countT++;
         }
-        else if(handle.GetTeam() == 3)
+        else if(team == 3)
         {
             countCT++;
         }
@@ -468,7 +465,7 @@ function Tick_mg1()
 
         return;
     }
-    EntFireByHandle(self,"RunScriptCode","Tick_mg1();",1.0,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg1",1.0,null,null);
 }
 
 
@@ -518,7 +515,7 @@ function startgame2()
     mg2_ticking = true;
 
     EntFire("relay_rotation","Trigger","",5);
-    EntFireByHandle(self,"RunScriptCode","Break_mg2();",10,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Break_mg2",10,null,null);
     EntFire("Music","RunScriptCode","SetMusic(mg2);",0);
 
     Tick_mg2();
@@ -543,7 +540,7 @@ function Break_mg2()
 
     PlatformArr_mg2.remove(rand);
 
-    EntFireByHandle(self,"RunScriptCode","Break_mg2();",break_ticrate,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Break_mg2",break_ticrate,null,null);
 }
 
 function PlatformBreak_mg2(target)
@@ -560,7 +557,7 @@ function Tick_mg2()
 
     hurt_mg2();
 
-    EntFireByHandle(self,"RunScriptCode","Tick_mg2();",1,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg2",1,null,null);
 }
 
 function hurt_mg2()
@@ -575,13 +572,15 @@ function hurt_mg2()
     while(null != (handle = Entities.FindInSphere(handle,origin_mg2,1000))
     )
     {
-        if(handle == null || !handle.IsValid() || handle.GetHealth() < 1)
+        // handles returned by FindInSphere are never null and always valid
+        if(handle.GetHealth() < 1)
             continue;
 
-        if(handle.GetTeam() == 2)
+        local team = handle.GetTeam();
+        if(team == 2)
             countT++;
 
-        else if(handle.GetTeam() == 3)
+        else if(team == 3)
             countCT++;
     }
 
@@ -663,14 +662,14 @@ function startgame3()
         EntFireByHandle(MG_lava_temp,"ForceSpawn","",0,null,null);
     }
 
-    EntFireByHandle(self,"RunScriptCode","Tick_mg3();",17,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg3",17,null,null);
     EntFire("MGw_move*", "Open", "", 35);
     EntFire("Teleport_Minigame_Lava", "Enable", "", 15);
 
 
     EntFireByHandle(self,"RunScriptCode","TeleportTeam(2);",15,null,null);
-    EntFireByHandle(self,"RunScriptCode","RandomWind();",65,null,null);
-    EntFireByHandle(self,"RunScriptCode","MoveDown_mg3();",100,null,null);
+    EntFireByHandle(self,"CallScriptFunction","RandomWind",65,null,null);
+    EntFireByHandle(self,"CallScriptFunction","MoveDown_mg3",100,null,null);
     EntFire("Music","RunScriptCode","SetMusic(mg3);",0);
 }
 
@@ -685,7 +684,7 @@ function MoveDown_mg3()
 
     PlatformArr_mg3.remove(rand);
 
-    EntFireByHandle(self,"RunScriptCode","MoveDown_mg3();",10,null,null);
+    EntFireByHandle(self,"CallScriptFunction","MoveDown_mg3",10,null,null);
 }
 
 function RandomWind()
@@ -704,7 +703,7 @@ function RandomWind()
     EntFire("MGw_push","FireUser" + rand,"",0);
     EntFire("MGw_push","Enable","",2);
 	EntFire("MGw_push","Disable","",Interval);
-    EntFireByHandle(self,"RunScriptCode","RandomWind();",Interval + iTime,null,null);
+    EntFireByHandle(self,"CallScriptFunction","RandomWind",Interval + iTime,null,null);
 
     iTime *= 0.91;
 }
@@ -815,14 +814,16 @@ function Tick_mg3()
     
     while((handle = Entities.FindInSphere(handle, origin_mg3, 1200)) != null)
     {
-        if(handle != null && handle.IsValid() && handle.GetHealth() > 0)
+        // handles returned by FindInSphere are never null and always valid
+        if(handle.GetHealth() > 0)
         {
             if(handle.GetClassname() == "player")
             {
-                if(handle.GetTeam() == 2)
+                local team = handle.GetTeam();
+                if(team == 2)
                     countT++;
 
-                if(handle.GetTeam() == 3)
+                if(team == 3)
                     countCT++;
             }
         }
@@ -863,7 +864,7 @@ function Tick_mg3()
         return;
     }
 
-    EntFireByHandle(self,"RunScriptCode","Tick_mg3();",1,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg3",1,null,null);
 }
 
 function Tick_mg3()
@@ -877,14 +878,16 @@ function Tick_mg3()
     
     while((handle = Entities.FindInSphere(handle, origin_mg3, 1200)) != null)
     {
-        if(handle != null && handle.IsValid() && handle.GetHealth() > 0)
+        // handles returned by FindInSphere are never null and always valid
+        if(handle.GetHealth() > 0)
         {
             if(handle.GetClassname() == "player")
             {
-                if(handle.GetTeam() == 2)
+                local team = handle.GetTeam();
+                if(team == 2)
                     countT++;
 
-                if(handle.GetTeam() == 3)
+                if(team == 3)
                     countCT++;
             }
         }
@@ -929,7 +932,7 @@ function Tick_mg3()
         return;
     }
 
-    EntFireByHandle(self,"RunScriptCode","Tick_mg3();",1,null,null);
+    EntFireByHandle(self,"CallScriptFunction","Tick_mg3",1,null,null);
 }
 
 
@@ -940,7 +943,7 @@ function Tick_mg3()
 function Win()
 {
     EntFire("Fade_White","Fade","",1);
-    EntFireByHandle(self,"RunScriptCode","SlayT();",2,null,null);
+    EntFireByHandle(self,"CallScriptFunction","SlayT",2,null,null);
 }
 
 function SlayT() 

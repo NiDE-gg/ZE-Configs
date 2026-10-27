@@ -39,12 +39,12 @@ function startgame3()
 {
 	ticking = true;
 	EntFireByHandle(self, "RunScriptCode", "TeleportTeam(3);",0, null, null);
-	EntFireByHandle(self, "RunScriptCode", "Tick();",16, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Tick",16, null, null);
 	EntFire("MGw_move*", "Open", "", 35);
 
 	EntFireByHandle(self, "RunScriptCode", "TeleportTeam(2);",15, null, null);
-	EntFireByHandle(self, "RunScriptCode", "RandomWind();",65, null, null);
-	EntFireByHandle(self, "RunScriptCode", "MoveDown();",100, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "RandomWind",65, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "MoveDown",100, null, null);
 	EntFire("Music", "RunScriptCode","SetMusic(mg3);",0);
 }
 
@@ -59,7 +59,7 @@ function MoveDown()
 	EntFire(PlatformArr[rand], "Open");
     PlatformArr.remove(rand);
 
-    EntFireByHandle(self, "RunScriptCode", "MoveDown();", 10, null, null)
+    EntFireByHandle(self, "CallScriptFunction", "MoveDown", 10, null, null)
 }
 
 function RandomWind()
@@ -76,7 +76,7 @@ function RandomWind()
 	EntFire("MGw_push", "Disable","",Interval);
 	//EntFire("Rot"+rand, "Stop","",Interval);
 
-	EntFireByHandle(self, "RunScriptCode", "RandomWind();",Interval + iTime, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "RandomWind",Interval + iTime, null, null);
 	iTime *= 0.91;
 }
 
@@ -151,7 +151,7 @@ function Tick()
 		return;
 
 	hurt();
-	EntFireByHandle(self, "RunScriptCode", "Tick();", 1, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Tick", 1, null, null);
 }
 
 function hurt()
@@ -163,17 +163,15 @@ function hurt()
 	local countT = 0;
 	local countCT = 0;
 	local handle = null;
+	// handles returned by FindInSphere are never null and always valid; the team is read once
 	while (null != (handle = Entities.FindInSphere(handle , origin, 1300)))
 	{
-		if(handle == null)
-            continue;
-        if(!handle.IsValid())
-            continue;
 		if(handle.GetHealth() < 1)
             continue;
-		if(handle.GetTeam() == 2)
+		local team = handle.GetTeam();
+		if(team == 2)
 			countT++;
-		if(handle.GetTeam() == 3)
+		if(team == 3)
 			countCT++;
 	}
 
@@ -228,7 +226,7 @@ function hurt()
 function Win()
 {
 	EntFire("Fade_White", "Fade","",1);
-	EntFireByHandle(self, "RunScriptCode", "SlayT();", 5, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "SlayT", 5, null, null);
 }
 
 function SlayT() {
@@ -246,7 +244,7 @@ function SlayT() {
             EntFireByHandle(handle, "SetHealth", "-1", 0.00, null, null);
         }
     }
-    EntFireByHandle(self, "RunScriptCode", "SlayT();", 1, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "SlayT", 1, null, null);
 }
 
 Chat_Buffer <- [];

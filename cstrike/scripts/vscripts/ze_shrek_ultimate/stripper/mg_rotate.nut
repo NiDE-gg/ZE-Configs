@@ -41,7 +41,7 @@ function startgame2()
 	mg2_ticking = true;
 	
 	EntFire("relay_rotation", "Trigger", "", 5); 
-	EntFireByHandle(self, "RunScriptCode", "Break_mg2();", 10, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Break_mg2", 10, null, null);
 	EntFire("Music", "RunScriptCode", "SetMusic(mg2);", 0);
 	Tick_mg2();
 }
@@ -63,7 +63,7 @@ function Break_mg2()
 	PlatformBreak_mg2(PlatformArr_mg2[rand]);
 	PlatformArr_mg2.remove(rand);
 
-	EntFireByHandle(self, "RunScriptCode", "Break_mg2();", break_ticrate, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Break_mg2", break_ticrate, null, null);
 }
 
 function PlatformBreak_mg2(target)
@@ -77,7 +77,7 @@ function Tick_mg2()
 {
 	if(!mg2_ticking) return;
 	hurt_mg2();
-	EntFireByHandle(self, "RunScriptCode", "Tick_mg2();", 1, null, null);
+	EntFireByHandle(self, "CallScriptFunction", "Tick_mg2", 1, null, null);
 }
 
 function hurt_mg2()
@@ -87,13 +87,15 @@ function hurt_mg2()
 	local countT = 0;
 	local countCT = 0;
 	local handle = null;
+	// handles returned by FindInSphere are never null and always valid; the team is read once
 	while (null != (handle = Entities.FindInSphere(handle, origin_mg2, 1000)))
 	{
-		if(handle == null || !handle.IsValid() || handle.GetHealth() < 1)
+		if(handle.GetHealth() < 1)
 			continue;
 			
-		if(handle.GetTeam() == 2) countT++;
-		else if(handle.GetTeam() == 3) countCT++;
+		local team = handle.GetTeam();
+		if(team == 2) countT++;
+		else if(team == 3) countCT++;
 	}
 
 	if (countT < 1 && countCT > 0)

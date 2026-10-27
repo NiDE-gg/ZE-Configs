@@ -1135,55 +1135,34 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 };
 
 
-// V15: mother-infection population is the reference for this server round.
-// Each 10% lost reduces HP by 5%, capped at DRZS_HEALTH_MAX_REDUCTION.
-::DRZS_HEALTH_MAX_REDUCTION <- 0.15;
-::DRZS_HEALTH_POPULATION_FACTOR <- 1.0;
-::DRZS_HEALTH_INITIAL_HUMANS <- 0;
-::DRZS_HEALTH_LOWEST_HUMANS <- 0;
-::DRZS_HEALTH_CAPTURE_AT <- -1.0;
-::DRZS_HEALTH_NEXT_CHECK <- 0.0;
-::DRZS_PopulationFactor <- function(humans, initialHumans)
-{
-    if (initialHumans <= 0 || humans >= initialHumans) return 1.0;
-    local reduction = 0.5 * (initialHumans - humans).tofloat() / initialHumans;
-    if (reduction > ::DRZS_HEALTH_MAX_REDUCTION) reduction = ::DRZS_HEALTH_MAX_REDUCTION;
-    return 1.0 - reduction;
-};
+// Humans alive just after the mother infection: the fixed base of every
+// round's kill quota for this server round. Human deaths do not lower it,
+// and zombie HP no longer depends on them either.
+::DRZS_QUOTA_HUMANS <- 0;
+::DRZS_QUOTA_CAPTURE_AT <- -1.0;
+::DRZS_QUOTA_NEXT_CHECK <- 0.0;
 ::DRZS_CapturePopulation <- function()
 {
-    if (!::DRSAFE_ACTIVE || ::DRL_FAILED) return;
-    if (::DRZS_HEALTH_INITIAL_HUMANS == 0)
-    {
-        local zombie = null;
-        local found = false;
-        while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
-            if (::DRZS_IsValidZombie(zombie)) { found = true; break; }
-        if (!found) return;
-        // Allow the mother infection batch to finish before taking the reference.
-        if (::DRZS_HEALTH_CAPTURE_AT < 0.0)
-        { ::DRZS_HEALTH_CAPTURE_AT = Time() + 0.1; return; }
-        if (Time() < ::DRZS_HEALTH_CAPTURE_AT) return;
-        local humans = ::DRZS_GetLivingHumans().len();
-        if (humans < 1) return;
-        ::DRZS_HEALTH_INITIAL_HUMANS = humans;
-        ::DRZS_HEALTH_LOWEST_HUMANS = humans;
-        return;
-    }
+    if (!::DRSAFE_ACTIVE || ::DRL_FAILED || ::DRZS_QUOTA_HUMANS > 0) return;
+    local zombie = null;
+    local found = false;
+    while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
+        if (::DRZS_IsValidZombie(zombie)) { found = true; break; }
+    if (!found) return;
+    // Allow the mother infection batch to finish before taking the reference.
+    if (::DRZS_QUOTA_CAPTURE_AT < 0.0)
+    { ::DRZS_QUOTA_CAPTURE_AT = Time() + 0.1; return; }
+    if (Time() < ::DRZS_QUOTA_CAPTURE_AT) return;
     local humans = ::DRZS_GetLivingHumans().len();
-    if (humans >= ::DRZS_HEALTH_LOWEST_HUMANS) return;
-    ::DRZS_HEALTH_LOWEST_HUMANS = humans;
-    local factor = ::DRZS_PopulationFactor(humans, ::DRZS_HEALTH_INITIAL_HUMANS);
-    if (fabs(factor - ::DRZS_HEALTH_POPULATION_FACTOR) < 0.00001) return;
-    ::DRZS_HEALTH_POPULATION_FACTOR = factor;
-    // Existing maxima preserve damage; no healing or reset to full HP here.
-    ::DRZS_ApplyAllZombieStats(true);
-    ::DRZS_SyncZRClassHealth();
+    if (humans < 1) return;
+    ::DRZS_QUOTA_HUMANS = humans;
+    // A round already running switches to the fixed base.
+    ::DRZS_RecalculateRoundTarget();
 };
 ::DRZS_PopulationTick <- function()
 {
-    if (Time() < ::DRZS_HEALTH_NEXT_CHECK) return;
-    ::DRZS_HEALTH_NEXT_CHECK = Time() + 0.5;
+    if (Time() < ::DRZS_QUOTA_NEXT_CHECK) return;
+    ::DRZS_QUOTA_NEXT_CHECK = Time() + 0.5;
     ::DRZS_CapturePopulation();
 };
 
@@ -1944,8 +1923,10 @@ if (!("DR_SHOPS_BUTTONS" in getroottable()))
 // DEAGLE GRAVITY JUDGEMENT CONFIG
 // ============================================================================
 
-if (!("DR_DEAGLE_MARK_COOLDOWN" in getroottable()))
-    ::DR_DEAGLE_MARK_COOLDOWN <- 10.0;
+// Timing: the mark gives DR_DEAGLE_MARK_DURATION to hit the zombie again;
+// the well then lasts DR_DEAGLE_ACTIVE_DURATION. A new mark is possible
+// DR_DEAGLE_MARK_COOLDOWN after the well ends, or after an unused mark expires.
+::DR_DEAGLE_MARK_COOLDOWN <- 15.0;
 
 // Pack-a-Punch bonus: an upgraded Gravity Deagle opens the gravity well on
 // its first impact (no mark). The cooldown between wells is unchanged.
@@ -1954,11 +1935,8 @@ if (!("DR_DEAGLE_MARK_COOLDOWN" in getroottable()))
 // Damage dealt to the zombie that receives the gravity well.
 ::DR_DEAGLE_BONUS_DAMAGE <- 1000.0;
 
-if (!("DR_DEAGLE_MARK_DURATION" in getroottable()))
-    ::DR_DEAGLE_MARK_DURATION <- 5.0;
-
-if (!("DR_DEAGLE_ACTIVE_DURATION" in getroottable()))
-    ::DR_DEAGLE_ACTIVE_DURATION <- 5.0;
+::DR_DEAGLE_MARK_DURATION <- 3.0;
+::DR_DEAGLE_ACTIVE_DURATION <- 3.0;
 
 if (!("DR_DEAGLE_PULL_RADIUS" in getroottable()))
     ::DR_DEAGLE_PULL_RADIUS <- 350.0;
@@ -2038,7 +2016,7 @@ if (!("DR_AK_HITS_PER_EXPLOSION" in getroottable()))
 ::DR_PAP_AK_HITS_PER_EXPLOSION <- 3;
 
 // Damage dealt to every zombie caught in a napalm burst.
-::DR_AK_BONUS_DAMAGE <- 1000.0;
+::DR_AK_BONUS_DAMAGE <- 250.0;
 
 if (!("DR_AK_EXPLOSION_RADIUS" in getroottable()))
     ::DR_AK_EXPLOSION_RADIUS <- 160.0;
@@ -2361,8 +2339,7 @@ if (!("DR_LASER_TP_DESTINATION" in getroottable()))
 
 // Les zombies envoyes en waiting room par le Ray Gun ou le MP5 reviennent
 // automatiquement sur une zone active apres ce delai.
-if (!("DR_SPECIAL_TELEPORT_RETURN_DELAY" in getroottable()))
-    ::DR_SPECIAL_TELEPORT_RETURN_DELAY <- 5.0;
+::DR_SPECIAL_TELEPORT_RETURN_DELAY <- 1.0;
 
 if (!("DR_specialTeleportReturnToken" in getroottable()))
     ::DR_specialTeleportReturnToken <- 0;
@@ -4376,7 +4353,11 @@ if (!("DR_callbacks" in getroottable()))
         ::DR_PAP_OnPlayerDeath(player);
 
     if ("DRZS_OnZombieKilled" in getroottable())
-        ::DRZS_OnZombieKilled(player, deathOrigin);
+    {
+        local killer = ("attacker" in params) && params.attacker > 0
+            ? GetPlayerFromUserID(params.attacker) : null;
+        ::DRZS_OnZombieKilled(player, deathOrigin, killer);
+    }
 
     if ("DRZS_OnPlayerDeath" in getroottable())
         ::DRZS_OnPlayerDeath(player);
@@ -11246,9 +11227,11 @@ if (equip == null || !equip.IsValid())
         zombieIndex;
 
 
-    // Le cooldown commence dÃƒÂ¨s la crÃƒÂ©ation de la marque.
+    // An unused mark expires after MARK_DURATION; the cooldown runs from
+    // then. Opening the well moves it to the end of the well.
     weaponData.nextMarkTime =
         now +
+        ::DR_DEAGLE_MARK_DURATION +
         ::DR_DEAGLE_MARK_COOLDOWN;
 
 
@@ -11930,7 +11913,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         if (::DR_PAP_DEAGLE_INSTANT
             && ::DR_PAP_GetWeaponFlag(weapon) != null)
         {
-            weaponData.nextMarkTime = now + ::DR_DEAGLE_MARK_COOLDOWN;
+            weaponData.nextMarkTime = now + ::DR_DEAGLE_ACTIVE_DURATION
+                + ::DR_DEAGLE_MARK_COOLDOWN;
             ::DR_PlaySoundOnEntity(attacker, ::DR_SOUND_DEAGLE_CHARGE);
             ::DR_PlaySoundOnEntity(zombie, ::DR_SOUND_DEAGLE_GRAVITY);
             ::DR_DEAGLE_OpenWell(attacker, zombie);
@@ -12008,6 +11992,9 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         zombieIndex
     );
 
+    // Next mark: DR_DEAGLE_MARK_COOLDOWN after the end of this well.
+    weaponData.nextMarkTime = now + ::DR_DEAGLE_ACTIVE_DURATION
+        + ::DR_DEAGLE_MARK_COOLDOWN;
 
     ::DR_DEAGLE_OpenWell(attacker, zombie);
 };
@@ -24729,12 +24716,15 @@ if (!("DRZS_SAFE_TIME" in getroottable()))
 else
     ::DRZS_SAFE_TIME = 15.0;
 
-// Exact requested quotas for 25 surviving humans (30-player start) and
-// 54 surviving humans (65-player start). The map/ZR owns initial infection.
+// Quotas for a base of 25 humans (30-player start) and 54 humans (65-player
+// start), per combat round. Slow progression: +0.5 and +1 per round, also
+// after the end of the tables. The map/ZR owns initial infection.
 ::DRZS_QUOTA_SMALL_HUMANS <- 25;
 ::DRZS_QUOTA_LARGE_HUMANS <- 54;
-::DRZS_QUOTA_SMALL <- [5, 6, 7, 7, 8, 9, 10, 11, 12, 13, 14, 15, 15, 16, 17];
-::DRZS_QUOTA_LARGE <- [10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32, 34, 36, 38];
+::DRZS_QUOTA_SMALL <- [5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12];
+::DRZS_QUOTA_LARGE <- [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24];
+::DRZS_QUOTA_SMALL_STEP <- 0.5;
+::DRZS_QUOTA_LARGE_STEP <- 1;
 
 if (!("DRZS_ZOMBIE_MIN_SPEED" in getroottable()))
     ::DRZS_ZOMBIE_MIN_SPEED <- 0.85;
@@ -25447,7 +25437,7 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
         + ::DRZS_ZOMBIE_HEALTH_LINEAR * n
         + ::DRZS_ZOMBIE_HEALTH_QUADRATIC * n * n).tointeger();
     if (health > ::DRZS_ZOMBIE_MAX_HEALTH) health = ::DRZS_ZOMBIE_MAX_HEALTH;
-    return floor(health * ::DRZS_HEALTH_POPULATION_FACTOR).tointeger();
+    return health;
 };
 
 ::DRZS_GetDogHealthForRound <- function(roundNumber)
@@ -25579,21 +25569,39 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 {
     roundNumber = ::DRZS_GetCombatProgressionRound(roundNumber);
     if (roundNumber <= values.len()) return values[roundNumber - 1];
-    return values.top() + (roundNumber - values.len()) * extraPerRound;
+    return (values.top() + (roundNumber - values.len()) * extraPerRound).tointeger();
 };
 
-::DRZS_GetRoundKillBase <- function()
+::DRZS_GetRoundKillBase <- function(roundNumber)
 {
-    return ::DRZS_GetQuotaAnchor(::DRZS_QUOTA_LARGE, ::DRZS_ROUND_NUMBER, 2);
+    return ::DRZS_GetQuotaAnchor(::DRZS_QUOTA_LARGE, roundNumber,
+        ::DRZS_QUOTA_LARGE_STEP);
 };
 
+
+// Dog waves: the round 5 quota, then DRZS_DOG_QUOTA_STEP more per dog wave
+// (round 10 = round 5 + 2, round 15 = round 5 + 4...).
+::DRZS_DOG_QUOTA_STEP <- 2;
 
 ::DRZS_GetRoundKillTarget <- function()
 {
-    local humans = ::DRZS_GetLivingHumans().len();
+    local roundNumber = ::DRZS_ROUND_NUMBER;
+    if (::DRZS_IsDogRound(roundNumber))
+        return ::DRZS_GetKillTargetForRound(5)
+            + (roundNumber / 5 - 1) * ::DRZS_DOG_QUOTA_STEP;
+    return ::DRZS_GetKillTargetForRound(roundNumber);
+};
+
+::DRZS_GetKillTargetForRound <- function(roundNumber)
+{
+    // Fixed base: humans alive just after the mother infection. Living
+    // humans are only used until that reference is taken.
+    local humans = ::DRZS_QUOTA_HUMANS > 0
+        ? ::DRZS_QUOTA_HUMANS : ::DRZS_GetLivingHumans().len();
     if (humans < 1) humans = 1;
-    local small = ::DRZS_GetQuotaAnchor(::DRZS_QUOTA_SMALL, ::DRZS_ROUND_NUMBER, 1);
-    local large = ::DRZS_GetRoundKillBase();
+    local small = ::DRZS_GetQuotaAnchor(::DRZS_QUOTA_SMALL, roundNumber,
+        ::DRZS_QUOTA_SMALL_STEP);
+    local large = ::DRZS_GetRoundKillBase(roundNumber);
     local numerator = 0;
     local denominator = 1;
     if (humans <= ::DRZS_QUOTA_SMALL_HUMANS)
@@ -26023,7 +26031,7 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 };
 
 
-::DRZS_OnZombieKilled <- function(player, deathOrigin)
+::DRZS_OnZombieKilled <- function(player, deathOrigin, killer = null)
 {
     if (::DRZS_ROUND_PHASE != "active"
         || player == null
@@ -26031,6 +26039,12 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
     {
         return;
     }
+
+    // Only a kill by a human counts: going spectator (!spec), the kill
+    // command or a fall must neither end the round (and its 15 s pause) nor
+    // drop a bonus.
+    if (!::DR_IsValidPlayer(killer) || killer == player || killer.GetTeam() != 3)
+        return;
 
     local playerIndex = player.entindex();
 
@@ -27307,11 +27321,9 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
 {
     ::DRZS_END_LOCK = false;
     ::DR_BONUS_LOW_HP_GUARD = null;
-    ::DRZS_HEALTH_INITIAL_HUMANS = 0;
-    ::DRZS_HEALTH_LOWEST_HUMANS = 0;
-    ::DRZS_HEALTH_POPULATION_FACTOR = 1.0;
-    ::DRZS_HEALTH_CAPTURE_AT = -1.0;
-    ::DRZS_HEALTH_NEXT_CHECK = 0.0;
+    ::DRZS_QUOTA_HUMANS = 0;
+    ::DRZS_QUOTA_CAPTURE_AT = -1.0;
+    ::DRZS_QUOTA_NEXT_CHECK = 0.0;
     ::DRZS_SPAWN_TOKEN++;
     ::DRZS_ROUND_TOKEN++;
     ::DRZS_WATCHDOG_TOKEN++;

@@ -127,8 +127,8 @@ function MapStart()
     EntFire("Item_DONKEY_Temp", "ForceSpawn", "", 10);
     EntFire("Music", "RunScriptCode", "GetRandomMusic();", 10);
     
-    EntFireByHandle(self, "RunScriptCode", "SelectLanguage();", 9.9, null, null);
-    EntFireByHandle(self, "RunScriptCode", "Hold();", 20.1, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "SelectLanguage", 9.9, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "Hold", 20.1, null, null);
     EntFireByHandle(self, "RunScriptCode", "SpawnZMItem(0);", 20.0, null, null);
     EntFireByHandle(self, "RunScriptCode", "SpawnZMItem(0);", 20.2, null, null);
     EntFireByHandle(self, "RunScriptCode", "SpawnZMItem(1);", 20.4, null, null);
@@ -304,9 +304,9 @@ function Toilet()
     EntFire("SHREK_Toilet_sound", "PlaySound", "", 65);
     EntFire("Music", "Volume", "0", 65);
     EntFire("Map_TD", "FireUser1", "", 65);
-    EntFireByHandle(self, "RunScriptCode", "StartTpZm();", 65.1 + time, null, null);
-    EntFireByHandle(self, "RunScriptCode", "ChekCTa();", 65 + time, null, null); // DISABLED
-    EntFireByHandle(self, "RunScriptCode", "StartDragon();", 67 + time, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "StartTpZm", 65.1 + time, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "ChekCTa", 65 + time, null, null); // DISABLED
+    EntFireByHandle(self, "CallScriptFunction", "StartDragon", 67 + time, null, null);
     EntFire("Toilet_Button", "Unlock", "0", 67 + time);
 
     if(RandomInt(0, 1))
@@ -372,7 +372,7 @@ function Final()
         text = "SOLO WIN";
         ServerChat(Chat_pref + text);
         EntFire("Fade_White", "Fade", "", 1);
-        EntFireByHandle(self, "RunScriptCode", "SlayT();", 2, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "SlayT", 2, null, null);
         return;
     }
 
@@ -508,7 +508,7 @@ function SlayT()
             EntFireByHandle(handle, "SetHealth", "-1", 0.00, null, null);
         }
     }
-    EntFireByHandle(self, "RunScriptCode", "SlayT();", 1, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "SlayT", 1, null, null);
 }
 
 function StartTpZm()
@@ -585,24 +585,25 @@ function SetModel()
     if(!g_bTicing)
         return;
 
+    // handles returned by FindByClassname are always valid; health/team are read once
     while((handle = Entities.FindByClassname(handle, "player")) != null)
     {
-        if(!handle.IsValid()) continue;
-        if(handle.GetHealth() < 1) continue;
-        if(handle.GetTeam() == 2 && handle.GetHealth() > (iHealth / 2))
+        local health = handle.GetHealth();
+        if(health < 1) continue;
+        if(handle.GetTeam() == 2 && health > (iHealth / 2))
         {
             if(g_bFravity)
             {
                 handle.__KeyValueFromFloat("gravity", 0.05);
             }
-            if(handle.GetTeam() == 2 && handle.GetHealth() > iHealth)
+            if(health > iHealth)
             {
                 handle.SetHealth(iHealth);
                 continue;
             }
         }
     }
-    EntFireByHandle(self, "RunScriptCode", "SetModel();", g_iTicrate, null, null);
+    EntFireByHandle(self, "CallScriptFunction", "SetModel", g_iTicrate, null, null);
 }
 function bananaTick()
 {
@@ -624,7 +625,7 @@ function bananaTick()
         }
     }
     if(BANANA_ARR.len() > 0)
-        EntFireByHandle(self, "RunScriptCode", "bananaTick();", g_iTicrate * 5, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "bananaTick", g_iTicrate * 5, null, null);
 }
 
 function ChesnokTick()
@@ -647,7 +648,7 @@ function ChesnokTick()
         }
     }
     if(CHESNOK_ARR.len() > 0)
-        EntFireByHandle(self, "RunScriptCode", "ChesnokTick();", g_iTicrate * 5, null, null);
+        EntFireByHandle(self, "CallScriptFunction", "ChesnokTick", g_iTicrate * 5, null, null);
 }
 
 ::ValidTestMoveParent <- function(handle_move, owner, team) 
