@@ -141,10 +141,33 @@ if (!("DRQ_SERIAL" in getroottable())) ::DRQ_SERIAL <- 0;
 if (!("DRQ_PEAK" in getroottable())) ::DRQ_PEAK <- 0;
 if (!("DRQ_EPOCH" in getroottable())) ::DRQ_EPOCH <- 0;
 
+// Compiled jobs, by source text: recurring thinks repeat the same text and
+// compiling is the costly part of a job. Bounded, and emptied with the queue.
+::DRQ_COMPILED <- {};
+::DRQ_COMPILED_COUNT <- 0;
+::DRQ_COMPILED_MAX <- 1024;
+
+::DRQ_Compiled <- function(code)
+{
+    if (::DRQ_COMPILED.rawin(code))
+        return ::DRQ_COMPILED[code];
+    local compiled = compilestring(code);
+    if (::DRQ_COMPILED_COUNT >= ::DRQ_COMPILED_MAX)
+    {
+        ::DRQ_COMPILED.clear();
+        ::DRQ_COMPILED_COUNT = 0;
+    }
+    ::DRQ_COMPILED[code] <- compiled;
+    ::DRQ_COMPILED_COUNT++;
+    return compiled;
+};
+
 ::DRQ_Reset <- function()
 {
     ::DRQ_HEAP.clear();
     ::DRQ_EPOCH++;
+    ::DRQ_COMPILED.clear();
+    ::DRQ_COMPILED_COUNT = 0;
 };
 
 ::DRQ_Before <- function(a, b)
@@ -209,22 +232,29 @@ if (!("DRQ_EPOCH" in getroottable())) ::DRQ_EPOCH <- 0;
     local validCaller = job.actionCaller;
     if (validActivator != null && !validActivator.IsValid()) validActivator = null;
     if (validCaller != null && !validCaller.IsValid()) validCaller = null;
-    local saved = [];
-    foreach (table in [root, scope])
-    {
-        foreach (key in ["activator", "caller"])
-            saved.append({table = table, key = key, existed = table.rawin(key),
-                value = table.rawin(key) ? table[key] : null});
-        table.activator <- validActivator;
-        table.caller <- validCaller;
-    }
-    try { compilestring(job.code).bindenv(scope)(); }
+    // Runs for every job: no temporary tables or arrays here.
+    local rootHadActivator = root.rawin("activator");
+    local rootActivator = rootHadActivator ? root.activator : null;
+    local rootHadCaller = root.rawin("caller");
+    local rootCaller = rootHadCaller ? root.caller : null;
+    local scopeHadActivator = scope.rawin("activator");
+    local scopeActivator = scopeHadActivator ? scope.activator : null;
+    local scopeHadCaller = scope.rawin("caller");
+    local scopeCaller = scopeHadCaller ? scope.caller : null;
+    root.activator <- validActivator;
+    root.caller <- validCaller;
+    scope.activator <- validActivator;
+    scope.caller <- validCaller;
+    try { ::DRQ_Compiled(job.code).bindenv(scope)(); }
     catch (error) { printl("[Der Riese callbacks] " + error); }
-    foreach (entry in saved)
-    {
-        if (entry.existed) entry.table[entry.key] = entry.value;
-        else if (entry.table.rawin(entry.key)) entry.table.rawdelete(entry.key);
-    }
+    if (rootHadActivator) root.activator = rootActivator;
+    else if (root.rawin("activator")) root.rawdelete("activator");
+    if (rootHadCaller) root.caller = rootCaller;
+    else if (root.rawin("caller")) root.rawdelete("caller");
+    if (scopeHadActivator) scope.activator = scopeActivator;
+    else if (scope.rawin("activator")) scope.rawdelete("activator");
+    if (scopeHadCaller) scope.caller = scopeCaller;
+    else if (scope.rawin("caller")) scope.rawdelete("caller");
 };
 
 ::DRQ_Dispatch <- function(epoch)
@@ -291,6 +321,21 @@ if (!("DR_IN_USE" in getroottable()))
 // MP5 combo, AK counter, M3 push, PaP bonus) must ignore it.
 ::DR_SCRIPT_DAMAGE_DEPTH <- 0;
 
+// Errors the script catches and goes on from: the first one of each place goes
+// to the log, the others only count, so a recurring error cannot flood it.
+// [DR stats] shows the total.
+if (!("DR_CAUGHT" in getroottable())) ::DR_CAUGHT <- {};
+
+::DR_LogCaught <- function(site, error)
+{
+    if (site in ::DR_CAUGHT)
+    {
+        ::DR_CAUGHT[site]++;
+        return;
+    }
+    ::DR_CAUGHT[site] <- 1;
+    printl("[DR caught] " + site + ": " + error);
+};
 // m_hMyWeapons length (48 in CS:S). Read from the engine on first spawn;
 // 64 is only the safe default until then.
 if (!("DR_WEAPON_SLOTS" in getroottable())) ::DR_WEAPON_SLOTS <- 64;
@@ -304,6 +349,7 @@ if (!("DR_WEAPON_SLOTS" in getroottable())) ::DR_WEAPON_SLOTS <- 64;
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_UpdateWeaponSlots", error);
     }
 };
 
@@ -566,7 +612,10 @@ if (!("DRL_TEXT" in getroottable())) ::DRL_TEXT <- null;
                     player.SetAngles(0, destination.GetAngles().y, 0);
                     player.SetVelocity(Vector(0, 0, 0));
                 }
-                catch (error) {}
+                catch (error)
+                {
+                    ::DR_LogCaught("DRL_CageThink", error);
+                }
             }
             if (human && !::DRL_InCage(player, hurt)) allHumansInside = false;
         }
@@ -597,7 +646,6 @@ if (!("DRL_TEXT" in getroottable())) ::DRL_TEXT <- null;
     ::DRWB_Hud_Stop();
     ::DRTP_Mission_Reset();
     ::DRTP_ESCAPE_TOKEN++;
-    ::DRTP_ESCAPE_SCHEDULED = false;
     ::DRTP_ESCAPE_OPEN = false;
     ::DRTP_ESCAPE_FINAL_ACTIVE = false;
     ::DRTP_ESCAPE_FINISHED = true;
@@ -1234,7 +1282,9 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
     if ("DRTP_Inside" in getroottable() && ::DRTP_Inside.rawin(index))
     {
         local state = ::DRTP_Inside[index];
-        if (state.player == player && state.zones.len() > 0) return true;
+        if (state.player == player)
+            foreach (id, inside in state.zones)
+                if (inside && ::DRTP_IsInsideZone(player, id)) return true;
     }
     return false;
 };
@@ -1251,17 +1301,17 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 ::DRSAFE_Refund <- function(player, amount, reason = "technical failure", label = null)
 {
     if (amount <= 0 || !::DRSAFE_CanBuy(player)) return false;
-    local current = ::DRTP_GetMoney(player);
+    local current = ::DR_Money_Get(player);
     if (current < 0) return false;
     // Add the paid amount to CURRENT funds: preserve earnings since payment.
-    if (!::DRTP_SetMoney(player, current + amount))
+    if (!::DR_Money_Set(player, current + amount))
     {
         ::DRSAFE_Log("Refund failed for player: " + player.entindex());
         return false;
     }
     local what = label != null ? " (" + label + ")" : "";
     ClientPrint(player, 3, "\x07FFAA00[Shop] Refunded " + amount + "$" + what + ": " + reason);
-    printl("[Der Riese refund] " + ::DR_MysteryBox_GetPlayerName(player) + what
+    printl("[Der Riese refund] " + ::DR_GetPlayerName(player) + what
         + ": " + amount + "$: " + reason);
     return true;
 };
@@ -1322,13 +1372,16 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         if (tx.register != null)
         {
             success = getroottable()[tx.register](player, weapon);
+            // Registered special weapon (Mystery Box): show its custom model.
+            if (success)
+                ::DR_SpecialModels_Start();
             if (success && tx.box != null)
             {
-                local ammoType = NetProps.GetPropInt(weapon, "m_iPrimaryAmmoType");
+                local ammoType = ::DR_SpecialWeapon_GetAmmoType(weapon);
                 if (ammoType < 0) throw "Special weapon ammo unavailable";
                 local reserve = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType);
-                // Same reserve as the wall weapon, never below the current one.
-                local standard = ::DR_Bonus_GetNormalReserve(tx.classname);
+                // The special weapon's reserve, never below the current one.
+                local standard = ::DR_SpecialWeapon_GetReserve(weapon);
                 if (reserve < standard) reserve = standard;
                 NetProps.SetPropIntArray(player, "m_iAmmo", reserve, ammoType);
                 success = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) == reserve;
@@ -1362,8 +1415,8 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         boxToken = box == null ? 0 : box.token, previous = ::DRWB_FindOwnedWeapon(player, classname)};
     if (box == null)
     {
-        local money = ::DRTP_GetMoney(player);
-        if (money < cost || !::DRTP_SetMoney(player, money - cost)) return false;
+        local money = ::DR_Money_Get(player);
+        if (money < cost || !::DR_Money_Set(player, money - cost)) return false;
     }
     ::DRSAFE_PURCHASES[player] <- tx;
     if (box != null) box.state = "claiming";
@@ -1385,13 +1438,13 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
 
 ::DRSAFE_BuyWallAmmo <- function(player, data, weapon, cost)
 {
-    local current = ::DRTP_GetMoney(player);
+    local current = ::DR_Money_Get(player);
     if (current < cost) return false;
     local ammoType = -1;
     local reserve = 0;
     try
     {
-        ammoType = NetProps.GetPropInt(weapon, "m_iPrimaryAmmoType");
+        ammoType = ::DR_SpecialWeapon_GetAmmoType(weapon);
         if (ammoType < 0) return false;
         reserve = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType);
     }
@@ -1408,7 +1461,7 @@ if (!("DRUSE_TOKEN" in getroottable())) ::DRUSE_TOKEN <- 0;
         }
         next = ::DR_PAP_RESERVE_AMMO;
     }
-    if (!::DRTP_SetMoney(player, current - cost)) return false;
+    if (!::DR_Money_Set(player, current - cost)) return false;
     local success = false;
     try
     {
@@ -1447,6 +1500,20 @@ if (!("DR_MONEY_LIMIT" in getroottable()))
 if (!("DR_MONEY_THINK_TOKEN" in getroottable()))
     ::DR_MONEY_THINK_TOKEN <- 0;
 
+::DR_Money_Get <- function(player)
+{
+    if (player == null || !player.IsValid() || !player.IsPlayer())
+        return -1;
+
+    try
+    {
+        return NetProps.GetPropInt(player, "m_iAccount");
+    }
+    catch (error)
+    {
+        return -1;
+    }
+};
 ::DR_Money_Set <- function(player, amount)
 {
     if (player == null || !player.IsValid() || !player.IsPlayer())
@@ -1483,6 +1550,7 @@ if (!("DR_MONEY_THINK_TOKEN" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_Money_ClampHumans", error);
         }
     }
 };
@@ -1578,6 +1646,7 @@ try
 }
 catch (error)
 {
+    ::DR_LogCaught("DR_Money_BeginRound", error);
 }
 
 // ============================================================================
@@ -1641,11 +1710,12 @@ if (!("DR_doubleTapButtons" in getroottable()))
 if (!("DR_doubleTapThinkRunning" in getroottable()))
     ::DR_doubleTapThinkRunning <- false;
 
-if (!("DR_doubleTapFireThinkRunning" in getroottable()))
-    ::DR_doubleTapFireThinkRunning <- false;
-
-if (!("DR_doubleTapFireToken" in getroottable()))
-    ::DR_doubleTapFireToken <- 0;
+// Single fire-rate thinker for every weapon (DR_FireRate_Think).
+if (!("DR_fireRateToken" in getroottable()))
+    ::DR_fireRateToken <- 0;
+::DR_fireRateRunning <- false;
+if (!("DR_fireRateStates" in getroottable()))
+    ::DR_fireRateStates <- {};
 
 
 // ============================================================================
@@ -1757,6 +1827,13 @@ if (!("DR_SOUND_DEAGLE_CHARGE" in getroottable()))
 
 if (!("DR_SOUND_FREEZEGUN_FIRE" in getroottable()))
     ::DR_SOUND_FREEZEGUN_FIRE <- "#cod zombies freezegun sound.mp3";
+
+// Played on a zombie when it freezes (Winter's Howl, M4A1 Ice), at most once
+// per DR_FREEZE_SOUND_INTERVAL so a crowd frozen at once plays it once.
+::DR_SOUND_FREEZE_GLASS <- "physics/glass/glass_bottle_break2.wav";
+::DR_FREEZE_SOUND_INTERVAL <- 0.10;
+if (!("DR_freezeSoundNextTime" in getroottable()))
+    ::DR_freezeSoundNextTime <- 0.0;
 
 if (!("DR_SOUND_LASER_TP_FIRE" in getroottable()))
     ::DR_SOUND_LASER_TP_FIRE <- "#cod zombies lasers tp sound.mp3";
@@ -2010,13 +2087,13 @@ if (!("DR_mp5ParticleIndex" in getroottable()))
 // ============================================================================
 
 if (!("DR_AK_HITS_PER_EXPLOSION" in getroottable()))
-    ::DR_AK_HITS_PER_EXPLOSION <- 5;
+    ::DR_AK_HITS_PER_EXPLOSION <- 8;
 
 // Pack-a-Punch bonus: impacts per napalm burst for an upgraded AK-47 Napalm.
-::DR_PAP_AK_HITS_PER_EXPLOSION <- 3;
+::DR_PAP_AK_HITS_PER_EXPLOSION <- 5;
 
 // Damage dealt to every zombie caught in a napalm burst.
-::DR_AK_BONUS_DAMAGE <- 250.0;
+::DR_AK_BONUS_DAMAGE <- 500.0;
 
 if (!("DR_AK_EXPLOSION_RADIUS" in getroottable()))
     ::DR_AK_EXPLOSION_RADIUS <- 160.0;
@@ -2073,8 +2150,8 @@ if (!("DR_m3Weapons" in getroottable()))
 if (!("DR_TMP_AMMO_INDEX" in getroottable()))
     ::DR_TMP_AMMO_INDEX <- 10;
 
-if (!("DR_TMP_STARTING_RESERVE" in getroottable()))
-    ::DR_TMP_STARTING_RESERVE <- 12000;
+// Bulletstorm reserve, kept in its own ammo pool (DR_TMP_AMMO_INDEX).
+::DR_TMP_STARTING_RESERVE <- 3000;
 
 if (!("DR_TMP_FIRE_RATE_MULTIPLIER" in getroottable()))
     ::DR_TMP_FIRE_RATE_MULTIPLIER <- 1.25;
@@ -2160,7 +2237,7 @@ if (!("DR_WUNDERWAFFE_CARRIER_MODEL" in getroottable()))
         "models/propper/ze_april_fool_2/lardy_april_fool_sphere.mdl";
 
 if (!("DR_WUNDERWAFFE_DIRECT_TRIGGER_MODEL" in getroottable()))
-    ::DR_WUNDERWAFFE_DIRECT_TRIGGER_MODEL <- "*33";
+    ::DR_WUNDERWAFFE_DIRECT_TRIGGER_MODEL <- "*31";
 
 if (!("DR_WUNDERWAFFE_BEAM_PARTICLE" in getroottable()))
     ::DR_WUNDERWAFFE_BEAM_PARTICLE <- "custom_particle_155";
@@ -2220,7 +2297,7 @@ if (!("DR_MONKEYBOMB_MODEL" in getroottable()))
         "models/malgo/area51/monkey_bomb/monkey_bomb.mdl";
 
 if (!("DR_MONKEYBOMB_TRIGGER_MODEL" in getroottable()))
-    ::DR_MONKEYBOMB_TRIGGER_MODEL <- "*31";
+    ::DR_MONKEYBOMB_TRIGGER_MODEL <- "*29";
 
 if (!("DR_MONKEYBOMB_EXPLOSION_PARTICLE" in getroottable()))
     ::DR_MONKEYBOMB_EXPLOSION_PARTICLE <-
@@ -2249,8 +2326,8 @@ if (!("DR_FREEZEGUN_PARTICLE_HEIGHT" in getroottable()))
 if (!("DR_FREEZEGUN_COOLDOWN" in getroottable()))
     ::DR_FREEZEGUN_COOLDOWN <- 0.25;
 
-if (!("DR_FREEZEGUN_ZONE_DURATION" in getroottable()))
-    ::DR_FREEZEGUN_ZONE_DURATION <- 4.0;
+// Each shot's freeze zone follows the player for this long.
+::DR_FREEZEGUN_ZONE_DURATION <- 3.0;
 
 if (!("DR_FREEZEGUN_PULSE_INTERVAL" in getroottable()))
     ::DR_FREEZEGUN_PULSE_INTERVAL <- 0.20;
@@ -2258,20 +2335,21 @@ if (!("DR_FREEZEGUN_PULSE_INTERVAL" in getroottable()))
 if (!("DR_FREEZEGUN_PULSE_LIFETIME" in getroottable()))
     ::DR_FREEZEGUN_PULSE_LIFETIME <- 0.19;
 
-if (!("DR_FREEZEGUN_REFREEZE_LOCK" in getroottable()))
-    ::DR_FREEZEGUN_REFREEZE_LOCK <- 5.0;
+// Full stop with no attack, then gradual thaw, then immunity: a zombie
+// already frozen, thawing or immune is not frozen again (DR_Freeze_Start).
+::DR_FREEZEGUN_FREEZE_DURATION <- 5.0;
+::DR_FREEZEGUN_THAW_DURATION <- 3.0;
+::DR_FREEZEGUN_REFREEZE_LOCK <- 3.0;
 
-if (!("DR_FREEZEGUN_FREEZE_DURATION" in getroottable()))
-    ::DR_FREEZEGUN_FREEZE_DURATION <- 5.0;
-
-if (!("DR_FREEZEGUN_RESTORE_DURATION" in getroottable()))
-    ::DR_FREEZEGUN_RESTORE_DURATION <- 5.0;
+// Immunity after a freeze (Winter's Howl, M4A1 Ice), per zombie index.
+if (!("DR_freezeImmunity" in getroottable()))
+    ::DR_freezeImmunity <- {};
 
 if (!("DR_FREEZEGUN_NORMAL_SPEED" in getroottable()))
     ::DR_FREEZEGUN_NORMAL_SPEED <- 1.0;
 
 if (!("DR_FREEZEGUN_TRIGGER_MODEL" in getroottable()))
-    ::DR_FREEZEGUN_TRIGGER_MODEL <- "*27";
+    ::DR_FREEZEGUN_TRIGGER_MODEL <- "*25";
 
 if (!("DR_FREEZEGUN_PARTICLE" in getroottable()))
     ::DR_FREEZEGUN_PARTICLE <- "custom_particle_002";
@@ -2363,7 +2441,7 @@ if (!("DR_SPECIAL_WEAPON_DAMAGE" in getroottable()))
 ::DR_MONKEYBOMB_DAMAGE <- 2000.0;
 
 if (!("DR_LASER_TP_TRIGGER_MODEL" in getroottable()))
-    ::DR_LASER_TP_TRIGGER_MODEL <- "*28";
+    ::DR_LASER_TP_TRIGGER_MODEL <- "*26";
 
 if (!("DR_LASER_TP_TRAIL_PARTICLE" in getroottable()))
     ::DR_LASER_TP_TRAIL_PARTICLE <- "custom_particle_016";
@@ -2395,7 +2473,7 @@ if (!("DR_THUNDERGUN_UP_FORCE" in getroottable()))
     ::DR_THUNDERGUN_UP_FORCE <- 300.0;
 
 if (!("DR_THUNDERGUN_TRIGGER_MODEL" in getroottable()))
-    ::DR_THUNDERGUN_TRIGGER_MODEL <- "*29";
+    ::DR_THUNDERGUN_TRIGGER_MODEL <- "*27";
 
 if (!("DR_THUNDERGUN_PARTICLE" in getroottable()))
     ::DR_THUNDERGUN_PARTICLE <- "custom_particle_009";
@@ -2507,6 +2585,25 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
         && player.IsPlayer();
 };
 
+
+::DR_GetPlayerName <- function(player, fallback = "PLAYER")
+{
+    if (!::DR_IsValidPlayer(player))
+        return fallback;
+
+    try
+    {
+        local playerName = NetProps.GetPropString(player, "m_szNetname");
+        if (playerName != null && playerName != "")
+            return playerName;
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_GetPlayerName", error);
+    }
+
+    return fallback;
+};
 
 ::DR_IsValidHuman <- function(player)
 {
@@ -2652,6 +2749,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
         ::DR_SOUND_AK_CHARGE,
         ::DR_SOUND_DEAGLE_CHARGE,
         ::DR_SOUND_FREEZEGUN_FIRE,
+        ::DR_SOUND_FREEZE_GLASS,
         ::DR_SOUND_LASER_TP_FIRE,
         ::DR_SOUND_MONKEYBOMB_LAUNCH,
         ::DR_SOUND_MP5_CHARGE,
@@ -2685,6 +2783,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_PrecacheSpecialSounds", error);
         }
     }
 };
@@ -2835,6 +2934,16 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
         (
             ::DR_deagleWeapons.rawin(weaponIndex)
             && ::DR_deagleWeapons[weaponIndex].weapon == weapon
+        )
+        ||
+        (
+            ::DR_m4Weapons.rawin(weaponIndex)
+            && ::DR_m4Weapons[weaponIndex].weapon == weapon
+        )
+        ||
+        (
+            ::DR_p90Weapons.rawin(weaponIndex)
+            && ::DR_p90Weapons[weaponIndex].weapon == weapon
         );
 
     if (!isSpecialWeapon)
@@ -2863,6 +2972,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_SpecialWeapon_OnWeaponFire", error);
     }
 };
 
@@ -2910,6 +3020,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_PAP_PlayPoweredFireSound", error);
     }
 };
 
@@ -3069,6 +3180,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
     }
     catch (e)
     {
+        ::DR_LogCaught("DR_KillEntitySafe", e);
     }
 };
 
@@ -3244,7 +3356,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
 
     DR_FireHandle(particle, "Start", "", 0.0, null, null);
 
-    // Particle de hit volontairement trÃƒÂ¨s courte.
+    // Particle de hit volontairement très courte.
     DR_FireHandle(particle, "Stop", "", 0.12, null, null);
     DR_FireHandle(particle, "Kill", "", 0.20, null, null);
 };
@@ -3316,7 +3428,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
     ::DR_LaserTP_SpawnHitParticle(hitPosition);
 
 
-    // TÃƒÂ©lÃƒÂ©portation.
+    // Téléportation.
     zombie.SetOrigin(destination.GetOrigin());
 
     local destAngles = destination.GetAngles();
@@ -3348,7 +3460,20 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
         if ("ice" in freeze)
             ::DR_KillEntitySafe(freeze.ice);
         ::DR_freezegunEffectStates.rawdelete(index);
+        // Still in the full stop: lift its attack block too.
+        try
+        {
+            if (freeze.player == zombie && freeze.speed <= 0.0
+                && NetProps.GetPropFloat(zombie, "m_flNextAttack") > Time())
+                NetProps.SetPropFloat(zombie, "m_flNextAttack", Time());
+        }
+        catch (error)
+        {
+            ::DR_LogCaught("DR_ZombieEffects_Clear", error);
+        }
     }
+    if (::DR_freezeImmunity.rawin(index))
+        ::DR_freezeImmunity.rawdelete(index);
 
     if (::DR_wunderwaffeShockStates.rawin(index))
     {
@@ -4061,6 +4186,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
 }
 
 ::DR_freezegunEffectStates.clear();
+::DR_freezeImmunity.clear();
 ::DR_Wunderwaffe_DestroyAllCharges();
 ::DR_Wunderwaffe_DestroyAllTempParticles();
 
@@ -4082,6 +4208,12 @@ if ("DR_AK_Reset" in getroottable())
 
 if ("DR_MP5_Reset" in getroottable())
     ::DR_MP5_Reset();
+
+if ("DR_M4_Reset" in getroottable())
+    ::DR_M4_Reset();
+
+if ("DR_P90_Reset" in getroottable())
+    ::DR_P90_Reset();
 
 if ("DR_DEAGLE_Reset" in getroottable())
     ::DR_DEAGLE_Reset();
@@ -4170,6 +4302,7 @@ if (!("DR_callbacks" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_FindPlayerForCleanup", error);
         }
     }
 
@@ -4325,6 +4458,10 @@ if (!("DR_callbacks" in getroottable()))
     if (!("userid" in params))
         return;
 
+    // ZR reports an infection as this death: the victim now wears its model.
+    if ("weapon" in params && params.weapon == "zombie_claws_of_death")
+        ::DR_PlayerModels_QueueQuick();
+
     local player =
         GetPlayerFromUserID(
             params.userid
@@ -4365,7 +4502,7 @@ if (!("DR_callbacks" in getroottable()))
     if ("DR_PerkDrink_Cancel" in getroottable())
         ::DR_PerkDrink_Cancel(player, true);
 
-    // Ces perks ne sont jamais sauvegardÃ©s par Tombstone.
+    // Ces perks ne sont jamais sauvegardés par Tombstone.
     if ("DR_SpeedCola_RemovePlayer" in getroottable())
         ::DR_SpeedCola_RemovePlayer(player);
 
@@ -4375,7 +4512,7 @@ if (!("DR_callbacks" in getroottable()))
     if ("DR_Juggernog_RemovePlayer" in getroottable())
         ::DR_Juggernog_RemovePlayer(player, false);
 
-    // Les items et armes spÃ©ciales sont encore prÃ©sents ici.
+    // Les items et armes spéciales sont encore présents ici.
     if ("DR_Tombstone_OnPlayerDeath" in getroottable())
         ::DR_Tombstone_OnPlayerDeath(player);
 
@@ -4602,6 +4739,14 @@ if (!("DR_callbacks" in getroottable()))
     if ("DR_Tombstone_OnRoundStart" in getroottable())
         ::DR_Tombstone_OnRoundStart();
 
+    if ("DR_PlayerModels_BeginRound" in getroottable())
+        ::DR_PlayerModels_BeginRound();
+
+    if ("DR_Diag_BeginRound" in getroottable())
+        ::DR_Diag_BeginRound();
+
+    if ("DR_BrushModels_Read" in getroottable())
+        ::DR_BrushModels_Read();
 };
 
 // --------------------------------------------------------------------------
@@ -4622,6 +4767,12 @@ if (!("DR_callbacks" in getroottable()))
     if ("DR_MP5_OnPlayerHurt" in getroottable())
         ::DR_MP5_OnPlayerHurt(params);
 
+    if ("DR_M4_OnPlayerHurt" in getroottable())
+        ::DR_M4_OnPlayerHurt(params);
+
+    if ("DR_P90_OnPlayerHurt" in getroottable())
+        ::DR_P90_OnPlayerHurt(params);
+
     if ("DR_DEAGLE_OnPlayerHurt" in getroottable())
         ::DR_DEAGLE_OnPlayerHurt(params);
 
@@ -4640,8 +4791,8 @@ if (!("DR_callbacks" in getroottable()))
     if ("DR_AK_OnWeaponFire" in getroottable())
         ::DR_AK_OnWeaponFire(params);
 
-    if ("DR_DoubleTap_OnWeaponFire" in getroottable())
-        ::DR_DoubleTap_OnWeaponFire(params);
+    if ("DR_FireRate_OnWeaponFire" in getroottable())
+        ::DR_FireRate_OnWeaponFire(params);
 
     if ("DR_SpecialWeapon_OnWeaponFire" in getroottable())
         ::DR_SpecialWeapon_OnWeaponFire(params);
@@ -4668,6 +4819,9 @@ if (!("DR_callbacks" in getroottable()))
 
     if ("DRZS_OnPlayerSpawn" in getroottable())
         ::DRZS_OnPlayerSpawn(params);
+
+    if ("DR_PlayerModels_OnSpawn" in getroottable())
+        ::DR_PlayerModels_OnSpawn(params);
 
     if ("userid" in params && "DRWB_SetSpawnAmmo" in getroottable())
     {
@@ -5509,6 +5663,9 @@ local spawnPos =
 
     if (step == 1)
     {
+        // The full stop is over: a block still in the queue must not appear,
+        // nothing would remove it.
+        data.iceQueued = false;
         if ("ice" in data)
         {
             ::DR_KillEntitySafe(data.ice);
@@ -5517,7 +5674,13 @@ local spawnPos =
     }
 
     if (step > restoreSpeeds.len())
+    {
         ::DR_freezegunEffectStates.rawdelete(zombieIndex);
+        if ("immunity" in data && data.immunity > 0.0)
+            ::DR_freezeImmunity[zombieIndex] <- {
+                player = zombie, until = Time() + data.immunity
+            };
+    }
     else
         data.speed = restoreSpeeds[step - 1];
 
@@ -5568,64 +5731,73 @@ local spawnPos =
         ::DR_FREEZEGUN_DAMAGE
     );
 
-    ::DR_freezegunEffectTokenIndex++;
-
-    local token =
-        ::DR_freezegunEffectTokenIndex;
-
-    if (::DR_freezegunEffectStates.rawin(zombieIndex))
-{
-    local oldData =
-        ::DR_freezegunEffectStates[zombieIndex];
-
-    if ("ice" in oldData)
-        ::DR_KillEntitySafe(oldData.ice);
-
-    ::DR_freezegunEffectStates.rawdelete(
-        zombieIndex
-    );
-}
-
-::DR_freezegunEffectStates[zombieIndex] <-
-{
-    token     = token,
-    player    = zombie,
-    ice       = null,
-    iceQueued = true,
-    speed     = 0.0
+    ::DR_Freeze_Start(zombie, ::DR_FREEZEGUN_FREEZE_DURATION,
+        ::DR_FREEZEGUN_THAW_DURATION, ::DR_FREEZEGUN_REFREEZE_LOCK, true);
 };
 
-    ::DR_Freezegun_ScheduleIceModel(
-        zombie,
-        zombieIndex,
-        1,
-        token
-    );
+// Freeze shared by the Winter's Howl and the M4A1 Ice: full stop with no
+// attack for freezeDuration, gradual thaw over thawDuration, then immunity.
+// A zombie already frozen, thawing or immune is not frozen again.
+::DR_Freeze_Start <- function(zombie, freezeDuration, thawDuration, immunity, withIce)
+{
+    if (zombie == null || !zombie.IsValid() || !zombie.IsPlayer()
+        || !zombie.IsAlive() || zombie.GetTeam() != 2 || zombie.GetHealth() <= 0)
+        return false;
 
+    local index = zombie.entindex();
+    if (::DR_freezegunEffectStates.rawin(index))
+    {
+        local old = ::DR_freezegunEffectStates[index];
+        if (old.player == zombie)
+            return false;
+        // Index reused by another player: drop the stale freeze.
+        if ("ice" in old)
+            ::DR_KillEntitySafe(old.ice);
+        ::DR_freezegunEffectStates.rawdelete(index);
+    }
+    if (::DR_freezeImmunity.rawin(index)
+        && ::DR_freezeImmunity[index].player == zombie
+        && Time() < ::DR_freezeImmunity[index].until)
+        return false;
+
+    ::DR_freezegunEffectTokenIndex++;
+    local token = ::DR_freezegunEffectTokenIndex;
+    ::DR_freezegunEffectStates[index] <- {
+        token = token, player = zombie, ice = null, iceQueued = withIce,
+        speed = 0.0, immunity = immunity
+    };
+
+    if (withIce)
+        ::DR_Freezegun_ScheduleIceModel(zombie, index, 1, token);
     ::DRZS_ResetZombieSpeed(zombie);
 
-    local restoreDelays =
-    [
-        5.0,
-        5.75,
-        6.5,
-        7.25,
-        8.0
-    ];
-
-    for (local i = 0; i < restoreDelays.len(); i++)
+    if (Time() >= ::DR_freezeSoundNextTime)
     {
-        local step = i + 1;
-
-        ::DR_Freezegun_QueueScriptCode(
-            "DR_Freezegun_EffectStep("
-                + zombieIndex + ","
-                + token + ","
-                + step
-                + ");",
-            restoreDelays[i]
-        );
+        ::DR_freezeSoundNextTime = Time() + ::DR_FREEZE_SOUND_INTERVAL;
+        ::DR_PlaySoundOnEntity(zombie, ::DR_SOUND_FREEZE_GLASS);
     }
+
+    // No knife attack while frozen: the engine skips weapon frames until
+    // m_flNextAttack, so the block ends by itself.
+    try
+    {
+        local until = Time() + freezeDuration;
+        if (NetProps.GetPropFloat(zombie, "m_flNextAttack") < until)
+            NetProps.SetPropFloat(zombie, "m_flNextAttack", until);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_Freeze_Start", error);
+    }
+
+    // Step 1 ends the full stop (ice removed), 2-4 thaw, 5 restores speed.
+    for (local step = 1; step <= 5; step++)
+    {
+        ::DR_Freezegun_QueueScriptCode("DR_Freezegun_EffectStep(" + index + ","
+            + token + "," + step + ");",
+            freezeDuration + thawDuration * (step - 1) / 4.0);
+    }
+    return true;
 };
 
 ::DR_Freezegun_DestroyZone <- function(zoneId)
@@ -6094,7 +6266,11 @@ local spawnPos =
     }
 
     if (data.rawin("iceQueued"))
+    {
+        if (!data.iceQueued)
+            return;
         data.iceQueued = false;
+    }
 
     data.ice = ::DR_Freezegun_CreateIceModel(zombie);
 };
@@ -6173,7 +6349,7 @@ local spawnPos =
         trigger,
         "Kill",
         "",
-        4.0,
+        ::DR_FREEZEGUN_ZONE_DURATION,
         null,
         null
     );
@@ -6448,49 +6624,48 @@ local spawnPos =
 // MONKEY BOMB - PULL
 // ============================================================================
 
-::DR_MonkeyBomb_PullTouch <- function()
+// Attraction: every tick the bomb pulls each living zombie whose hull
+// overlaps its zone (the disabled trigger's brush), without re-touching a
+// trigger. Dogs are not attracted (wanted); the explosion still hurts them.
+::DR_MONKEYBOMB_PULL_TICK <- 0.03;
+
+::DR_MonkeyBomb_PullThink <- function(bombId)
 {
-    local zombie =
-        activator;
-
-    local trigger =
-        caller;
-
-    if (zombie == null
-        || !zombie.IsValid()
-        || !zombie.IsPlayer()
-        || !zombie.IsAlive()
-        || zombie.GetTeam() != 2)
-    {
-        return;
-    }
-
-    if (trigger == null || !trigger.IsValid())
-        return;
-
-    trigger.ValidateScriptScope();
-
-    local scope =
-        trigger.GetScriptScope();
-
-    if (!("monkeyBombId" in scope))
-        return;
-
-    local bombId =
-        scope.monkeyBombId;
-
     if (!::DR_monkeyBombs.rawin(bombId))
         return;
-
-    local data =
-        ::DR_monkeyBombs[bombId];
-
-    if (!("armed" in data) || !data.armed)
+    local data = ::DR_monkeyBombs[bombId];
+    if (!("armed" in data) || !data.armed
+        || data.trigger == null || !data.trigger.IsValid())
         return;
 
-    local center =
-        trigger.GetOrigin();
+    local center = data.trigger.GetOrigin();
+    local zoneMins = center + data.trigger.GetBoundingMins();
+    local zoneMaxs = center + data.trigger.GetBoundingMaxs();
+    local zombie = null;
+    while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
+    {
+        if (!zombie.IsAlive() || zombie.GetTeam() != 2)
+            continue;
+        local index = zombie.entindex();
+        if (::DRZS_DOG_STATES.rawin(index) && ::DRZS_DOG_STATES[index].player == zombie
+            && ::DRZS_DOG_STATES[index].isDog)
+            continue;
+        local origin = zombie.GetOrigin();
+        local mins = origin + zombie.GetBoundingMins();
+        local maxs = origin + zombie.GetBoundingMaxs();
+        if (maxs.x < zoneMins.x || mins.x > zoneMaxs.x
+            || maxs.y < zoneMins.y || mins.y > zoneMaxs.y
+            || maxs.z < zoneMins.z || mins.z > zoneMaxs.z)
+            continue;
+        ::DR_MonkeyBomb_Pull(zombie, center);
+    }
 
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_MonkeyBomb_PullThink(" + bombId + ");", ::DR_MONKEYBOMB_PULL_TICK, null);
+};
+
+::DR_MonkeyBomb_Pull <- function(zombie, center)
+{
     local position =
         zombie.GetOrigin();
 
@@ -6617,7 +6792,7 @@ local spawnPos =
 
 // ============================================================================
 // MONKEY BOMB - ARM
-// AppelÃƒÂ©e une seconde aprÃƒÂ¨s le lancement.
+// Appelée une seconde après le lancement.
 // ============================================================================
 
 ::DR_MonkeyBomb_Arm <- function(bombId)
@@ -6702,7 +6877,7 @@ local spawnPos =
     monkey.SetOrigin(origin);
     data.origin = origin;
 
-    // Angle mondial fixe, indÃƒÂ©pendamment du lancer et du joueur.
+    // Angle mondial fixe, indépendamment du lancer et du joueur.
     monkey.SetAngles(
         0,
         0,
@@ -6728,13 +6903,10 @@ local spawnPos =
     );
 
     // ----------------------------------------------------------------------
-    // TRIGGER DÃ¢â‚¬â„¢ATTRACTION
+    // TRIGGER D’ATTRACTION
     // ----------------------------------------------------------------------
 
-    local touchOutput =
-        ::DR_SCRIPT_NAME
-        + ",RunScriptCode,DR_MonkeyBomb_PullTouch(),0,-1";
-
+    // Disabled brush: it only gives the zone to DR_MonkeyBomb_PullThink.
     local trigger =
         DR_Spawn(
             "trigger_multiple",
@@ -6744,12 +6916,7 @@ local spawnPos =
                 origin        = ::DR_KV3(origin),
                 spawnflags    = 1,
                 StartDisabled = 1,
-                wait          = 0.01,
-                filtername    = "filter_t",
-
-                "OnStartTouch#1": touchOutput,
-                "OnStartTouch#2": "!self,Disable,,0.00,-1",
-                "OnStartTouch#3": "!self,Enable,,0.01,-1"
+                filtername    = "filter_t"
             }
         );
 
@@ -6784,14 +6951,7 @@ local spawnPos =
     data.trigger = trigger;
     data.armed = true;
 
-    DR_FireHandle(
-        trigger,
-        "Enable",
-        "",
-        0.0,
-        null,
-        null
-    );
+    ::DR_MonkeyBomb_PullThink(bombId);
 
     // Six active seconds start once the monkey has landed.
     DR_Fire(
@@ -6821,10 +6981,10 @@ local spawnPos =
     local origin =
         data.origin;
 
-    // Bloque immÃƒÂ©diatement les nouveaux appels du trigger.
+    // Bloque immédiatement les nouveaux appels du trigger.
     data.armed = false;
 
-    // Le son part de la bombe avant la suppression de ses entitÃƒÂ©s.
+    // Le son part de la bombe avant la suppression de ses entités.
     if ("monkey" in data
         && data.monkey != null
         && data.monkey.IsValid())
@@ -6951,8 +7111,8 @@ local spawnPos =
 
 
 // ============================================================================
-// MONKEY BOMB - SUPPRESSION FORCÃƒâ€°E
-// UtilisÃƒÂ©e pendant un reset de manche.
+// MONKEY BOMB - SUPPRESSION FORCÉE
+// Utilisée pendant un reset de manche.
 // ============================================================================
 
 ::DR_MonkeyBomb_Destroy <- function(bombId)
@@ -7237,7 +7397,7 @@ local spawnPos =
     local scope =
         player.GetScriptScope();
 
-    // EmpÃƒÂªche le E du ramassage dÃ¢â‚¬â„¢utiliser immÃƒÂ©diatement lÃ¢â‚¬â„¢item.
+    // Empêche le E du ramassage d’utiliser immédiatement l’item.
     scope.drMonkeyBombLastButtons <-
         NetProps.GetPropInt(
             player,
@@ -7267,7 +7427,7 @@ local spawnPos =
 
 // ============================================================================
 // WUNDERWAFFE - FIND NEAREST ZOMBIE
-// Aucun trigger n'est crÃƒÂ©ÃƒÂ© pour la propagation.
+// Aucun trigger n'est créé pour la propagation.
 // ============================================================================
 
 ::DR_Wunderwaffe_FindNextTarget <- function(
@@ -7440,6 +7600,7 @@ local spawnPos =
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_Wunderwaffe_ApplyDamage", error);
     }
 
     if (health < 0)
@@ -7495,6 +7656,7 @@ local spawnPos =
         }
         catch (fallbackError)
         {
+            ::DR_LogCaught("DR_Wunderwaffe_ApplyDamage#2", fallbackError);
         }
     }
 
@@ -7552,6 +7714,7 @@ local spawnPos =
     }
     catch (e)
     {
+        ::DR_LogCaught("DR_Wunderwaffe_StopParticle", e);
     }
 };
 
@@ -8486,7 +8649,7 @@ local spawnPos =
         return false;
     }
 
-    // Le modÃƒÂ¨le reste prÃƒÂ©sent tant que le dernier faisceau existe.
+    // Le modèle reste présent tant que le dernier faisceau existe.
     if (data.charges <= 0)
         return false;
 
@@ -8525,7 +8688,7 @@ local spawnPos =
         );
 
         // Pas de RemoveItem ici :
-        // le modÃƒÂ¨le disparaÃƒÂ®tra aprÃƒÂ¨s le dernier faisceau.
+        // le modèle disparaîtra après le dernier faisceau.
     }
 
     return true;
@@ -8818,6 +8981,7 @@ reserve =
             catch (error)
             {
 
+                ::DR_LogCaught("DR_TMP_HandleMagazine", error);
             }
         }
 
@@ -8830,101 +8994,6 @@ reserve =
 };
 
 
-// --------------------------------------------------------------------------
-// RAPID FIRE
-// --------------------------------------------------------------------------
-
-::DR_TMP_ApplyRapidFire <- function(player, weapon, data)
-{
-    local buttons = 0;
-
-    try
-    {
-        buttons =
-            NetProps.GetPropInt(
-                player,
-                "m_nButtons"
-            );
-    }
-    catch (error)
-    {
-        return;
-    }
-
-
-    // IN_ATTACK
-    if ((buttons & 1) == 0)
-        return;
-
-
-    local now = Time();
-    local nextAttack = 0.0;
-
-    try
-    {
-        nextAttack =
-            NetProps.GetPropFloat(
-                weapon,
-                "m_flNextPrimaryAttack"
-            );
-    }
-    catch (error)
-    {
-        return;
-    }
-
-
-    if (nextAttack <= now)
-        return;
-
-
-    // EmpÃƒÂªche de rÃƒÂ©duire plusieurs fois le dÃƒÂ©lai du mÃƒÂªme tir.
-    local difference =
-        nextAttack - data.lastProcessedNextAttack;
-
-    if (difference < 0.0)
-        difference = -difference;
-
-    if (difference <= 0.0001)
-        return;
-
-
-    local remaining =
-        nextAttack - now;
-
-    local fireRateMultiplier =
-        ::DR_TMP_FIRE_RATE_MULTIPLIER;
-
-    if ("DR_DoubleTap_PlayerHasPerk" in getroottable()
-        && ::DR_DoubleTap_PlayerHasPerk(player))
-    {
-        fireRateMultiplier *=
-            ::DR_DOUBLETAP_FIRE_RATE_MULTIPLIER;
-    }
-
-    local modifiedNextAttack =
-        now +
-        (
-            remaining /
-            fireRateMultiplier
-        );
-
-
-    try
-    {
-        NetProps.SetPropFloat(
-            weapon,
-            "m_flNextPrimaryAttack",
-            modifiedNextAttack
-        );
-
-        data.lastProcessedNextAttack =
-            modifiedNextAttack;
-    }
-    catch (error)
-    {
-    }
-};
 
 
 // --------------------------------------------------------------------------
@@ -8979,12 +9048,8 @@ reserve =
             continue;
         }
 
+        // Its x1.25 fire rate is applied by DR_FireRate_Think.
         ::DR_TMP_HandleMagazine(
-            player,
-            weapon,
-            data
-        );
-        ::DR_TMP_ApplyRapidFire(
             player,
             weapon,
             data
@@ -9081,6 +9146,7 @@ reserve =
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_TMP_RegisterWeapon", error);
         }
 
 
@@ -9331,6 +9397,7 @@ if (!("DR_TMP_PRIMARY_CLASSES" in getroottable()))
                 3,
                 "\x0700FFFF[Bulletstorm TMP] RAPID FIRE + 120-ROUND MAG"
             );
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
         }
 
         return;
@@ -9373,7 +9440,7 @@ if (equip == null || !equip.IsValid())
 ::DRSAFE_QueueEquip(player, equip, 0.05);
 
 
-    // RÃƒÂ©cupÃƒÂ¨re lÃ¢â‚¬â„¢entitÃƒÂ© exacte de la nouvelle TMP.
+    // Récupère l’entité exacte de la nouvelle TMP.
     ::DRSAFE_QueueCode(player.entindex(), "DR_TMP_RegisterAfterGive(" +
             player.entindex() +
             ",5);", 0.10);
@@ -9763,6 +9830,7 @@ if (equip == null || !equip.IsValid())
                 3,
                 "\x0700FFFF[M3 Shockwave] HIGH-IMPACT ROUNDS"
             );
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
         }
 
 
@@ -9795,7 +9863,7 @@ if (equip == null || !equip.IsValid())
         return false;
 
 
-    // RÃƒÂ©utilise la fonction qui supprime uniquement lÃ¢â‚¬â„¢arme principale.
+    // Réutilise la fonction qui supprime uniquement l’arme principale.
     ::DR_TMP_RemovePrimaryWeapon(
         player
     );
@@ -9987,7 +10055,7 @@ if (equip == null || !equip.IsValid())
         zombie.entindex();
 
 
-    // Le feu reste appliquÃƒÂ©, mais Hellfire ne remplace pas
+    // Le feu reste appliqué, mais Hellfire ne remplace pas
     // le Freezegun ou la Wunderwaffe.
     if (::DR_AK_HasStrongerEffect(zombieIndex))
         return;
@@ -10183,7 +10251,7 @@ if (equip == null || !equip.IsValid())
         return;
 
 
-    // Si le champ existe, refuse les dÃƒÂ©gÃƒÂ¢ts secondaires du feu.
+    // Si le champ existe, refuse les dégâts secondaires du feu.
     if ("weapon" in params)
     {
         local eventWeapon =
@@ -10233,7 +10301,7 @@ if (equip == null || !equip.IsValid())
     }
 
 
-    // EmpÃƒÂªche une mÃƒÂªme balle dÃ¢â‚¬â„¢ÃƒÂªtre comptÃƒÂ©e plusieurs fois.
+    // Empêche une même balle d’être comptée plusieurs fois.
     data.shotOpen = false;
     data.successfulHits++;
 
@@ -10365,8 +10433,9 @@ if (equip == null || !equip.IsValid())
             ClientPrint(
                 player,
                 3,
-                "\x07FF4500[AK-47 Napalm] NAPALM BURST EVERY 5 HITS"
+                "\x07FF4500[AK-47 Napalm] NAPALM BURST EVERY 8 HITS"
             );
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
         }
 
 
@@ -10591,13 +10660,13 @@ if (equip == null || !equip.IsValid())
         zombie.GetOrigin();
 
 
-    // La particule reste Ãƒ  lÃ¢â‚¬â„¢ancienne position.
+    // La particule reste à l’ancienne position.
     ::DR_MP5_PlayTeleportParticle(
         departurePosition
     );
 
 
-    // TÃ©lÃ©portation vers la destination fixe de la map.
+    // Téléportation vers la destination fixe de la map.
     zombie.SetOrigin(
         destinationEntity.GetOrigin()
     );
@@ -10632,7 +10701,7 @@ if (equip == null || !equip.IsValid())
     }
 
 
-    // Ãƒâ€°vite de compter une grenade ou une autre source de dÃƒÂ©gÃƒÂ¢ts
+    // Évite de compter une grenade ou une autre source de dégâts
     // pendant que le joueur tient son MP5.
     if ("weapon" in params)
     {
@@ -10730,7 +10799,7 @@ if (equip == null || !equip.IsValid())
         weaponData.combos[zombieIndex];
 
 
-    // Le zombie ou lÃ¢â‚¬â„¢ancien ÃƒÂ©tat nÃ¢â‚¬â„¢est plus valide.
+    // Le zombie ou l’ancien état n’est plus valide.
     if (combo.zombie == null
         || !combo.zombie.IsValid()
         || combo.zombie != zombie)
@@ -10745,7 +10814,7 @@ if (equip == null || !equip.IsValid())
     }
 
 
-    // Les 3 secondes sont dÃƒÂ©passÃƒÂ©es :
+    // Les 3 secondes sont dépassées :
     // cet impact devient le nouveau premier impact.
     if (now - combo.startTime
         > ::DR_MP5_COMBO_WINDOW)
@@ -10770,7 +10839,7 @@ if (equip == null || !equip.IsValid())
     }
 
 
-    // Supprime dÃ¢â‚¬â„¢abord la sÃƒÂ©quence terminÃƒÂ©e.
+    // Supprime d’abord la séquence terminée.
     weaponData.combos.rawdelete(
         zombieIndex
     );
@@ -10890,6 +10959,7 @@ if (equip == null || !equip.IsValid())
                 3,
                 "\x0700FFFF[MP5 Teleporter] 10 HITS = TELEPORT"
             );
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
         }
 
 
@@ -10953,6 +11023,506 @@ if (equip == null || !equip.IsValid())
 ::DR_MP5_Reset <- function()
 {
     ::DR_mp5Weapons.clear();
+};
+
+// ============================================================================
+// M4A1 ICE / P90 ADRENALINE (Mystery Box special weapons)
+//
+// M4A1 Ice: same logic as the AK-47 Napalm. Every 8 hits (5 when
+// Pack-a-Punched), on any zombie, a burst damages and freezes the zombies
+// around the last one hit (no attack, ice block).
+// P90 Adrenaline: counts impacts on one zombie like the MP5. Speed and fire
+// rate for the shooter, 3 levels, and the magazine is fed from the reserve
+// while the effect lasts.
+// ============================================================================
+
+::DR_M4_HITS_REQUIRED <- 8;
+::DR_PAP_M4_HITS_REQUIRED <- 5;
+::DR_M4_BURST_RADIUS <- 64.0;
+::DR_M4_FREEZE_DURATION <- 2.0;
+::DR_PAP_M4_FREEZE_DURATION <- 3.0;
+::DR_M4_THAW_DURATION <- 1.0;
+::DR_M4_IMMUNITY <- 0.0;
+::DR_M4_BURST_DAMAGE <- 500.0;
+::DR_M4_EVENT_NAMES <- {m4a1 = true, weapon_m4a1 = true};
+
+// Impacts on the same zombie (within the combo window) to reach level 1, 2
+// and 3; at level 3 the last value also renews the effect.
+::DR_P90_HITS_PER_LEVEL <- [10, 15, 20];
+::DR_PAP_P90_HITS_PER_LEVEL <- [5, 8, 10];
+::DR_P90_COMBO_WINDOW <- 3.0;
+::DR_P90_DURATION <- 3.0;
+::DR_PAP_P90_DURATION <- 4.0;
+// Per level: player speed and P90 fire rate multipliers. A new trigger
+// during the effect climbs one level and restarts the duration. Level 3
+// fires like the TMP Bulletstorm (x1.25); Double Tap and Pack-a-Punch
+// multiply it once (DR_FireRate_GetMultiplier).
+::DR_P90_LEVELS <- [
+    {speed = 1.20, fireRate = 1.10},
+    {speed = 1.25, fireRate = 1.18},
+    {speed = 1.30, fireRate = 1.25}
+];
+// Level 3 stays just under the dogs' speed.
+::DR_PAP_P90_LEVELS <- [
+    {speed = 1.35, fireRate = 1.10},
+    {speed = 1.39, fireRate = 1.18},
+    {speed = 1.42, fireRate = 1.25}
+];
+::DR_P90_TICK <- 0.03;
+::DR_P90_EVENT_NAMES <- {p90 = true, weapon_p90 = true};
+
+if (!("DR_m4Weapons" in getroottable()))
+    ::DR_m4Weapons <- {};
+if (!("DR_p90Weapons" in getroottable()))
+    ::DR_p90Weapons <- {};
+if (!("DR_p90Adrenaline" in getroottable()))
+    ::DR_p90Adrenaline <- {};
+if (!("DR_p90ThinkToken" in getroottable()))
+    ::DR_p90ThinkToken <- 0;
+::DR_p90ThinkRunning <- false;
+
+// --------------------------------------------------------------------------
+// SHARED: REGISTRY, EQUIPMENT, IMPACT COUNTER
+// --------------------------------------------------------------------------
+
+::DR_SpecialWeapon_Register <- function(registry, classname, player, weapon)
+{
+    if (!::DR_IsValidHuman(player) || weapon == null || !weapon.IsValid()
+        || weapon.GetClassname() != classname)
+        return false;
+
+    local weaponIndex = weapon.entindex();
+    // Braces needed: Squirrel does not attach an else to an if whose single
+    // statement ends with a table literal.
+    if (!registry.rawin(weaponIndex) || registry[weaponIndex].weapon != weapon)
+    {
+        registry[weaponIndex] <- {weapon = weapon, owner = player, combos = {}};
+    }
+    else
+        registry[weaponIndex].owner = player;
+    return true;
+};
+
+::DR_SpecialWeapon_GetEquip <- function(name, classname)
+{
+    local equip = Entities.FindByName(null, name);
+    if (equip != null && equip.IsValid())
+        return equip;
+
+    local keys = {targetname = name, spawnflags = 1};
+    keys[classname] <- 1;
+    return DR_Spawn("game_player_equip", keys);
+};
+
+// Tombstone and Pack-a-Punch deliveries: register the weapon once it exists.
+::DR_SpecialWeapon_RegisterAfterGive <- function(playerIndex, attemptsRemaining,
+    classname, registerFunction, retryFunction)
+{
+    local player = EntIndexToHScript(playerIndex);
+    if (!::DR_IsValidHuman(player))
+        return;
+
+    local weapon = ::DRWB_FindOwnedWeapon(player, classname);
+    if (weapon != null && weapon.IsValid())
+    {
+        if (getroottable()[registerFunction](player, weapon))
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
+        return;
+    }
+
+    if (attemptsRemaining > 0)
+        ::DRSAFE_QueueCode(playerIndex, retryFunction + "(" + playerIndex + ","
+            + (attemptsRemaining - 1) + ");", 0.05);
+};
+
+// Counts the impacts of a registered special weapon on each zombie (one
+// combo per zombie, reset after the window). Returns the hit when the count
+// is reached, else null.
+::DR_SpecialWeapon_CountHit <- function(registry, eventNames, params, hitsNormal,
+    hitsPap, window, requireLiving)
+{
+    // Wonder weapon damage is not a bullet from the held weapon.
+    if (::DR_SCRIPT_DAMAGE_DEPTH > 0
+        || !("userid" in params) || !("attacker" in params))
+        return null;
+    if ("weapon" in params && !eventNames.rawin(params.weapon))
+        return null;
+
+    local zombie = GetPlayerFromUserID(params.userid);
+    local attacker = GetPlayerFromUserID(params.attacker);
+    if (zombie == null || !zombie.IsValid() || !zombie.IsPlayer()
+        || !zombie.IsAlive() || zombie.GetTeam() != 2
+        || (requireLiving && zombie.GetHealth() <= 0))
+        return null;
+    if (!::DR_IsValidHuman(attacker) || attacker == zombie)
+        return null;
+
+    local weapon = ::DR_TMP_GetActiveWeapon(attacker);
+    if (weapon == null || !weapon.IsValid())
+        return null;
+    local weaponIndex = weapon.entindex();
+    if (!registry.rawin(weaponIndex))
+        return null;
+    local data = registry[weaponIndex];
+    if (data.weapon != weapon)
+    {
+        registry.rawdelete(weaponIndex);
+        return null;
+    }
+    data.owner = attacker;
+
+    local zombieIndex = zombie.entindex();
+    local now = Time();
+    if (!data.combos.rawin(zombieIndex)
+        || data.combos[zombieIndex].zombie != zombie
+        || now - data.combos[zombieIndex].startTime > window)
+    {
+        data.combos[zombieIndex] <- {zombie = zombie, hits = 1, startTime = now};
+        return null;
+    }
+
+    local combo = data.combos[zombieIndex];
+    combo.hits++;
+    local pap = ::DR_PAP_GetWeaponFlag(weapon) != null;
+    if (combo.hits < (pap ? hitsPap : hitsNormal))
+        return null;
+
+    data.combos.rawdelete(zombieIndex);
+    return {attacker = attacker, zombie = zombie, weapon = weapon, pap = pap};
+};
+
+// --------------------------------------------------------------------------
+// M4A1 ICE
+// --------------------------------------------------------------------------
+
+::DR_M4_RegisterWeapon <- function(player, weapon)
+{
+    if (!::DR_SpecialWeapon_Register(::DR_m4Weapons, "weapon_m4a1", player, weapon))
+        return false;
+    ClientPrint(player, 3, "\x0700BFFF[M4A1 Ice] ICE BURST EVERY 8 HITS (5 PaP)");
+    return true;
+};
+
+::DR_M4_GetEquipEntity <- function()
+{
+    return ::DR_SpecialWeapon_GetEquip("dr_equip_m4_ice", "weapon_m4a1");
+};
+
+::DR_M4_RegisterAfterGive <- function(playerIndex, attemptsRemaining = 5)
+{
+    ::DR_SpecialWeapon_RegisterAfterGive(playerIndex, attemptsRemaining,
+        "weapon_m4a1", "DR_M4_RegisterWeapon", "DR_M4_RegisterAfterGive");
+};
+
+// Same rule as DR_AK_Explode in a smaller area. A zombie already frozen takes
+// the damage but keeps its current freeze.
+::DR_M4_Burst <- function(origin, attacker, duration)
+{
+    local radiusSquared = ::DR_M4_BURST_RADIUS * ::DR_M4_BURST_RADIUS;
+    local zombie = null;
+    while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
+    {
+        if (!zombie.IsValid() || !zombie.IsPlayer()
+            || !zombie.IsAlive() || zombie.GetTeam() != 2)
+            continue;
+
+        local difference = zombie.GetOrigin() + Vector(0, 0, 36) - origin;
+        if (difference.x * difference.x + difference.y * difference.y
+            + difference.z * difference.z > radiusSquared)
+            continue;
+
+        // Damage first: DR_Freeze_Start ignores a zombie this burst killed.
+        ::DR_SpecialWeapon_ApplyDamage(zombie, attacker, ::DR_M4_BURST_DAMAGE);
+        ::DR_Freeze_Start(zombie, duration, ::DR_M4_THAW_DURATION,
+            ::DR_M4_IMMUNITY, true);
+    }
+};
+
+::DR_M4_OnPlayerHurt <- function(params)
+{
+    // Wonder weapon damage is not a bullet from the held weapon.
+    if (::DR_SCRIPT_DAMAGE_DEPTH > 0
+        || !("userid" in params) || !("attacker" in params))
+        return;
+    if ("weapon" in params && !::DR_M4_EVENT_NAMES.rawin(params.weapon))
+        return;
+
+    local zombie = GetPlayerFromUserID(params.userid);
+    local attacker = GetPlayerFromUserID(params.attacker);
+    if (zombie == null || !zombie.IsValid() || !zombie.IsPlayer()
+        || !zombie.IsAlive() || zombie.GetTeam() != 2)
+        return;
+    if (!::DR_IsValidHuman(attacker))
+        return;
+
+    local weapon = ::DR_TMP_GetActiveWeapon(attacker);
+    if (weapon == null || !weapon.IsValid())
+        return;
+    local weaponIndex = weapon.entindex();
+    if (!::DR_m4Weapons.rawin(weaponIndex)
+        || ::DR_m4Weapons[weaponIndex].weapon != weapon)
+        return;
+    local data = ::DR_m4Weapons[weaponIndex];
+    data.owner = attacker;
+
+    if (!("burstHits" in data))
+    {
+        data.burstHits <- 0;
+        data.lastHitTime <- -1.0;
+    }
+
+    // One bullet through several zombies hurts them in the same tick.
+    local now = Time();
+    if (data.lastHitTime == now)
+        return;
+    data.lastHitTime = now;
+
+    local pap = ::DR_PAP_GetWeaponFlag(weapon) != null;
+    data.burstHits++;
+    if (data.burstHits < (pap ? ::DR_PAP_M4_HITS_REQUIRED : ::DR_M4_HITS_REQUIRED))
+        return;
+    data.burstHits = 0;
+
+    ::DR_M4_Burst(zombie.GetOrigin() + Vector(0, 0, 36), attacker,
+        pap ? ::DR_PAP_M4_FREEZE_DURATION : ::DR_M4_FREEZE_DURATION);
+};
+
+::DR_M4_Reset <- function()
+{
+    ::DR_m4Weapons.clear();
+};
+
+// --------------------------------------------------------------------------
+// P90 ADRENALINE
+// --------------------------------------------------------------------------
+
+::DR_P90_RegisterWeapon <- function(player, weapon)
+{
+    if (!::DR_SpecialWeapon_Register(::DR_p90Weapons, "weapon_p90", player, weapon))
+        return false;
+    ClientPrint(player, 3,
+        "\x07FF8C00[P90 Adrenaline] 10 / 15 / 20 HITS (5 / 8 / 10 PaP) = SPEED + FIRE RATE");
+    return true;
+};
+
+::DR_P90_GetEquipEntity <- function()
+{
+    return ::DR_SpecialWeapon_GetEquip("dr_equip_p90_adrenaline", "weapon_p90");
+};
+
+::DR_P90_RegisterAfterGive <- function(playerIndex, attemptsRemaining = 5)
+{
+    ::DR_SpecialWeapon_RegisterAfterGive(playerIndex, attemptsRemaining,
+        "weapon_p90", "DR_P90_RegisterWeapon", "DR_P90_RegisterAfterGive");
+};
+
+::DR_P90_GetLevel <- function(state)
+{
+    return (state.pap ? ::DR_PAP_P90_LEVELS : ::DR_P90_LEVELS)[state.level - 1];
+};
+
+
+::DR_P90_OnPlayerHurt <- function(params)
+{
+    // Impacts needed for the next level: the shooter's current level while
+    // the effect lasts on the P90 in hand, else level 1's count.
+    local level = 0;
+    if ("attacker" in params)
+    {
+        local attacker = GetPlayerFromUserID(params.attacker);
+        if (attacker != null && attacker.IsValid()
+            && ::DR_p90Adrenaline.rawin(attacker.entindex()))
+        {
+            local state = ::DR_p90Adrenaline[attacker.entindex()];
+            if (state.player == attacker && state.until > Time()
+                && state.weapon == ::DR_TMP_GetActiveWeapon(attacker))
+                level = state.level;
+        }
+    }
+    local step = level < ::DR_P90_HITS_PER_LEVEL.len()
+        ? level : ::DR_P90_HITS_PER_LEVEL.len() - 1;
+
+    // The impact that kills the zombie still counts.
+    local hit = ::DR_SpecialWeapon_CountHit(::DR_p90Weapons, ::DR_P90_EVENT_NAMES,
+        params, ::DR_P90_HITS_PER_LEVEL[step], ::DR_PAP_P90_HITS_PER_LEVEL[step],
+        ::DR_P90_COMBO_WINDOW, false);
+    if (hit != null)
+        ::DR_P90_Trigger(hit.attacker, hit.weapon, hit.pap);
+};
+
+::DR_P90_Trigger <- function(player, weapon, pap)
+{
+    local index = player.entindex();
+    local state = null;
+    if (::DR_p90Adrenaline.rawin(index))
+    {
+        state = ::DR_p90Adrenaline[index];
+        if (state.player != player || state.weapon != weapon || state.pap != pap)
+            state = null;
+    }
+    if (state == null)
+    {
+        state = {player = player, weapon = weapon, pap = pap, level = 0, until = 0.0};
+        ::DR_p90Adrenaline[index] <- state;
+    }
+
+    local levels = pap ? ::DR_PAP_P90_LEVELS : ::DR_P90_LEVELS;
+    local levelUp = state.level < levels.len();
+    if (levelUp)
+        state.level++;
+    state.until = Time() + (pap ? ::DR_PAP_P90_DURATION : ::DR_P90_DURATION);
+
+    ::DR_P90_FillClip(player, weapon);
+    ::DR_P90_ApplySpeed(player, state);
+
+    if (levelUp)
+    {
+        ::DR_PlaySoundOnEntity(player, ::DR_SOUND_MP5_CHARGE);
+        ClientPrint(player, 3, "\x07FF8C00[P90 Adrenaline] LEVEL " + state.level
+            + ": +" + ((::DR_P90_GetLevel(state).speed - 1.0) * 100.0 + 0.5).tointeger()
+            + "% SPEED");
+    }
+
+    if (!::DR_p90ThinkRunning)
+    {
+        ::DR_p90ThinkRunning = true;
+        ::DR_p90ThinkToken++;
+        DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+            "DR_P90_Think(" + ::DR_p90ThinkToken + ");", ::DR_P90_TICK, null);
+    }
+};
+
+// While the effect lasts the magazine stays full: each shot comes from the
+// reserve, and a reload in progress ends at once (nothing left to load).
+::DR_P90_FillClip <- function(player, weapon)
+{
+    try
+    {
+        local clip = NetProps.GetPropInt(weapon, "m_iClip1");
+        local full = weapon.GetMaxClip1();
+        if (full <= 0)
+            full = 50;
+        local ammoType = NetProps.GetPropInt(weapon, "m_iPrimaryAmmoType");
+        local reserve = NetProps.GetPropIntArray(player, "m_iAmmo", ammoType);
+        local moved = full - clip;
+        if (moved > reserve)
+            moved = reserve;
+        if (moved > 0)
+        {
+            clip += moved;
+            NetProps.SetPropInt(weapon, "m_iClip1", clip);
+            NetProps.SetPropIntArray(player, "m_iAmmo", reserve - moved, ammoType);
+        }
+        if (clip > 0 && NetProps.GetPropInt(weapon, "m_bInReload") != 0)
+        {
+            local now = Time();
+            NetProps.SetPropFloat(player, "m_flNextAttack", now);
+            NetProps.SetPropFloat(weapon, "m_flNextPrimaryAttack", now);
+        }
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_P90_FillClip", error);
+    }
+};
+
+::DR_P90_ApplySpeed <- function(player, state)
+{
+    // The perk drink immobilizes the player and keeps priority.
+    local index = player.entindex();
+    if (::DR_perkDrinkStates.rawin(index)
+        && ::DR_perkDrinkStates[index].player == player)
+        return;
+
+    local speed = ::DR_P90_GetLevel(state).speed;
+    try
+    {
+        if (fabs(NetProps.GetPropFloat(player, "m_flLaggedMovementValue") - speed) > 0.001)
+            NetProps.SetPropFloat(player, "m_flLaggedMovementValue", speed);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_P90_ApplySpeed", error);
+    }
+};
+
+::DR_P90_End <- function(index)
+{
+    if (!::DR_p90Adrenaline.rawin(index))
+        return;
+
+    local player = ::DR_p90Adrenaline[index].player;
+    ::DR_p90Adrenaline.rawdelete(index);
+
+    // Humans only (alive or dead): a zombie's speed belongs to the rounds.
+    if (!::DR_IsValidPlayer(player) || player.GetTeam() != 3
+        || (::DR_perkDrinkStates.rawin(index)
+            && ::DR_perkDrinkStates[index].player == player))
+        return;
+    try
+    {
+        NetProps.SetPropFloat(player, "m_flLaggedMovementValue",
+            ::DR_PERK_DRINK_NORMAL_SPEED);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_P90_End", error);
+    }
+};
+
+::DR_P90_Think <- function(token)
+{
+    if (!::DR_p90ThinkRunning || token != ::DR_p90ThinkToken)
+        return;
+
+    local now = Time();
+    local ended = [];
+    foreach (index, state in ::DR_p90Adrenaline)
+    {
+        local player = state.player;
+        local weapon = state.weapon;
+        // Ends with time, death, infection, or when the P90 leaves the
+        // inventory (dropped, replaced, given to the Pack-a-Punch).
+        if (!::DR_IsValidHuman(player) || now >= state.until
+            || weapon == null || !weapon.IsValid()
+            || NetProps.GetPropEntity(weapon, "m_hOwnerEntity") != player)
+        {
+            ended.append(index);
+            continue;
+        }
+
+        // Speed holds with any weapon in hand; the magazine only concerns the
+        // P90 itself (its fire rate is applied by DR_FireRate_Think).
+        ::DR_P90_ApplySpeed(player, state);
+        if (::DR_TMP_GetActiveWeapon(player) != weapon)
+            continue;
+        ::DR_P90_FillClip(player, weapon);
+    }
+
+    foreach (index in ended)
+        ::DR_P90_End(index);
+
+    if (::DR_p90Adrenaline.len() == 0)
+    {
+        ::DR_p90ThinkRunning = false;
+        return;
+    }
+
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_P90_Think(" + token + ");", ::DR_P90_TICK, null);
+};
+
+::DR_P90_Reset <- function()
+{
+    local indexes = [];
+    foreach (index, state in ::DR_p90Adrenaline)
+        indexes.append(index);
+    foreach (index in indexes)
+        ::DR_P90_End(index);
+
+    ::DR_p90Weapons.clear();
+    ::DR_p90ThinkToken++;
+    ::DR_p90ThinkRunning = false;
 };
 
 // ============================================================================
@@ -11183,7 +11753,7 @@ if (equip == null || !equip.IsValid())
         weaponData.nextMarkTime <- 0.0;
 
 
-    // Ce Deagle possÃƒÂ¨de dÃƒÂ©jÃƒ  une autre cible.
+    // Ce Deagle possède déjà une autre cible.
     if (weaponData.markedZombieIndex != -1
         && weaponData.markedZombieIndex != zombieIndex)
     {
@@ -11299,8 +11869,8 @@ if (equip == null || !equip.IsValid())
         zombie.entindex();
 
 
-    // Une nouvelle activation sur le mÃƒÂªme Nemesis
-    // remplace et rÃƒÂ©initialise lÃ¢â‚¬â„¢ancienne.
+    // Une nouvelle activation sur le même Nemesis
+    // remplace et réinitialise l’ancienne.
     ::DR_DEAGLE_StopActiveEffect(
         zombieIndex
     );
@@ -11335,7 +11905,7 @@ if (equip == null || !equip.IsValid())
     };
 
 
-    // Immobilisation immÃƒÂ©diate.
+    // Immobilisation immédiate.
     zombie.SetOrigin(anchorPosition);
 
     zombie.SetVelocity(
@@ -11554,8 +12124,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
             data.anchor;
 
 
-        // Le Nemesis marquÃƒÂ© reste exactement
-        // Ãƒ  la position du deuxiÃƒÂ¨me impact.
+        // Le Nemesis marqué reste exactement
+        // à la position du deuxième impact.
         if (anchored)
         {
             target.SetOrigin(center);
@@ -11601,8 +12171,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
                 zombie.entindex();
 
 
-            // Un autre Nemesis servant dÃƒÂ©jÃƒ  de centre
-            // ne peut pas ÃƒÂªtre dÃƒÂ©placÃƒÂ©.
+            // Un autre Nemesis servant déjà de centre
+            // ne peut pas être déplacé.
             if (
                 ::DR_deagleActiveStates.rawin(
                     pulledIndex
@@ -11613,8 +12183,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
             }
 
 
-            // Un vÃƒÂ©ritable gel ou choc ÃƒÂ©lectrique
-            // reste prioritaire sur lÃ¢â‚¬â„¢attraction.
+            // Un véritable gel ou choc électrique
+            // reste prioritaire sur l’attraction.
             if (
                 (
                     "DR_freezegunEffectStates"
@@ -11721,7 +12291,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
             ::DR_deagleWeapons[weaponIndex];
 
 
-        // Protection contre la rÃƒÂ©utilisation dÃ¢â‚¬â„¢un entindex.
+        // Protection contre la réutilisation d’un entindex.
         if (oldData.weapon != weapon)
         {
             local markedZombies = [];
@@ -11932,11 +12502,11 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
 
     // --------------------------------------------------------------
-    // AUTRE ZOMBIE TRAVERSÃƒâ€° PAR LA BALLE
+    // AUTRE ZOMBIE TRAVERSÉ PAR LA BALLE
     // --------------------------------------------------------------
 
-    // Une seule cible peut ÃƒÂªtre marquÃƒÂ©e par ce Deagle.
-    // Tous les autres impacts sont ignorÃƒÂ©s.
+    // Une seule cible peut être marquée par ce Deagle.
+    // Tous les autres impacts sont ignorés.
     if (weaponData.markedZombieIndex
         != zombieIndex)
     {
@@ -11945,7 +12515,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
 
     // --------------------------------------------------------------
-    // VÃƒâ€°RIFICATION DE LA MARQUE
+    // VÉRIFICATION DE LA MARQUE
     // --------------------------------------------------------------
 
     if (!weaponData.marks.rawin(zombieIndex))
@@ -11974,7 +12544,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
 
     // --------------------------------------------------------------
-    // DEUXIÃƒË†ME IMPACT SUR LA BONNE CIBLE
+    // DEUXIÈME IMPACT SUR LA BONNE CIBLE
     // --------------------------------------------------------------
 
     ::DR_PlaySoundOnEntity(
@@ -12286,6 +12856,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
                 3,
                 "\x0700FFFF[Gravity Deagle] MARK + DETONATE = 5s GRAVITY WELL"
             );
+            ::DR_SpecialWeapon_FillReserve(player, weapon);
         }
 
 
@@ -12317,7 +12888,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         return false;
 
 
-    // Le Deagle remplace uniquement lÃ¢â‚¬â„¢arme secondaire.
+    // Le Deagle remplace uniquement l’arme secondaire.
     ::DR_DEAGLE_RemoveSecondaryWeapon(
         player
     );
@@ -12427,27 +12998,6 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 // SPEED COLA SYSTEM
 // ============================================================================
 
-::DR_SpeedCola_GetMoney <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropInt(
-            player,
-            "m_iAccount"
-        );
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-
-::DR_SpeedCola_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
-
 ::DR_SpeedCola_GetActiveWeapon <- function(player)
 {
     try
@@ -12523,6 +13073,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_SpeedCola_SetPlayback", error);
         }
     }
 
@@ -12538,6 +13089,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_SpeedCola_SetPlayback#2", error);
         }
     }
 };
@@ -12557,6 +13109,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_SpeedCola_IsReloading", error);
     }
 
     try
@@ -12631,7 +13184,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         if (difference < 0.0)
             difference = -difference;
 
-        // Cette valeur a dÃƒÂ©jÃƒ  ÃƒÂ©tÃƒÂ© raccourcie par Speed Cola.
+        // Cette valeur a déjà été raccourcie par Speed Cola.
         if (difference < 0.002)
             return;
     }
@@ -12657,6 +13210,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_SpeedCola_AdjustTimer", error);
     }
 };
 
@@ -12888,8 +13442,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
     local now = Time();
 
-    // Les nouvelles valeurs crÃƒÂ©ÃƒÂ©es par chaque ÃƒÂ©tape du M3 sont
-    // automatiquement dÃƒÂ©tectÃƒÂ©es et raccourcies une seule fois.
+    // Les nouvelles valeurs créées par chaque étape du M3 sont
+    // automatiquement détectées et raccourcies une seule fois.
     ::DR_SpeedCola_AdjustTimer(
         player,
         "m_flNextAttack",
@@ -12997,7 +13551,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     local money =
-        ::DR_SpeedCola_GetMoney(player);
+        ::DR_Money_Get(player);
 
     local cost =
         ::DR_GetPurchaseCost(::DR_SPEEDCOLA_COST);
@@ -13009,7 +13563,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         return false;
     }
 
-    if (!::DR_SpeedCola_SetMoney(
+    if (!::DR_Money_Set(
         player,
         money - cost
     ))
@@ -13019,7 +13573,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
     if (!::DR_SpeedCola_Give(player))
     {
-        ::DR_SpeedCola_SetMoney(player, money);
+        ::DR_Money_Set(player, money);
         return false;
     }
 
@@ -13150,43 +13704,6 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 // Perk individuel : augmente la cadence de tir jusqu'a la fin du round.
 // ============================================================================
 
-::DR_DoubleTap_GetMoney <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropInt(
-            player,
-            "m_iAccount"
-        );
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-
-::DR_DoubleTap_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
-
-::DR_DoubleTap_GetActiveWeapon <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropEntity(
-            player,
-            "m_hActiveWeapon"
-        );
-    }
-    catch (error)
-    {
-        return null;
-    }
-};
-
-
 ::DR_DoubleTap_PlayerHasPerk <- function(player)
 {
     if (!::DR_IsValidHuman(player))
@@ -13211,104 +13728,116 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 };
 
 
-::DR_DoubleTap_FireThink <- function(token)
+// --------------------------------------------------------------------------
+// FIRE RATE: one calculation for every weapon
+// Special weapon (TMP Bulletstorm, P90 Adrenaline level) x Double Tap x
+// Pack-a-Punch, applied once to each new shot timer by a single thinker.
+// Separate thinkers re-divided each other's timer and stacked more.
+// --------------------------------------------------------------------------
+
+::DR_FireRate_GetMultiplier <- function(player, weapon)
 {
-    if (!::DR_doubleTapFireThinkRunning
-        || token != ::DR_doubleTapFireToken)
+    local rate = 1.0;
+    if (::DR_DoubleTap_IsRegisteredTMP(weapon))
+        rate *= ::DR_TMP_FIRE_RATE_MULTIPLIER;
+    else
     {
+        local index = player.entindex();
+        if (::DR_p90Adrenaline.rawin(index)
+            && ::DR_p90Adrenaline[index].player == player
+            && ::DR_p90Adrenaline[index].weapon == weapon)
+            rate *= ::DR_P90_GetLevel(::DR_p90Adrenaline[index]).fireRate;
+    }
+
+    if (::DR_DoubleTap_PlayerHasPerk(player))
+        rate *= ::DR_DOUBLETAP_FIRE_RATE_MULTIPLIER;
+
+    local pap = ::DR_PAP_GetWeaponFlag(weapon);
+    if (pap != null && pap.fireRateMultiplier > 1.0)
+        rate *= pap.fireRateMultiplier;
+    return rate;
+};
+
+::DR_FireRate_Start <- function()
+{
+    if (::DR_fireRateRunning)
+        return;
+    ::DR_fireRateRunning = true;
+    ::DR_fireRateToken++;
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_FireRate_Think(" + ::DR_fireRateToken + ");", ::DR_DOUBLETAP_TICK, null);
+};
+
+::DR_FireRate_Think <- function(token)
+{
+    if (!::DR_fireRateRunning || token != ::DR_fireRateToken)
+        return;
+
+    // Only players who can have a bonus: Double Tap, TMP Bulletstorm,
+    // P90 Adrenaline or a Pack-a-Punch weapon.
+    local players = {};
+    foreach (index, data in ::DR_doubleTapPlayers)
+        players[data.player] <- true;
+    foreach (index, data in ::DR_tmpWeapons)
+        if ("owner" in data && data.owner != null)
+            players[data.owner] <- true;
+    foreach (index, data in ::DR_p90Adrenaline)
+        players[data.player] <- true;
+    foreach (index, data in ::DR_PAP_WEAPON_FLAGS)
+        if ("owner" in data && data.owner != null)
+            players[data.owner] <- true;
+
+    if (players.len() == 0)
+    {
+        ::DR_fireRateRunning = false;
         return;
     }
 
-    if (::DR_doubleTapPlayers.len() <= 0)
+    local now = Time();
+    foreach (player, unused in players)
     {
-        ::DR_doubleTapFireThinkRunning = false;
-        return;
-    }
-
-    local invalidPlayers = [];
-
-    foreach (playerIndex, perkData in ::DR_doubleTapPlayers)
-    {
-        local player = perkData.player;
         if (!::DR_IsValidHuman(player))
-        {
-            invalidPlayers.append(playerIndex);
             continue;
-        }
-
-        local weapon = ::DR_DoubleTap_GetActiveWeapon(player);
+        local weapon = ::DR_TMP_GetActiveWeapon(player);
         if (weapon == null || !weapon.IsValid())
             continue;
-
-        // TMP Overdrive already handles its own Double Tap multiplier.
-        if (::DR_DoubleTap_IsRegisteredTMP(weapon))
+        local rate = ::DR_FireRate_GetMultiplier(player, weapon);
+        if (rate <= 1.0)
             continue;
 
-        if ("DR_PAP_AdjustTimer" in getroottable())
+        local weaponIndex = weapon.entindex();
+        if (!::DR_fireRateStates.rawin(weaponIndex)
+            || ::DR_fireRateStates[weaponIndex].weapon != weapon)
         {
-            ::DR_PAP_AdjustTimer(
-                weapon,
-                "m_flNextPrimaryAttack",
-                perkData,
-                "doubleTapLastPrimary",
-                Time(),
-                ::DR_DOUBLETAP_FIRE_RATE_MULTIPLIER
-            );
+            ::DR_fireRateStates[weaponIndex] <- {weapon = weapon};
         }
+        ::DR_PAP_AdjustTimer(weapon, "m_flNextPrimaryAttack",
+            ::DR_fireRateStates[weaponIndex], "last", now, rate);
     }
 
-    foreach (playerIndex in invalidPlayers)
-    {
-        if (::DR_doubleTapPlayers.rawin(playerIndex))
-            ::DR_doubleTapPlayers.rawdelete(playerIndex);
-    }
-
-    if (::DR_doubleTapPlayers.len() <= 0)
-    {
-        ::DR_doubleTapFireThinkRunning = false;
-        return;
-    }
-
-    DR_Fire(
-        ::DR_SCRIPT_NAME,
-        "RunScriptCode",
-        "DR_DoubleTap_FireThink(" + token.tostring() + ");",
-        ::DR_DOUBLETAP_TICK,
-        null
-    );
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_FireRate_Think(" + token + ");", ::DR_DOUBLETAP_TICK, null);
 };
 
-
-::DR_DoubleTap_StartFireThink <- function()
+// A boosted shot restarts the thinker (it stops when nobody can be boosted).
+::DR_FireRate_OnWeaponFire <- function(params)
 {
-    if (::DR_doubleTapFireThinkRunning)
+    if (::DR_fireRateRunning || !("userid" in params))
         return;
-
-    ::DR_doubleTapFireThinkRunning = true;
-    ::DR_doubleTapFireToken++;
-
-    local token = ::DR_doubleTapFireToken;
-
-    DR_Fire(
-        ::DR_SCRIPT_NAME,
-        "RunScriptCode",
-        "DR_DoubleTap_FireThink(" + token.tostring() + ");",
-        ::DR_DOUBLETAP_TICK,
-        null
-    );
+    local player = GetPlayerFromUserID(params.userid);
+    if (!::DR_IsValidHuman(player))
+        return;
+    local weapon = ::DR_TMP_GetActiveWeapon(player);
+    if (weapon != null && weapon.IsValid()
+        && ::DR_FireRate_GetMultiplier(player, weapon) > 1.0)
+        ::DR_FireRate_Start();
 };
 
-
-::DR_DoubleTap_OnWeaponFire <- function(params)
+::DR_FireRate_Reset <- function()
 {
-    // The persistent thinker applies the multiplier after the engine writes
-    // the new timer, including after a wall-weapon replacement.
-    if ("userid" in params)
-    {
-        local player = GetPlayerFromUserID(params.userid);
-        if (::DR_DoubleTap_PlayerHasPerk(player))
-            ::DR_DoubleTap_StartFireThink();
-    }
+    ::DR_fireRateToken++;
+    ::DR_fireRateRunning = false;
+    ::DR_fireRateStates.clear();
 };
 
 
@@ -13334,7 +13863,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         player = player
     };
 
-    ::DR_DoubleTap_StartFireThink();
+    ::DR_FireRate_Start();
 
     ClientPrint(
         player,
@@ -13359,7 +13888,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     local money =
-        ::DR_DoubleTap_GetMoney(player);
+        ::DR_Money_Get(player);
 
     local cost =
         ::DR_GetPurchaseCost(::DR_DOUBLETAP_COST);
@@ -13372,12 +13901,12 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         return false;
     }
 
-    if (!::DR_DoubleTap_SetMoney(player, money - cost))
+    if (!::DR_Money_Set(player, money - cost))
         return false;
 
     if (!::DR_DoubleTap_Give(player))
     {
-        ::DR_DoubleTap_SetMoney(player, money);
+        ::DR_Money_Set(player, money);
         return false;
     }
 
@@ -13412,13 +13941,11 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
 ::DR_DoubleTap_Reset <- function()
 {
-    ::DR_doubleTapFireToken++;
-
     ::DR_doubleTapPlayers.clear();
     ::DR_doubleTapInside.clear();
     ::DR_doubleTapButtons.clear();
     ::DR_doubleTapThinkRunning = false;
-    ::DR_doubleTapFireThinkRunning = false;
+    ::DR_FireRate_Reset();
 };
 
 
@@ -13449,7 +13976,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     local currentMoney =
-        ::DR_Tombstone_GetMoney(player);
+        ::DR_Money_Get(player);
 
     if (currentMoney < 0)
         return false;
@@ -13459,7 +13986,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         ? currentMoney
         : stash.money;
 
-    if (!::DR_Tombstone_SetMoney(
+    if (!::DR_Money_Set(
         player,
         restoredMoney
     ))
@@ -13511,46 +14038,6 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     return userId;
 };
 
-
-::DR_Tombstone_GetPlayerName <- function(player)
-{
-    if (!::DR_IsValidPlayer(player))
-        return "Player";
-
-    try
-    {
-        return NetProps.GetPropString(
-            player,
-            "m_szNetname"
-        );
-    }
-    catch (error)
-    {
-        return "Player";
-    }
-};
-
-
-::DR_Tombstone_GetMoney <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropInt(
-            player,
-            "m_iAccount"
-        );
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-
-::DR_Tombstone_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
 
 ::DR_Tombstone_ArrayContains <- function(values, searchedValue)
 {
@@ -13648,6 +14135,20 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         && ::DR_deagleWeapons[weaponIndex].weapon == weapon)
     {
         return "deagle";
+    }
+
+    if (("DR_m4Weapons" in getroottable())
+        && ::DR_m4Weapons.rawin(weaponIndex)
+        && ::DR_m4Weapons[weaponIndex].weapon == weapon)
+    {
+        return "m4";
+    }
+
+    if (("DR_p90Weapons" in getroottable())
+        && ::DR_p90Weapons.rawin(weaponIndex)
+        && ::DR_p90Weapons[weaponIndex].weapon == weapon)
+    {
+        return "p90";
     }
 
     return null;
@@ -13814,7 +14315,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     local money =
-        ::DR_Tombstone_GetMoney(player);
+        ::DR_Money_Get(player);
 
     local cost =
         ::DR_GetPurchaseCost(::DR_TOMBSTONE_COST);
@@ -13827,7 +14328,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         return false;
     }
 
-    if (!::DR_Tombstone_SetMoney(
+    if (!::DR_Money_Set(
         player,
         money - cost
     ))
@@ -13838,7 +14339,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     ::DR_tombstoneActive[userId] <- {
         player       = player,
         playerIndex  = player.entindex(),
-        ownerName    = ::DR_Tombstone_GetPlayerName(player),
+        ownerName    = ::DR_GetPlayerName(player, "Player"),
         lastWeapons  = ::DR_Tombstone_CaptureSpecialWeapons(player),
         nextSnapshot = Time() + ::DR_TOMBSTONE_SNAPSHOT_INTERVAL
     };
@@ -13909,7 +14410,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     if (userId < 0)
         return;
 
-    // Le joueur ne possÃ¨de pas Tombstone.
+    // Le joueur ne possède pas Tombstone.
     if (!::DR_tombstoneActive.rawin(userId))
         return;
 
@@ -13926,8 +14427,8 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
             player
         );
 
-    // Protection si l'arme est tombÃ©e juste
-    // avant l'Ã©vÃ©nement player_death.
+    // Protection si l'arme est tombée juste
+    // avant l'événement player_death.
     if (specialWeapons.len() <= 0
         && activeData.lastWeapons.len() > 0)
     {
@@ -13944,7 +14445,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
 
     // Sauvegarde de l'argent.
     local savedMoney =
-        ::DR_Tombstone_GetMoney(player);
+        ::DR_Money_Get(player);
 
     if (savedMoney < ::DR_START_CASH)
     savedMoney = ::DR_START_CASH;
@@ -13955,7 +14456,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     local ownerName =
         activeData.ownerName;
 
-    // Le perk Tombstone est consommÃ©.
+    // Le perk Tombstone est consommé.
     ::DR_tombstoneActive.rawdelete(
         userId
     );
@@ -13984,7 +14485,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         speedCola =
             hasSpeedCola,
 
-        // Argent prÃ©sent au moment de la mort.
+        // Argent présent au moment de la mort.
         money =
             savedMoney,
 
@@ -14320,6 +14821,22 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
                 "DR_DEAGLE_RegisterAfterGive",
                 true
             );
+
+        case "m4":
+            return ::DR_MysteryBox_GiveRegisteredWeapon(
+                player,
+                ::DR_M4_GetEquipEntity(),
+                "DR_M4_RegisterAfterGive",
+                false
+            );
+
+        case "p90":
+            return ::DR_MysteryBox_GiveRegisteredWeapon(
+                player,
+                ::DR_P90_GetEquipEntity(),
+                "DR_P90_RegisterAfterGive",
+                false
+            );
     }
 
     return false;
@@ -14342,7 +14859,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     if (ownerUserId < 0)
         return;
 
-    // Le joueur ne peut rÃ©cupÃ©rer que sa propre tombe.
+    // Le joueur ne peut récupérer que sa propre tombe.
     if (!::DR_tombstoneStashes.rawin(
         ownerUserId
     ))
@@ -14355,7 +14872,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
             ownerUserId
         ];
 
-    // VÃ©rifie qu'il s'agit bien de la bonne
+    // Vérifie qu'il s'agit bien de la bonne
     // instance de la Tombstone.
     if (stash.token != token)
         return;
@@ -14403,7 +14920,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         );
 
     // -------------------------------------------------------
-    // RESTAURATION DE L'ITEM SPÃ‰CIAL
+    // RESTAURATION DE L'ITEM SPÉCIAL
     // -------------------------------------------------------
 
     if (stash.specialItem != null)
@@ -14418,7 +14935,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     // -------------------------------------------------------
-    // RESTAURATION DES ARMES SPÃ‰CIALES
+    // RESTAURATION DES ARMES SPÉCIALES
     // -------------------------------------------------------
 
     local failedWeapons = [];
@@ -14440,7 +14957,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         failedWeapons;
 
     // -------------------------------------------------------
-    // ANCIENNE COMPATIBILITÃ‰ SPEED COLA
+    // ANCIENNE COMPATIBILITÉ SPEED COLA
     // -------------------------------------------------------
 
     if (stash.speedCola)
@@ -14455,7 +14972,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     }
 
     // -------------------------------------------------------
-    // TOUT A Ã‰TÃ‰ RÃ‰CUPÃ‰RÃ‰
+    // TOUT A ÉTÉ RÉCUPÉRÉ
     // -------------------------------------------------------
 
     if (stash.specialItem == null
@@ -14480,7 +14997,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         return;
     }
 
-    // Une partie de la restauration a Ã©chouÃ© :
+    // Une partie de la restauration a échoué :
     // la tombe reste utilisable.
     stash.claiming = false;
 
@@ -14696,31 +15213,43 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
     ::DR_mysteryBoxRewards.append({
         name  = "Bulletstorm TMP",
         slot  = "weapon",
-        model = "models/weapons/w_smg_tmp.mdl"
+        model = "models/weapons/der_riese/w_tmp_bulletstorm.mdl"
     });
 
     ::DR_mysteryBoxRewards.append({
         name  = "M3 Shockwave",
         slot  = "weapon",
-        model = "models/weapons/w_shot_m3super90.mdl"
+        model = "models/weapons/der_riese/w_m3_shockwave.mdl"
     });
 
     ::DR_mysteryBoxRewards.append({
         name  = "AK-47 Napalm",
         slot  = "weapon",
-        model = "models/weapons/w_rif_ak47.mdl"
+        model = "models/weapons/der_riese/w_ak47_napalm.mdl"
     });
 
     ::DR_mysteryBoxRewards.append({
         name  = "MP5 Teleporter",
         slot  = "weapon",
-        model = "models/weapons/w_smg_mp5.mdl"
+        model = "models/weapons/der_riese/w_mp5_teleporter.mdl"
     });
 
     ::DR_mysteryBoxRewards.append({
         name  = "Gravity Deagle",
         slot  = "weapon",
-        model = "models/weapons/w_pist_deagle.mdl"
+        model = "models/weapons/der_riese/w_deagle_gravity.mdl"
+    });
+
+    ::DR_mysteryBoxRewards.append({
+        name  = "M4A1 Ice",
+        slot  = "weapon",
+        model = "models/weapons/der_riese/w_m4a1_ice.mdl"
+    });
+
+    ::DR_mysteryBoxRewards.append({
+        name  = "P90 Adrenaline",
+        slot  = "weapon",
+        model = "models/weapons/der_riese/w_p90_adrenaline.mdl"
     });
 
 
@@ -14732,6 +15261,7 @@ if (!("DR_deaglePositionWellIndex" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_MysteryBox_BuildRewards", error);
         }
     }
 };
@@ -14914,7 +15444,10 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
     while ((entity = Entities.FindByClassname(entity, classname)) != null)
     {
         try { if (NetProps.GetPropInt(entity, "m_iHammerID") == hammerId) return entity; }
-        catch (error) {}
+        catch (error)
+        {
+            ::DR_LogCaught("DRPOWER_FindHammerEntity", error);
+        }
     }
     return null;
 };
@@ -15229,35 +15762,11 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
 };
 
 
-::DR_MysteryBox_GetPlayerName <- function(player)
-{
-    if (!::DR_IsValidPlayer(player))
-        return "PLAYER";
-
-    try
-    {
-        local playerName =
-            NetProps.GetPropString(
-                player,
-                "m_szNetname"
-            );
-
-        if (playerName != null && playerName != "")
-            return playerName;
-    }
-    catch (error)
-    {
-    }
-
-    return "PLAYER";
-};
-
-
 ::DR_MysteryBox_ShowOwner <- function(data, player)
 {
     ::DR_MysteryBox_SetWorldText(
         data.priceText,
-        "Player: " + ::DR_MysteryBox_GetPlayerName(player) + "\n"
+        "Player: " + ::DR_GetPlayerName(player) + "\n"
             + ::DR_MysteryBox_GetPriceStatus(data),
         "255 255 0",
         ::DR_MYSTERY_BOX_OWNER_TEXT_SIZE
@@ -15453,27 +15962,6 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
 };
 
 
-::DR_MysteryBox_GetMoney <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropInt(
-            player,
-            "m_iAccount"
-        );
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-
-::DR_MysteryBox_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
-
 // --------------------------------------------------------------------------
 // SPECIAL WEAPON DETECTION
 // --------------------------------------------------------------------------
@@ -15531,6 +16019,13 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
     {
         return true;
     }
+
+
+    if (("DR_m4Weapons" in getroottable()) && ::DR_m4Weapons.rawin(weaponIndex))
+        return true;
+
+    if (("DR_p90Weapons" in getroottable()) && ::DR_p90Weapons.rawin(weaponIndex))
+        return true;
 
 
     return false;
@@ -15623,6 +16118,13 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
     {
         ::DR_mp5Weapons.rawdelete(weaponIndex);
     }
+
+
+    if (("DR_m4Weapons" in getroottable()) && ::DR_m4Weapons.rawin(weaponIndex))
+        ::DR_m4Weapons.rawdelete(weaponIndex);
+
+    if (("DR_p90Weapons" in getroottable()) && ::DR_p90Weapons.rawin(weaponIndex))
+        ::DR_p90Weapons.rawdelete(weaponIndex);
 
 
     if (("DR_deagleWeapons" in getroottable())
@@ -15837,6 +16339,14 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
             weaponsToRemove,
             seenWeaponIndexes
         );
+    }
+
+
+    foreach (registryName in ["DR_m4Weapons", "DR_p90Weapons"])
+    {
+        if (registryName in getroottable())
+            ::DR_MysteryBox_CollectTrackedWeapons(getroottable()[registryName],
+                player, weaponsToRemove, seenWeaponIndexes);
     }
 
 
@@ -16589,8 +17099,9 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
         }
         else
         {
-            local names = ["TMP", "M3", "AK", "MP5", "DEAGLE"];
-            local classes = ["weapon_tmp", "weapon_m3", "weapon_ak47", "weapon_mp5navy", "weapon_deagle"];
+            local names = ["TMP", "M3", "AK", "MP5", "DEAGLE", "M4", "P90"];
+            local classes = ["weapon_tmp", "weapon_m3", "weapon_ak47", "weapon_mp5navy",
+                "weapon_deagle", "weapon_m4a1", "weapon_p90"];
             local i = rewardId - 5;
             local equip = getroottable()["DR_" + names[i] + "_GetEquipEntity"]();
             reason = "delivery failed";
@@ -16673,7 +17184,7 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
 
 
     local money =
-        ::DR_MysteryBox_GetMoney(
+        ::DR_Money_Get(
             player
         );
 
@@ -16714,7 +17225,7 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
 
 
     if (
-        !::DR_MysteryBox_SetMoney(
+        !::DR_Money_Set(
             player,
             money -
                 cost
@@ -16789,7 +17300,7 @@ if (!("DRPOWER_BUTTON" in getroottable())) ::DRPOWER_BUTTON <- null;
     ClientPrint(
         player,
         3,
-        "\x0700FFFF[Mystery Box] The box is spinning..."
+        "\x07FFFF00[Mystery Box] The box is spinning..."
     );
 
 
@@ -17043,30 +17554,6 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 // JUGGERNOG SYSTEM
 // ============================================================================
 
-::DR_Juggernog_GetMoney <- function(player)
-{
-    if (!::DR_IsValidPlayer(player))
-        return -1;
-
-    try
-    {
-        return NetProps.GetPropInt(
-            player,
-            "m_iAccount"
-        );
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-
-::DR_Juggernog_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
-
 ::DR_Juggernog_SetHealth <- function(player, health)
 {
     if (!::DR_IsValidPlayer(player))
@@ -17079,6 +17566,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_Juggernog_SetHealth", error);
     }
 
     try
@@ -17109,6 +17597,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_Juggernog_GetHealth", error);
     }
 
     try
@@ -17264,7 +17753,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
     }
 
     local money =
-        ::DR_Juggernog_GetMoney(player);
+        ::DR_Money_Get(player);
 
     local cost =
         ::DR_GetPurchaseCost(::DR_JUGGERNOG_COST);
@@ -17276,7 +17765,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         return false;
     }
 
-    if (!::DR_Juggernog_SetMoney(
+    if (!::DR_Money_Set(
         player,
         money - cost
     ))
@@ -17286,7 +17775,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 
     if (!::DR_Juggernog_Give(player))
     {
-        ::DR_Juggernog_SetMoney(
+        ::DR_Money_Set(
             player,
             money
         );
@@ -17383,8 +17872,8 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         0
     );
 
-    // Retire l'Ã©tat avant le point_hurt.
-    // Le player_hurt du point_hurt ne sera donc pas recomptÃ©.
+    // Retire l'état avant le point_hurt.
+    // Le player_hurt du point_hurt ne sera donc pas recompté.
     if (::DR_juggernogPlayers.rawin(playerIndex))
     {
         ::DR_juggernogPlayers.rawdelete(
@@ -17405,8 +17894,8 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
 
     local temporaryHurt = false;
 
-    // SÃ©curitÃ© : si le point_hurt n'existe pas dans le VMF,
-    // le script en crÃ©e un temporairement.
+    // Sécurité : si le point_hurt n'existe pas dans le VMF,
+    // le script en crée un temporairement.
     if (hurtEntity == null || !hurtEntity.IsValid())
     {
         hurtEntity = DR_Spawn(
@@ -17533,8 +18022,8 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
         data.overlayLevel
     );
 
-    // Les dÃ©gÃ¢ts du knife ont dÃ©jÃ  Ã©tÃ© appliquÃ©s.
-    // On remet immÃ©diatement la rÃ©serve pour le prochain knife.
+    // Les dégâts du knife ont déjà été appliqués.
+    // On remet immédiatement la réserve pour le prochain knife.
     ::DR_Juggernog_SetHealth(
         victim,
         ::DR_JUGGERNOG_BUFFER_HEALTH
@@ -17815,6 +18304,7 @@ if (::DRSAFE_ACTIVE && !::DRL_FAILED)
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_StartCash_Recheck", error);
     }
 };
 
@@ -18064,6 +18554,7 @@ if (!("DR_startGlockDelivery" in getroottable())) ::DR_startGlockDelivery <- {};
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_StartGlock_Find", error);
         }
     }
 
@@ -18662,22 +19153,6 @@ if (!("DR_PAP_STATE" in getroottable()))
 };
 
 
-::DR_PAP_GetPlayerName <- function(player)
-{
-    if ("DR_MysteryBox_GetPlayerName" in getroottable())
-        return ::DR_MysteryBox_GetPlayerName(player);
-
-    try
-    {
-        return player.GetName();
-    }
-    catch (error)
-    {
-        return "PLAYER";
-    }
-};
-
-
 ::DR_PAP_GetActiveWeapon <- function(player)
 {
     try
@@ -18735,6 +19210,11 @@ if (!("DR_PAP_STATE" in getroottable()))
 
 ::DR_PAP_GetWeaponModel <- function(weapon, classname)
 {
+    // Special weapons show their custom world model on the machine.
+    local special = ::DR_SpecialModels_WorldPath(weapon);
+    if (special != null)
+        return special;
+
     local model = "";
 
     try
@@ -18802,8 +19282,11 @@ if (!("DR_PAP_STATE" in getroottable()))
     if (specialType == "m3")
         return 8;
 
-    if (specialType == "ak" || specialType == "mp5")
+    if (specialType == "ak" || specialType == "mp5" || specialType == "m4")
         return 30;
+
+    if (specialType == "p90")
+        return 50;
 
     if (specialType == "deagle")
         return 7;
@@ -18817,6 +19300,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_PAP_GetFullClip", error);
     }
 
     local clips = {
@@ -19017,6 +19501,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_PAP_CreateProp", error);
     }
 
     try
@@ -19025,6 +19510,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_PAP_CreateProp#2", error);
     }
 
     local prop = null;
@@ -19201,7 +19687,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     ::DR_PAP_STATE.stage = "ready";
     ::DR_PAP_STATE.claimUntil = Time() + ::DR_PAP_CLAIM_TIME;
 
-    local name = ::DR_PAP_GetPlayerName(::DR_PAP_STATE.owner);
+    local name = ::DR_GetPlayerName(::DR_PAP_STATE.owner);
     ::DR_PAP_SetText(name + " - PRESS E", "255 255 0");
 
     ::DR_PAP_Schedule(
@@ -19273,6 +19759,18 @@ if (!("DR_PAP_STATE" in getroottable()))
                 equipFunction = "DR_DEAGLE_GetEquipEntity",
                 registerFunction = "DR_DEAGLE_RegisterAfterGive"
             };
+
+        case "m4":
+            return {
+                equipFunction = "DR_M4_GetEquipEntity",
+                registerFunction = "DR_M4_RegisterAfterGive"
+            };
+
+        case "p90":
+            return {
+                equipFunction = "DR_P90_GetEquipEntity",
+                registerFunction = "DR_P90_RegisterAfterGive"
+            };
     }
 
     return null;
@@ -19308,6 +19806,7 @@ if (!("DR_PAP_STATE" in getroottable()))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_PAP_FindWeapon", error);
         }
     }
 
@@ -19578,7 +20077,7 @@ if (!("DR_PAP_STATE" in getroottable()))
         return false;
     }
 
-    local money = ::DRTP_GetMoney(player);
+    local money = ::DR_Money_Get(player);
 
     if (money < ::DR_PAP_COST)
     {
@@ -19614,7 +20113,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     }
 
 
-    if (!::DRTP_SetMoney(player, money - ::DR_PAP_COST))
+    if (!::DR_Money_Set(player, money - ::DR_PAP_COST))
     {
         ::DR_PlaySoundOnEntity(
             player,
@@ -19654,7 +20153,7 @@ if (!("DR_PAP_STATE" in getroottable()))
     };
 
     ::DR_PAP_SetText(
-        ::DR_PAP_GetPlayerName(player) + " - IMPROVING",
+        ::DR_GetPlayerName(player) + " - IMPROVING",
         "255 255 0"
     );
     ::DR_PAP_Schedule(
@@ -19936,30 +20435,7 @@ if (!("DR_PAP_STATE" in getroottable()))
         return;
 
     ::DR_PAP_PlayPoweredFireSound(player, weapon, data);
-
-    local now = Time();
-    local nextAttack = 0.0;
-
-    try
-    {
-        nextAttack = NetProps.GetPropFloat(
-            weapon,
-            "m_flNextPrimaryAttack"
-        );
-
-        if (nextAttack <= now)
-            return;
-
-        NetProps.SetPropFloat(
-            weapon,
-            "m_flNextPrimaryAttack",
-            now + (nextAttack - now)
-                / data.fireRateMultiplier
-        );
-    }
-    catch (error)
-    {
-    }
+    // The PaP fire rate is applied by DR_FireRate_Think.
 };
 
 
@@ -20040,6 +20516,7 @@ if (!("DR_PAP_STATE" in getroottable()))
             }
             catch (fallbackError)
             {
+                ::DR_LogCaught("DR_PAP_OnPlayerHurt", fallbackError);
             }
         }
 
@@ -20176,14 +20653,19 @@ if (!("DRTP_ExitSprites" in getroottable())) ::DRTP_ExitSprites <- {};
     "350.01 -3797 186"
 ];
 
-if (!("DRTP_ESCAPE_MIN_DELAY" in getroottable()))
-    ::DRTP_ESCAPE_MIN_DELAY <- 180.0;
+// Single countdown between the third teleporter link and the final escape.
+// The escape teleporter is chosen and shown at once and stays usable until
+// its last seconds (was a 180 s wait, then a 50 s reserved window).
+::DRTP_ESCAPE_DELAY <- 240.0;
 
-if (!("DRTP_ESCAPE_MAX_DELAY" in getroottable()))
-    ::DRTP_ESCAPE_MAX_DELAY <- 270.0;
+// No pause between waves in the countdown's last minute (nor during the
+// final escape).
+::DRTP_ESCAPE_NO_PAUSE_TIME <- 60;
 
-if (!("DRTP_ESCAPE_DURATION" in getroottable()))
-    ::DRTP_ESCAPE_DURATION <- 50.0;
+// A normal use fires tpNteleportingrelay, which enables then disables tpNtp
+// and stops the teleporter particles up to 3 s later: the escape teleporter
+// refuses it in the last seconds so it cannot cut the final escape.
+::DRTP_ESCAPE_RESERVE_TIME <- 5;
 
 if (!("DRTP_ESCAPE_FINAL_DURATION" in getroottable()))
     ::DRTP_ESCAPE_FINAL_DURATION <- 10.0;
@@ -20200,11 +20682,13 @@ if (!("DRTP_ESCAPE_OPEN_TARGET" in getroottable()))
 if (!("DRTP_ESCAPE_TOKEN" in getroottable()))
     ::DRTP_ESCAPE_TOKEN <- 0;
 
-if (!("DRTP_ESCAPE_SCHEDULED" in getroottable()))
-    ::DRTP_ESCAPE_SCHEDULED <- false;
-
+// True during the countdown before the final escape.
 if (!("DRTP_ESCAPE_OPEN" in getroottable()))
     ::DRTP_ESCAPE_OPEN <- false;
+
+// Seconds left before the final escape, while DRTP_ESCAPE_OPEN.
+if (!("DRTP_ESCAPE_REMAINING" in getroottable()))
+    ::DRTP_ESCAPE_REMAINING <- 0;
 
 if (!("DRTP_ESCAPE_FINAL_ACTIVE" in getroottable()))
     ::DRTP_ESCAPE_FINAL_ACTIVE <- false;
@@ -20475,29 +20959,12 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
         ClientPrint(player, 3, message);
 };
 
-::DRTP_GetMoney <- function(player)
-{
-    try
-    {
-        return NetProps.GetPropInt(player, "m_iAccount");
-    }
-    catch (error)
-    {
-        return -1;
-    }
-};
-
-::DRTP_SetMoney <- function(player, amount)
-{
-    return ::DR_Money_Set(player, amount);
-};
-
 ::DRTP_ChargeUse <- function(player)
 {
     if (::DRTP_USE_COST <= 0)
         return true;
 
-    local money = ::DRTP_GetMoney(player);
+    local money = ::DR_Money_Get(player);
 
     if (money < ::DRTP_USE_COST)
     {
@@ -20510,7 +20977,7 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
         return false;
     }
 
-    if (!::DRTP_SetMoney(player, money - ::DRTP_USE_COST))
+    if (!::DR_Money_Set(player, money - ::DRTP_USE_COST))
         return false;
 
     return true;
@@ -20553,9 +21020,20 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
     ::DRTP_SetTeleportImmunity(player, true);
 };
 
+// Humans get the teleport immunity. A zombie touching the trigger during
+// the window dies, credited to nobody: no kill and no damage money (the
+// trigger needs no filter_ct for that).
 ::DRTP_OnTeleportImmunityTouch <- function(id)
 {
-    ::DRTP_ApplyTeleportImmunityToPlayer(id, activator);
+    local player = activator;
+    if (player != null && player.IsValid() && player.IsPlayer()
+        && player.IsAlive() && player.GetTeam() == 2)
+    {
+        if (::DRTP_TeleportImmunity.rawin(id) && !::DRZS_END_LOCK)
+            ::DR_SpecialWeapon_ApplyDamage(player, null, 999999.0);
+        return;
+    }
+    ::DRTP_ApplyTeleportImmunityToPlayer(id, player);
 };
 
 ::DRTP_EndTeleportImmunity <- function(id, token)
@@ -20790,6 +21268,8 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
     ::DRTP_ESCAPE_OPEN = false;
     ::DRTP_ESCAPE_FINAL_ACTIVE = true;
 
+    // Reserved for the escape from now on: no more normal use.
+    ::DRTP_Escape_SetButtonEnabled(id, false);
     ::DRTP_Escape_SetTriggerTarget(id, "tp_dest_final");
     DR_FireHandle(trigger, "Enable", "", 0.05, null, null);
     ::DRTP_Escape_SetFinalEffects(id, true);
@@ -20971,19 +21451,15 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
 };
 
 
-if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
-    ::DRTP_MISSION_FINISH_SHOWN_TOKEN <- -1;
-
+// The "all teleporters linked" announcement is part of the escape
+// countdown text (DRTP_Escape_Countdown), not a mission text.
 ::DRTP_Mission_Show <- function(token, objective)
 {
-    if (::DRL_FAILED || (::DRL_ACTIVE && objective != 3)) return;
+    if (::DRL_FAILED || ::DRL_ACTIVE) return;
     if (token != ::DRTP_MISSION_TOKEN
         || !::DRTP_MISSION_SCHEDULED.rawin(objective)) return;
     if (objective == 1 && ::DRTP_PowerEnabled) return;
     if (objective == 2 && ::DRTP_Escape_AllTeleportersActive()) return;
-    if (objective == 3 && (::DRTP_ESCAPE_OPEN || ::DRTP_ESCAPE_FINAL_ACTIVE
-        || ::DRTP_ESCAPE_FINISHED)) return;
-    if (objective == 3 && ::DRTP_MISSION_FINISH_SHOWN_TOKEN == token) return;
     local text = ::DRTP_Mission_GetText(objective);
     if (text == null || !text.IsValid()) return;
     ::DRTP_UpdateObjectiveMarkers();
@@ -21000,15 +21476,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
             ? "\nRETURN TO SPAWN: PRESS E ON THE MAINFRAME"
             : "\nPRESS E AT AN UNLINKED TELEPORTER";
     }
-    else if (objective == 3)
-    {
-        ::DRTP_MISSION_FINISH_SHOWN_TOKEN = token;
-        message = "ALL TELEPORTERS LINKED: PREPARE FOR THE ESCAPE FINALE";
-        DR_FireHandle(text, "AddOutput", "fadein 0", 0.0, null, null);
-        DR_FireHandle(text, "AddOutput", "fadeout 0", 0.0, null, null);
-        ::DRTP_Escape_ShowText(text, message, 10.0);
-        return; // One announcement, no recurring redisplay after ten seconds.
-    }
     ::DRTP_Escape_ShowText(text, message, 1.2);
     DR_Fire(::DRTP_SCRIPT_NAME, "RunScriptCode",
         "DRTP_Mission_Show(" + token + "," + objective + ");", 1.0, null);
@@ -21017,7 +21484,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
 
 ::DRTP_Mission_GetText <- function(objective)
 {
-    if (objective < 1 || objective > 3)
+    if (objective < 1 || objective > 2)
         return null;
 
     if (::DRTP_MISSION_TEXTS.rawin(objective))
@@ -21084,17 +21551,20 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     if (token != ::DRTP_ESCAPE_TOKEN || !::DRTP_ESCAPE_OPEN)
         return;
 
+    ::DRTP_ESCAPE_REMAINING = remaining;
     if (remaining <= 0)
     {
         ::DRTP_Escape_ActivateFinal(token);
         return;
     }
 
-    ::DRTP_Escape_ShowText(
-        ::DRTP_ESCAPE_COUNTDOWN_TEXT,
-        "ESCAPE: " + remaining.tostring() + " SECONDS",
-        1.1
-    );
+    // The "all linked" announcement shares this game_text for its first ten
+    // seconds: two texts at the same height would overlap on screen.
+    local message = "ESCAPE: TELEPORTER " + ::DRTP_LinkLabel(::DRTP_ESCAPE_TELEPORTER_ID)
+        + " - " + (remaining / 60) + ":" + format("%02d", remaining % 60);
+    if (::DRTP_ESCAPE_DELAY.tointeger() - remaining < 10)
+        message += "\nALL TELEPORTERS LINKED: PREPARE FOR THE ESCAPE FINALE";
+    ::DRTP_Escape_ShowText(::DRTP_ESCAPE_COUNTDOWN_TEXT, message, 1.1);
 
     DR_Fire(
         ::DRTP_SCRIPT_NAME,
@@ -21168,19 +21638,21 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
 };
 
 
-::DRTP_Escape_Open <- function(token)
+// Third teleporter linked: the escape teleporter is chosen at once (fewest
+// humans nearby), marked by the red cross, and the countdown to the final
+// escape starts. It stays usable until its last seconds.
+::DRTP_Escape_Schedule <- function()
 {
-    if (token != ::DRTP_ESCAPE_TOKEN
-        || !::DRTP_ESCAPE_SCHEDULED
+    if (::DRTP_ESCAPE_OPEN
+        || ::DRTP_ESCAPE_FINAL_ACTIVE
+        || ::DRTP_ESCAPE_FINISHED
         || !::DRTP_Escape_AllTeleportersActive())
     {
         return;
     }
 
-    ::DRTP_ESCAPE_SCHEDULED = false;
+    ::DRTP_ESCAPE_TOKEN++;
     ::DRTP_ESCAPE_OPEN = true;
-    ::DRTP_ESCAPE_FINAL_ACTIVE = false;
-    ::DRTP_ESCAPE_FINISHED = false;
 
     if (::DRTP_ESCAPE_TELEPORTER_ID < 1
         || ::DRTP_ESCAPE_TELEPORTER_ID > ::DRTP_Teleporters.len())
@@ -21189,22 +21661,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     }
 
     ::DRTP_ExitSprite_Show(::DRTP_ESCAPE_TELEPORTER_ID);
-    ::DRTP_Escape_SetButtonEnabled(
-        ::DRTP_ESCAPE_TELEPORTER_ID,
-        false
-    );
-    local reservedTrigger = ::DRTP_Escape_GetTrigger(
-        ::DRTP_ESCAPE_TELEPORTER_ID
-    );
-    if (reservedTrigger != null)
-        DR_FireHandle(
-            reservedTrigger,
-            "Disable",
-            "",
-            0.0,
-            null,
-            null
-        );
 
     if (::DRTP_ESCAPE_OPEN_TARGET != "")
     {
@@ -21217,50 +21673,8 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
         );
     }
 
-    ::DRTP_Escape_ShowText(
-        ::DRTP_ESCAPE_COUNTDOWN_TEXT,
-        "ESCAPE OPEN - 50 SECONDS",
-        1.1
-    );
-
-    DR_Fire(
-        ::DRTP_SCRIPT_NAME,
-        "RunScriptCode",
-        "DRTP_Escape_Countdown(" + token.tostring() + ","
-            + (::DRTP_ESCAPE_DURATION.tointeger() - 1).tostring() + ");",
-        1.0,
-        null
-    );
-};
-
-
-::DRTP_Escape_Schedule <- function()
-{
-    if (::DRTP_ESCAPE_SCHEDULED
-        || ::DRTP_ESCAPE_OPEN
-        || ::DRTP_ESCAPE_FINISHED
-        || !::DRTP_Escape_AllTeleportersActive())
-    {
-        return;
-    }
-
-    ::DRTP_ESCAPE_TOKEN++;
-    ::DRTP_ESCAPE_SCHEDULED = true;
-
-    local token = ::DRTP_ESCAPE_TOKEN;
-    local delay = RandomFloat(
-        ::DRTP_ESCAPE_MIN_DELAY,
-        ::DRTP_ESCAPE_MAX_DELAY
-    );
-
-    DR_Fire(
-        ::DRTP_SCRIPT_NAME,
-        "RunScriptCode",
-        "DRTP_Escape_Open(" + token.tostring() + ");",
-        delay,
-        null
-    );
-
+    ::DRTP_Escape_Countdown(::DRTP_ESCAPE_TOKEN,
+        ::DRTP_ESCAPE_DELAY.tointeger());
 };
 
 
@@ -21270,10 +21684,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     if (::DRTP_Escape_AllTeleportersActive())
     {
         ::DRL_Complete();
-        ::DRTP_Mission_Schedule(
-            3,
-            ::DRTP_MISSION_START_DELAY
-        );
 
         if ("DR_PAP_Unlock" in getroottable())
             ::DR_PAP_Unlock();
@@ -21297,7 +21707,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     ::DRTP_Escape_StopCountdownSound();
     ::DRTP_Escape_StopFinalEffects();
     ::DRTP_ESCAPE_TOKEN++;
-    ::DRTP_ESCAPE_SCHEDULED = false;
     ::DRTP_ESCAPE_OPEN = false;
     ::DRTP_ESCAPE_FINAL_ACTIVE = false;
     ::DRTP_ESCAPE_FINISHED = false;
@@ -21311,7 +21720,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     );
     ::DRTP_Mission_GetText(1);
     ::DRTP_Mission_GetText(2);
-    ::DRTP_Mission_GetText(3);
 
     ::DRTP_Mission_Reset();
     ::DRTP_Mission_Schedule(
@@ -21361,7 +21769,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     // Invalide les RunScriptCode déjà planifiés pour éviter une ouverture
     // d'escape pendant l'intermission ou le round suivant.
     ::DRTP_ESCAPE_TOKEN++;
-    ::DRTP_ESCAPE_SCHEDULED = false;
     ::DRTP_ESCAPE_OPEN = false;
     ::DRTP_ESCAPE_FINAL_ACTIVE = false;
     ::DRTP_ESCAPE_FINISHED = false;
@@ -21421,6 +21828,27 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     }
 
     ::DRTP_Inside[index].zones[id] <- true;
+};
+
+// Zones are tracked by touch: a teleport out of the trigger, or the trigger
+// disabled with the player inside, can skip OnEndTouch and leave him
+// "inside" for good (items blocked, E using the teleporter from anywhere).
+// Every use first checks he really stands in the enabled zone.
+::DRTP_IsInsideZone <- function(player, id)
+{
+    local data = ::DRTP_GetTeleporter(id);
+    if (data == null)
+        return false;
+    local trigger = Entities.FindByName(null, data.zoneName);
+    if (trigger == null || !trigger.IsValid()
+        || NetProps.GetPropInt(trigger, "m_bDisabled") != 0)
+        return false;
+
+    local zone = trigger.GetOrigin();
+    local origin = player.GetOrigin();
+    return ::DRUSE_Overlaps(
+        {mins = zone + trigger.GetBoundingMins(), maxs = zone + trigger.GetBoundingMaxs()},
+        origin + player.GetBoundingMins(), origin + player.GetBoundingMaxs());
 };
 
 ::DRTP_OnExit <- function(id)
@@ -21723,8 +22151,10 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     if (!::DRTP_IsValidHuman(player))
         return false;
 
-    if ((::DRTP_ESCAPE_OPEN || ::DRTP_ESCAPE_FINAL_ACTIVE)
-        && id == ::DRTP_ESCAPE_TELEPORTER_ID)
+    // Usable during the escape countdown, except in its last seconds.
+    if (id == ::DRTP_ESCAPE_TELEPORTER_ID && (::DRTP_ESCAPE_FINAL_ACTIVE
+        || (::DRTP_ESCAPE_OPEN
+            && ::DRTP_ESCAPE_REMAINING <= ::DRTP_ESCAPE_RESERVE_TIME)))
     {
         ::DRTP_Print(
             player,
@@ -21791,14 +22221,21 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
         if ((pressed & ::DRTP_IN_USE) == 0)
             continue;
 
+        local stale = [];
+        local useId = -1;
         foreach (id, inside in state.zones)
         {
-            if (inside)
-            {
-                ::DRTP_TryUse(id, player);
-                break;
-            }
+            if (!inside || !::DRTP_IsInsideZone(player, id))
+                stale.append(id);
+            else if (useId < 0)
+                useId = id;
         }
+        foreach (id in stale)
+            state.zones.rawdelete(id);
+        if (state.zones.len() == 0)
+            removePlayers.append(index);
+        if (useId >= 0)
+            ::DRTP_TryUse(useId, player);
     }
 
     foreach (index in removePlayers)
@@ -21840,7 +22277,6 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     );
     ::DRTP_Mission_GetText(1);
     ::DRTP_Mission_GetText(2);
-    ::DRTP_Mission_GetText(3);
 
     ::DRTP_AddOutput(
         "tp1button",
@@ -22000,6 +22436,7 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_PAP_AdjustTimer", error);
     }
 };
 
@@ -22036,21 +22473,8 @@ if (!("DRTP_MISSION_FINISH_SHOWN_TOKEN" in getroottable()))
         if (::DR_PAP_GetActiveWeapon(player) != weapon)
             continue;
 
-        // weapon_fire may arrive before the engine writes the new attack
-        // timer. Recheck it from the persistent thinker so every new shot
-        // receives the PAP fire-rate multiplier reliably.
-        if (data.fireRateMultiplier > 1.0)
-        {
-            ::DR_PAP_AdjustTimer(
-                weapon,
-                "m_flNextPrimaryAttack",
-                data,
-                "lastFireRatePrimary",
-                Time(),
-                data.fireRateMultiplier
-            );
-        }
-
+        // The PaP fire rate is applied by DR_FireRate_Think; this thinker
+        // keeps the reload speed.
         local papReloading = false;
         if (data.reloadMultiplier > 1.0
             && "DR_PAP_IsReloadingForPlayer" in getroottable())
@@ -22380,7 +22804,7 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
     while ((human = Entities.FindByClassname(human, "player")) != null)
     {
         if (!::DRDOOR_IsValidHuman(human)) continue;
-        local money = ::DRTP_GetMoney(human);
+        local money = ::DR_Money_Get(human);
         if (money < 0)
         {
             ::DRDOOR_Notice(player, id, "Purchase unavailable: could not read team funds");
@@ -22399,13 +22823,13 @@ if (!("DRDOOR_Opened" in getroottable())) ::DRDOOR_Opened <- {};
     foreach (charge in charges)
     {
         if (charge.paid == 0) continue;
-        if (!::DRTP_SetMoney(charge.player, charge.before - charge.paid))
+        if (!::DR_Money_Set(charge.player, charge.before - charge.paid))
         {
             // The setter may have written before reporting a verification
             // failure: restore the current account as well as earlier ones.
             charged.append(charge);
             foreach (previous in charged)
-                if (!::DRTP_SetMoney(previous.player, previous.before))
+                if (!::DR_Money_Set(previous.player, previous.before))
                     ::DRSAFE_Log("Door payment rollback failed for player " + previous.player.entindex());
             ::DRDOOR_Opened[id] = false;
             ::DRDOOR_Notice(player, id, "Purchase cancelled: payment failed");
@@ -23003,7 +23427,7 @@ if (!("DRWB_SCRIPT_NAME" in getroottable()))
     if (data == null) return;
     local owned = ::DRWB_FindOwnedWeapon(player, data.weapon);
     local cost = owned != null ? ::DRWB_GetAmmoPrice(data, owned).price : data.cost;
-    if (::DRTP_GetMoney(player) < cost)
+    if (::DR_Money_Get(player) < cost)
     {
         ClientPrint(player, 3, "\x07FF0000[Wall Shop] Insufficient funds: " + cost + "$");
         return;
@@ -23303,6 +23727,7 @@ try
 }
 catch (error)
 {
+    ::DR_LogCaught("DRWB_Install", error);
 }
 
 try
@@ -23311,10 +23736,11 @@ try
 }
 catch (error)
 {
+    ::DR_LogCaught("DRWB_Install#2", error);
 }
 
 if (!("DR_BONUS_PHYSBOX_BRUSH" in getroottable()))
-    ::DR_BONUS_PHYSBOX_BRUSH <- "*89";
+    ::DR_BONUS_PHYSBOX_BRUSH <- "*86";
 
 if (!("DR_BONUS_DROP_CHANCE" in getroottable()))
     ::DR_BONUS_DROP_CHANCE <- 0.05;
@@ -23336,7 +23762,7 @@ else
     ::DR_BONUS_LOW_HP_DURATION = 15.0;
 
 if (!("DR_BONUS_TEXT_CHANNEL" in getroottable()))
-    ::DR_BONUS_TEXT_CHANNEL <- 6;
+    ::DR_BONUS_TEXT_CHANNEL <- 0;
 
 if (!("DR_BONUS_TEXT_UPDATE_INTERVAL" in getroottable()))
     ::DR_BONUS_TEXT_UPDATE_INTERVAL <- 1.0;
@@ -23593,6 +24019,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
             }
             catch (error)
             {
+                ::DR_LogCaught("DR_Bonus_DestroyActive", error);
             }
         }
         else
@@ -23622,6 +24049,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_Bonus_DestroyActive#2", error);
         }
 
         ::DR_KillEntitySafe(::DR_BONUS_STATE.sound);
@@ -23708,15 +24136,257 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
     if (weapon == null || !weapon.IsValid())
         return -1;
 
-    local classname = weapon.GetClassname();
-
     if ("DR_PAP_GetWeaponFlag" in getroottable()
         && ::DR_PAP_GetWeaponFlag(weapon) != null)
     {
         return ::DR_PAP_RESERVE_AMMO;
     }
 
-    return ::DR_Bonus_GetNormalReserve(classname);
+    return ::DR_SpecialWeapon_GetReserve(weapon);
+};
+
+// Reserve of the Mystery Box special weapons (purchase and Max Ammo). The
+// TMP Bulletstorm uses DR_TMP_STARTING_RESERVE in its own ammo pool.
+::DR_SPECIAL_WEAPON_RESERVES <- {
+    mp5 = 1200, ak = 1200, m4 = 1200, p90 = 1200, deagle = 375, m3 = 250
+};
+
+// Reserve of this exact weapon: its special value, else its normal one.
+::DR_SpecialWeapon_GetReserve <- function(weapon)
+{
+    local type = ::DR_Tombstone_GetSpecialWeaponType(weapon);
+    if (type == "tmp")
+        return ::DR_TMP_STARTING_RESERVE;
+    if (type != null && ::DR_SPECIAL_WEAPON_RESERVES.rawin(type))
+        return ::DR_SPECIAL_WEAPON_RESERVES[type];
+    return ::DR_Bonus_GetNormalReserve(weapon.GetClassname());
+};
+
+// Special weapon delivered outside a purchase (Tombstone, Pack-a-Punch,
+// console): top its reserve up to the special value, never lower.
+::DR_SpecialWeapon_FillReserve <- function(player, weapon)
+{
+    try
+    {
+        local ammoType = ::DR_SpecialWeapon_GetAmmoType(weapon);
+        local standard = ::DR_SpecialWeapon_GetReserve(weapon);
+        if (ammoType >= 0 && standard > 0
+            && NetProps.GetPropIntArray(player, "m_iAmmo", ammoType) < standard)
+            NetProps.SetPropIntArray(player, "m_iAmmo", standard, ammoType);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_SpecialWeapon_FillReserve", error);
+    }
+
+    // Every special weapon delivery goes through here: show its custom model.
+    ::DR_SpecialModels_Start();
+};
+
+// Ammo pool of this exact weapon: the TMP Bulletstorm keeps its reserve in
+// DR_TMP_AMMO_INDEX, apart from the Glock's 9 mm.
+::DR_SpecialWeapon_GetAmmoType <- function(weapon)
+{
+    if (::DR_Tombstone_GetSpecialWeaponType(weapon) == "tmp")
+        return ::DR_TMP_AMMO_INDEX;
+    return NetProps.GetPropInt(weapon, "m_iPrimaryAmmoType");
+};
+
+
+// --------------------------------------------------------------------------
+// SPECIAL WEAPON MODELS
+// Custom view and world models (models/weapons/der_riese, packed in the
+// map). The game puts the stock models back on each deploy and drop, so a
+// thinker keeps the custom ones on every registered special weapon.
+// --------------------------------------------------------------------------
+
+::DR_SPECIAL_MODELS <- {
+    tmp    = {view = "v_tmp_bulletstorm", world = "w_tmp_bulletstorm"},
+    m3     = {view = "v_m3_shockwave",    world = "w_m3_shockwave"},
+    ak     = {view = "v_ak47_napalm",     world = "w_ak47_napalm"},
+    mp5    = {view = "v_mp5_teleporter",  world = "w_mp5_teleporter"},
+    deagle = {view = "v_deagle_gravity",  world = "w_deagle_gravity"},
+    m4     = {view = "v_m4a1_ice",        world = "w_m4a1_ice"},
+    p90    = {view = "v_p90_adrenaline",  world = "w_p90_adrenaline"}
+};
+::DR_SPECIAL_MODEL_TICK <- 0.03;
+if (!("DR_specialModelToken" in getroottable()))
+    ::DR_specialModelToken <- 0;
+::DR_specialModelRunning <- false;
+
+::DR_SpecialModels_Path <- function(name)
+{
+    return "models/weapons/der_riese/" + name + ".mdl";
+};
+
+if (!("DR_specialModelIndex" in getroottable()))
+    ::DR_specialModelIndex <- {};
+foreach (type, models in ::DR_SPECIAL_MODELS)
+    foreach (key, name in models)
+    {
+        local path = ::DR_SpecialModels_Path(name);
+        ::DR_specialModelIndex[path] <- PrecacheModel(path);
+    }
+
+// Model index of a custom model: the index the precache returned, else
+// GetModelIndex (kept for the next call: this runs every tick per special
+// weapon). -1 if neither is known.
+::DR_SpecialModels_Index <- function(path)
+{
+    if (::DR_specialModelIndex.rawin(path)
+        && typeof ::DR_specialModelIndex[path] == "integer"
+        && ::DR_specialModelIndex[path] > 0)
+        return ::DR_specialModelIndex[path];
+    try
+    {
+        local index = GetModelIndex(path);
+        if (index > 0)
+            ::DR_specialModelIndex[path] <- index;
+        return index;
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_SpecialModels_Index", error);
+    }
+    return -1;
+};
+
+// With its silencer on, the M4A1 draws a model the client picks itself and
+// ignores m_iWorldModelIndex: everyone would see the stock gun. So the M4A1
+// Ice has no silencer: it stays off and right click stays on cooldown.
+::DR_SPECIAL_SILENCER_BLOCK <- 1000.0;
+::DR_SpecialModels_BlockSilencer <- function(weapon)
+{
+    try
+    {
+        if (NetProps.GetPropInt(weapon, "m_bSilencerOn") != 0)
+            NetProps.SetPropInt(weapon, "m_bSilencerOn", 0);
+        // Deploys reset the timer; Speed Cola and PaP may shorten it.
+        local now = Time();
+        if (NetProps.GetPropFloat(weapon, "m_flNextSecondaryAttack")
+            < now + ::DR_SPECIAL_SILENCER_BLOCK * 0.1)
+            NetProps.SetPropFloat(weapon, "m_flNextSecondaryAttack",
+                now + ::DR_SPECIAL_SILENCER_BLOCK);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_SpecialModels_BlockSilencer", error);
+    }
+};
+
+// World model of a registered special weapon, or null for any other weapon.
+::DR_SpecialModels_WorldPath <- function(weapon)
+{
+    local type = ::DR_Tombstone_GetSpecialWeaponType(weapon);
+    if (type == null || !::DR_SPECIAL_MODELS.rawin(type))
+        return null;
+    return ::DR_SpecialModels_Path(::DR_SPECIAL_MODELS[type].world);
+};
+
+::DR_SpecialModels_Start <- function()
+{
+    if (::DR_specialModelRunning)
+        return;
+    ::DR_specialModelRunning = true;
+    ::DR_specialModelToken++;
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_SpecialModels_Think(" + ::DR_specialModelToken + ");",
+        ::DR_SPECIAL_MODEL_TICK, null);
+};
+
+::DR_SpecialModels_Think <- function(token)
+{
+    if (!::DR_specialModelRunning || token != ::DR_specialModelToken)
+        return;
+
+    local active = false;
+    foreach (type, models in ::DR_SPECIAL_MODELS)
+    {
+        local registry = "DR_" + type + "Weapons";
+        if (!(registry in getroottable()))
+            continue;
+        foreach (index, data in getroottable()[registry])
+        {
+            if (data.weapon == null || !data.weapon.IsValid())
+                continue;
+            active = true;
+            if (type == "m4")
+                ::DR_SpecialModels_BlockSilencer(data.weapon);
+            ::DR_SpecialModels_Apply(data.weapon, models);
+        }
+    }
+
+    // Stops with the last special weapon; the next delivery restarts it.
+    if (!active)
+    {
+        ::DR_specialModelRunning = false;
+        return;
+    }
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_SpecialModels_Think(" + token + ");", ::DR_SPECIAL_MODEL_TICK, null);
+};
+
+::DR_SpecialModels_Apply <- function(weapon, models)
+{
+    local worldPath = ::DR_SpecialModels_Path(models.world);
+    try
+    {
+        // Third person and on the ground: the client draws this index.
+        local worldIndex = ::DR_SpecialModels_Index(worldPath);
+        if (worldIndex > 0
+            && NetProps.GetPropInt(weapon, "m_iWorldModelIndex") != worldIndex)
+            NetProps.SetPropInt(weapon, "m_iWorldModelIndex", worldIndex);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_SpecialModels_Apply", error);
+    }
+
+    local owner = null;
+    try
+    {
+        owner = NetProps.GetPropEntity(weapon, "m_hOwner");
+    }
+    catch (error)
+    {
+        owner = null;
+    }
+
+    // On the ground: the entity's own model (the drop puts the stock one back).
+    if (owner == null || !owner.IsValid())
+    {
+        if (weapon.GetModelName() != worldPath)
+            weapon.SetModel(worldPath);
+        return;
+    }
+
+    // First person: the holder's view model, only while this weapon is out.
+    if (!::DR_IsValidHuman(owner) || ::DR_TMP_GetActiveWeapon(owner) != weapon)
+        return;
+    local viewModel = ::DR_SpeedCola_GetViewModel(owner);
+    if (viewModel == null || !viewModel.IsValid())
+        return;
+    local viewPath = ::DR_SpecialModels_Path(models.view);
+    if (viewModel.GetModelName() == viewPath)
+        return;
+
+    try
+    {
+        // Same animation, found by name in the new model (the MP5 wireframe
+        // has one extra sequence first, so the indexes differ).
+        local sequenceName = viewModel.GetSequenceName(viewModel.GetSequence());
+        viewModel.SetModel(viewPath);
+        local sequence = viewModel.LookupSequence(sequenceName);
+        if (sequence >= 0)
+            NetProps.SetPropInt(viewModel, "m_nSequence", sequence);
+        local viewIndex = ::DR_SpecialModels_Index(viewPath);
+        if (viewIndex > 0)
+            NetProps.SetPropInt(weapon, "m_iViewModelIndex", viewIndex);
+    }
+    catch (error)
+    {
+        ::DR_LogCaught("DR_SpecialModels_Apply#2", error);
+    }
 };
 
 
@@ -23745,6 +24415,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
         }
         catch (error)
         {
+            ::DR_LogCaught("DR_Bonus_DestroyTeleportPending", error);
         }
 
         ::DR_KillEntitySafe(pending.sound);
@@ -23772,6 +24443,14 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
     ::DR_Bonus_Spawn(kind, origin, false);
 };
 
+
+// Item charges restored by Max Ammo, by DR_specialItems type.
+::DR_BONUS_ITEM_MAX_CHARGES <- {
+    laser_teleport = ::DR_LASER_TP_CHARGES,
+    thundergun     = ::DR_THUNDERGUN_CHARGES,
+    freezegun      = ::DR_FREEZEGUN_CHARGES,
+    wunderwaffe    = ::DR_WUNDERWAFFE_CHARGES
+};
 
 ::DR_Bonus_ApplyMaxAmmo <- function()
 {
@@ -23820,10 +24499,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 
             try
             {
-                ammoType = NetProps.GetPropInt(
-                    weapon,
-                    "m_iPrimaryAmmoType"
-                );
+                ammoType = ::DR_SpecialWeapon_GetAmmoType(weapon);
             }
             catch (error)
             {
@@ -23862,6 +24538,17 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
                     "Max Ammo failed for ent="
                         + player.entindex().tostring()
                 );
+            }
+        }
+
+        // The wonder weapons get their charges back too (not the Monkey Bomb).
+        if (::DR_specialItems.rawin(player))
+        {
+            local item = ::DR_specialItems[player];
+            if ("type" in item && ::DR_BONUS_ITEM_MAX_CHARGES.rawin(item.type)
+                && item.charges < ::DR_BONUS_ITEM_MAX_CHARGES[item.type])
+            {
+                item.charges = ::DR_BONUS_ITEM_MAX_CHARGES[item.type];
             }
         }
 
@@ -24046,10 +24733,10 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
     if (damage <= 0)
         return;
 
-    local money = ::DRTP_GetMoney(attacker);
+    local money = ::DR_Money_Get(attacker);
 
     if (money >= 0)
-        ::DRTP_SetMoney(attacker, money + damage);
+        ::DR_Money_Set(attacker, money + damage);
 };
 
 
@@ -24130,6 +24817,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_Bonus_Spawn", error);
     }
 
     local spawnOrigin = origin;
@@ -24316,6 +25004,7 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
     }
     catch (error)
     {
+        ::DR_LogCaught("DR_Bonus_Spawn#2", error);
     }
 
     local visual = null;
@@ -24436,8 +25125,8 @@ if (!DR_BONUS_STATE.rawin("x2Duration"))
 
 
 // Bonus type chances in percent; Double Points takes the rest (45 %).
-::DR_BONUS_LOW_HP_CHANCE <- 10;
-::DR_BONUS_MAX_AMMO_CHANCE <- 45;
+::DR_BONUS_LOW_HP_CHANCE <- 20;
+::DR_BONUS_MAX_AMMO_CHANCE <- 35;
 
 ::DR_Bonus_RollKind <- function()
 {
@@ -24697,9 +25386,9 @@ else
     ::DRZS_ZOMBIE_MIN_HEALTH = 2500;
 
 if (!("DRZS_ZOMBIE_HEALTH_LINEAR" in getroottable()))
-    ::DRZS_ZOMBIE_HEALTH_LINEAR <- 400.0;
+    ::DRZS_ZOMBIE_HEALTH_LINEAR <- 250.0;
 else
-    ::DRZS_ZOMBIE_HEALTH_LINEAR = 400.0;
+    ::DRZS_ZOMBIE_HEALTH_LINEAR = 250.0;
 
 if (!("DRZS_ZOMBIE_HEALTH_QUADRATIC" in getroottable()))
     ::DRZS_ZOMBIE_HEALTH_QUADRATIC <- 0.0;
@@ -24727,17 +25416,20 @@ else
 ::DRZS_QUOTA_LARGE_STEP <- 1;
 
 if (!("DRZS_ZOMBIE_MIN_SPEED" in getroottable()))
-    ::DRZS_ZOMBIE_MIN_SPEED <- 0.85;
+    ::DRZS_ZOMBIE_MIN_SPEED <- 0.80;
+else
+    ::DRZS_ZOMBIE_MIN_SPEED = 0.80;
 
 if (!("DRZS_ZOMBIE_MAX_SPEED" in getroottable()))
     ::DRZS_ZOMBIE_MAX_SPEED <- 1.00;
 else
     ::DRZS_ZOMBIE_MAX_SPEED = 1.00;
 
+// 0.80 at round 1, +0.15/11 per round, 1.00 from round 16.
 if (!("DRZS_ZOMBIE_SPEED_LINEAR" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.15 / 7.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.15 / 11.0);
 else
-    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.15 / 7.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.15 / 11.0);
 
 if (!("DRZS_ZOMBIE_SPEED_QUADRATIC" in getroottable()))
     ::DRZS_ZOMBIE_SPEED_QUADRATIC <- 0.0;
@@ -24745,9 +25437,9 @@ else
     ::DRZS_ZOMBIE_SPEED_QUADRATIC = 0.0;
 
 if (!("DRZS_ZOMBIE_SPEED_ROUND" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_ROUND <- 8.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND <- 16.0;
 else
-    ::DRZS_ZOMBIE_SPEED_ROUND = 8.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND = 16.0;
 
 if (!("DRZS_ROUND_KILLS" in getroottable()))
     ::DRZS_ROUND_KILLS <- 0;
@@ -25217,19 +25909,28 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 
     local state = ::DRZS_DOG_STATES[playerIndex];
     if (!state.rawin("player") || state.player != player) return;
+    // Only a dog ever had its model changed here. Restoring the others put
+    // them back on the ZR model at every wave until the 1 s scan fixed it.
+    if (!state.isDog) return;
     if (!state.rawin("originalModel")
         || state.originalModel == "")
     {
         return;
     }
 
+    // A former dog goes straight back to its custom model.
+    local path = ::DR_PlayerModels_PathFor(player);
+    if (path == null)
+        path = state.originalModel;
+
     try
     {
-        player.SetModel(state.originalModel);
+        player.SetModel(path);
     }
     catch (error)
     {
         // The next player spawn will restore the normal team model.
+        ::DR_LogCaught("DRZS_Dog_RestoreModel", error);
     }
 };
 
@@ -25300,6 +26001,7 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
     {
         // Keep the dog attributes active even if this engine build refuses
         // a direct player model change.
+        ::DR_LogCaught("DRZS_Dog_ApplyVisual", error);
     }
 
     ::DRZS_Dog_UpdateParticle(zombie, state);
@@ -25830,6 +26532,7 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 {
     ::DRZS_ROUND_NUMBER++;
     ::DRZS_StartRoundWindow();
+    ::DR_Diag_Line("wave");
 };
 
 
@@ -25936,8 +26639,9 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 // Last round whose end skips the 15 s waiting-room pause.
 ::DRZS_NO_PAUSE_LAST_ROUND <- 4;
 
-// No pause after the early waves and during the escape (50 s countdown and
-// final 10 s): the next wave starts at once and zombies stay on the map.
+// No pause after the early waves and during the escape (last minute of the
+// countdown and final 10 s): the next wave starts at once and zombies stay
+// on the map.
 // A dog wave always keeps its pause and announcement.
 ::DRZS_SkipSafePhase <- function()
 {
@@ -25947,7 +26651,8 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
     if (::DRZS_ROUND_NUMBER <= ::DRZS_NO_PAUSE_LAST_ROUND)
         return true;
 
-    return ::DRTP_ESCAPE_OPEN || ::DRTP_ESCAPE_FINAL_ACTIVE;
+    return ::DRTP_ESCAPE_FINAL_ACTIVE || (::DRTP_ESCAPE_OPEN
+        && ::DRTP_ESCAPE_REMAINING <= ::DRTP_ESCAPE_NO_PAUSE_TIME);
 };
 
 ::DRZS_EndRoundByQuota <- function()
@@ -26214,6 +26919,7 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DRZS_ResetZombieSpeed", error);
     }
 
     ::DR_Freezegun_SetSpeed(zombie, speed);
@@ -27055,6 +27761,8 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
         ::DR_Bonus_EnsureLowHPGuard();
         local roundHealth = ::DRZS_GetZombieHealth();
         local zombie = null;
+        // Searched once per pass, not once per waiting zombie.
+        local room = Entities.FindByName(null, ::DRZS_WAITING_DESTINATION);
 
         while ((zombie = Entities.FindByClassname(zombie, "player")) != null)
         {
@@ -27082,7 +27790,6 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
             }
             if (state.stage == "waiting")
             {
-                local room = Entities.FindByName(null, ::DRZS_WAITING_DESTINATION);
                 if (room != null && room.IsValid()
                     && (zombie.GetOrigin() - room.GetOrigin()).Length() > 160.0)
                     ::DRZS_RetryWaitingTeleport(playerIndex, state.token);
@@ -27379,6 +28086,7 @@ if (!("DRZS_WATCHDOG_INTERVAL" in getroottable()))
     }
     catch (error)
     {
+        ::DR_LogCaught("DRZS_Install", error);
     }
 
     try
@@ -28050,6 +28758,264 @@ foreach (sound in ::DR_AUDIO_PRECACHE)
 }
 ::DR_Audio_BeginRound();
 
+// ============================================================================
+// HUMAN PLAYER MODELS (Dempsey / Richtofen)
+// ZR sets its own model when a player spawns and players can spawn before
+// round_start, which empties the delayed job queue. So a scan once per second,
+// restarted every round, keeps living players on their model. Dogs keep theirs.
+// ============================================================================
+::DR_PLAYER_MODELS <- [
+    "models/player/der_riese/dempsey.mdl",
+    "models/player/der_riese/richtofen.mdl",
+    "models/player/der_riese/takeo.mdl"
+];
+::DR_ZOMBIE_MODELS <- [
+    "models/player/der_riese/zombie_guard.mdl",
+    "models/player/der_riese/zombie_guard_grey.mdl",
+    "models/player/der_riese/zombie_guard_sleeves.mdl"
+];
+foreach (path in ::DR_PLAYER_MODELS)
+    printl("[Der Riese] Player model " + path + " precache index " + PrecacheModel(path));
+foreach (path in ::DR_ZOMBIE_MODELS)
+    printl("[Der Riese] Player model " + path + " precache index " + PrecacheModel(path));
+if (!("DR_ZOMBIE_MODEL_CHOICE" in getroottable()))
+    ::DR_ZOMBIE_MODEL_CHOICE <- {};
+
+if (!("DR_PLAYER_MODEL_CHOICE" in getroottable()))
+    ::DR_PLAYER_MODEL_CHOICE <- {};
+if (!("DR_PLAYER_MODEL_TOKEN" in getroottable()))
+    ::DR_PLAYER_MODEL_TOKEN <- 0;
+::DR_PLAYER_MODEL_QUICK <- false;
+
+// At most this many model changes per pass, so a full server is not changed in
+// one frame at round start; a pass that hits the limit continues 0.1 s later.
+::DR_PLAYER_MODEL_BATCH <- 8;
+
+// The model this player's team wears in this life, drawn once per life. Null
+// for spectators.
+::DR_PlayerModels_PathFor <- function(player)
+{
+    local playerIndex = player.entindex();
+    local team = player.GetTeam();
+    if (team == 3)
+    {
+        if (!::DR_PLAYER_MODEL_CHOICE.rawin(playerIndex))
+            ::DR_PLAYER_MODEL_CHOICE[playerIndex] <- ::DR_PLAYER_MODELS[RandomInt(0, ::DR_PLAYER_MODELS.len() - 1)];
+        return ::DR_PLAYER_MODEL_CHOICE[playerIndex];
+    }
+    if (team == 2)
+    {
+        if (!::DR_ZOMBIE_MODEL_CHOICE.rawin(playerIndex))
+            ::DR_ZOMBIE_MODEL_CHOICE[playerIndex] <- ::DR_ZOMBIE_MODELS[RandomInt(0, ::DR_ZOMBIE_MODELS.len() - 1)];
+        return ::DR_ZOMBIE_MODEL_CHOICE[playerIndex];
+    }
+    return null;
+};
+
+// One pass over the living players. Returns the number of models changed.
+::DR_PlayerModels_Pass <- function()
+{
+    local applied = 0;
+    local player = null;
+    while (applied < ::DR_PLAYER_MODEL_BATCH
+        && (player = Entities.FindByClassname(player, "player")) != null)
+    {
+        if (!::DR_IsValidPlayer(player) || !player.IsAlive())
+            continue;
+        local playerIndex = player.entindex();
+        if (player.GetTeam() == 2 && ::DRZS_DOG_STATES.rawin(playerIndex)
+            && ::DRZS_DOG_STATES[playerIndex].isDog)
+            continue;
+        local path = ::DR_PlayerModels_PathFor(player);
+        if (path == null || player.GetModelName() == path)
+            continue;
+        try
+        {
+            player.SetModel(path);
+            applied++;
+        }
+        catch (error)
+        {
+            printl("[Der Riese] Player model: " + error);
+        }
+    }
+    return applied;
+};
+
+::DR_PlayerModels_Scan <- function(token)
+{
+    if (token != ::DR_PLAYER_MODEL_TOKEN)
+        return;
+    local applied = ::DR_PlayerModels_Pass();
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DR_PlayerModels_Scan(" + token + ");",
+        applied >= ::DR_PLAYER_MODEL_BATCH ? 0.1 : 1.0, null);
+};
+
+// ZR sets its model on spawn and on infection: one extra pass just after,
+// so nobody shows it until the next 1 s scan. Several requests share one pass.
+::DR_PlayerModels_QueueQuick <- function()
+{
+    if (::DR_PLAYER_MODEL_QUICK)
+        return;
+    ::DR_PLAYER_MODEL_QUICK = true;
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_PlayerModels_Quick(" + ::DR_PLAYER_MODEL_TOKEN + ");", 0.15, null);
+};
+
+::DR_PlayerModels_Quick <- function(token)
+{
+    if (token != ::DR_PLAYER_MODEL_TOKEN)
+        return;
+    ::DR_PLAYER_MODEL_QUICK = false;
+    if (::DR_PlayerModels_Pass() >= ::DR_PLAYER_MODEL_BATCH)
+        ::DR_PlayerModels_QueueQuick();
+};
+
+::DR_PlayerModels_BeginRound <- function()
+{
+    ::DR_PLAYER_MODEL_TOKEN++;
+    // round_start emptied the job queue, with any pending quick pass.
+    ::DR_PLAYER_MODEL_QUICK = false;
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DR_PlayerModels_Scan(" + ::DR_PLAYER_MODEL_TOKEN + ");", 0.5, null);
+};
+
+// A new life draws a new model.
+::DR_PlayerModels_OnSpawn <- function(params)
+{
+    if (!("userid" in params))
+        return;
+    local player = GetPlayerFromUserID(params.userid);
+    if (!::DR_IsValidPlayer(player))
+        return;
+    if (::DR_PLAYER_MODEL_CHOICE.rawin(player.entindex()))
+        ::DR_PLAYER_MODEL_CHOICE.rawdelete(player.entindex());
+    if (::DR_ZOMBIE_MODEL_CHOICE.rawin(player.entindex()))
+        ::DR_ZOMBIE_MODEL_CHOICE.rawdelete(player.entindex());
+    ::DR_PlayerModels_QueueQuick();
+};
+
+::DR_PlayerModels_BeginRound();
+
+// ============================================================================
+// BRUSH MODELS
+// ============================================================================
+// The *N numbers change when a compile adds or removes brush entities. Each brush
+// copied at runtime has its own name in Hammer: read its number before logic_auto
+// kills it, as it does for index_entities. A brush not found keeps the number
+// written in its constant.
+::DR_BRUSH_MODELS <- {
+    dr_b_freezegun = "DR_FREEZEGUN_TRIGGER_MODEL",
+    dr_b_raygun    = "DR_LASER_TP_TRIGGER_MODEL",
+    dr_b_thunder   = "DR_THUNDERGUN_TRIGGER_MODEL",
+    dr_b_monkey    = "DR_MONKEYBOMB_TRIGGER_MODEL",
+    dr_b_wunder    = "DR_WUNDERWAFFE_DIRECT_TRIGGER_MODEL",
+    dr_b_bonus     = "DR_BONUS_PHYSBOX_BRUSH"
+};
+
+::DR_BrushModels_Read <- function()
+{
+    local root = getroottable();
+    foreach (name, constant in ::DR_BRUSH_MODELS)
+    {
+        local brush = Entities.FindByName(null, name);
+        if (brush == null || !brush.IsValid())
+            continue;
+        root[constant] = brush.GetModelName();
+    }
+};
+
+// At map load the script runs before later entities exist; round_start reads them
+// directly because it empties this job.
+DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DR_BrushModels_Read();", 0.0, null);
+
+// ============================================================================
+// SERVER DIAGNOSTICS
+// One console line every 30 s and one per wave: with -condebug, console.log
+// then shows the state of the map just before a crash. Off in game with
+// script ::DR_DIAG_ENABLED = false; one line on demand with
+// script DR_Diag_Line("manual")
+// ============================================================================
+if (!("DR_DIAG_ENABLED" in getroottable()))
+    ::DR_DIAG_ENABLED <- true;
+if (!("DR_DIAG_TOKEN" in getroottable()))
+    ::DR_DIAG_TOKEN <- 0;
+::DR_DIAG_INTERVAL <- 30.0;
+// Above this entity count the line says so (the engine stops at 2048 edicts).
+::DR_DIAG_ENTITY_WARNING <- 1700;
+::DR_DIAG_TOP_CLASSES <- 10;
+
+::DR_Diag_Line <- function(label)
+{
+    if (!::DR_DIAG_ENABLED)
+        return;
+    local counts = {};
+    local total = 0;
+    local humans = 0;
+    local zombies = 0;
+    local entity = Entities.First();
+    while (entity != null)
+    {
+        local classname = entity.GetClassname();
+        if (counts.rawin(classname))
+            counts[classname]++;
+        else
+            counts[classname] <- 1;
+        total++;
+        if (classname == "player" && entity.IsAlive())
+        {
+            if (entity.GetTeam() == 3)
+                humans++;
+            else if (entity.GetTeam() == 2)
+                zombies++;
+        }
+        entity = Entities.Next(entity);
+    }
+    local rows = [];
+    foreach (classname, count in counts)
+        rows.append({name = classname, count = count});
+    rows.sort(function(a, b) { return b.count - a.count; });
+    local top = "";
+    for (local i = 0; i < rows.len() && i < ::DR_DIAG_TOP_CLASSES; i++)
+        top += " " + rows[i].name + "=" + rows[i].count;
+    local created = 0;
+    local failed = 0;
+    foreach (classname, stats in ::DRN_STATS)
+    {
+        created += stats.created;
+        failed += stats.failed;
+    }
+    local caught = 0;
+    foreach (site, count in ::DR_CAUGHT)
+        caught += count;
+    printl("[DR stats] " + label + " t=" + Time().tointeger()
+        + " server_round=" + ::DRN_SERVER_ROUNDS
+        + " wave=" + ::DRZS_ROUND_NUMBER + " phase=" + ::DRZS_ROUND_PHASE
+        + " humans=" + humans + " zombies=" + zombies
+        + " entities=" + total + " queue=" + ::DRQ_HEAP.len() + "/" + ::DRQ_PEAK
+        + " spawned=" + created + " spawn_failed=" + failed
+        + " caught=" + caught + " |" + top);
+    if (total >= ::DR_DIAG_ENTITY_WARNING)
+        printl("[DR stats] WARNING: " + total + " entities, the limit is close");
+};
+
+::DR_Diag_Think <- function(token)
+{
+    if (token != ::DR_DIAG_TOKEN)
+        return;
+    ::DR_Diag_Line("timer");
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DR_Diag_Think(" + token + ");",
+        ::DR_DIAG_INTERVAL, null);
+};
+
+::DR_Diag_BeginRound <- function()
+{
+    ::DR_DIAG_TOKEN++;
+    DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode",
+        "DR_Diag_Think(" + ::DR_DIAG_TOKEN + ");", ::DR_DIAG_INTERVAL, null);
+};
+
+::DR_Diag_BeginRound();
+
 ::DRPOWER_Install();
-::DR_BUILD_ID <- "v15-test-v1b-2026-10-20";
+::DR_BUILD_ID <- "v2-2026-11-02";
 printl("[Der Riese] Loaded: " + ::DR_BUILD_ID);
