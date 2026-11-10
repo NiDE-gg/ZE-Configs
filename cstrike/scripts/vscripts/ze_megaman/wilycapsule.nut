@@ -285,7 +285,7 @@ function Orbe(tipo, dir){
 		for (local h; h = Entities.FindInSphere(h, sig, 28);){
 			if (!h.IsPlayer() || !h.IsAlive() || h.GetTeam() != (("reflejado" in this) ? 2 : 3)) continue
 			h.TakeDamageEx(self, (owner != null && owner.IsValid()) ? owner : self, self, Vector(0, 0, 0), h.GetOrigin(), damage, 0)
-			if (h.IsAlive() && owner != null && owner.IsValid()) owner.GetScriptScope().OrbeEfecto(h, tipo)
+			if (h.IsAlive() && owner != null && owner.IsValid()) try { owner.GetScriptScope().OrbeEfecto(h, tipo) } catch (e) {  }
 			self.Kill(); return -1
 		}
 		return -1
