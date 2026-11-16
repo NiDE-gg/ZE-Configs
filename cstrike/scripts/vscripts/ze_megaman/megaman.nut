@@ -1,4 +1,4 @@
-::MEGAMAN_VERSION <- "v110 (2026-11-09)"
+::MEGAMAN_VERSION <- "v111 (2026-11-09)"
 if (("IsDedicatedServer" in getroottable()) && IsDedicatedServer()) {
     ::DebugDrawLine   <- function(...) {}
     ::DebugDrawBox    <- function(...) {}
@@ -28,14 +28,14 @@ if (!("DoEntFireNativo" in getroottable()))
 {
     ClientPrint(null, 4, "ze_megaman scripts " + ::MEGAMAN_VERSION)
 }
-IncludeScript("mog/overlays.nut");
-IncludeScript("mog/megaman_events.nut");
+IncludeScript("ze_megaman/overlays.nut");
+IncludeScript("ze_megaman/megaman_events.nut");
 IncludeScript("mog/fx.nut");
 IncludeScript("mog/megaman_mm6bli_icespike.nut");
-IncludeScript("mog/bossintro.nut");
+IncludeScript("ze_megaman/bossintro.nut");
 IncludeScript("mog/stageintro.nut");
 IncludeScript("mog/dmgnum.nut");
-IncludeScript("mog/fileselect.nut");
+IncludeScript("ze_megaman/fileselect.nut");
 IncludeScript("mog/leaderboard.nut");
 IncludeScript("mog/escudoprueba.nut");
 IncludeScript("mog/forcebeam.nut");
