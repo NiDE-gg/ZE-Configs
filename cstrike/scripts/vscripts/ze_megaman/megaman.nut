@@ -1620,8 +1620,6 @@ MegamanV2Informe()
         scope.V2Pain <- Time() + 0.5
         MegamanV2Refrescar(scope)
         EntFireByHandle(self, "RunScriptCode", "activator.SetAbsVelocity(Vector(0,0,0))", 0, self, null);
-        NetProps.SetPropBool(self, "pl.deadflag", true);
-        EntFireByHandle(self, "RunScriptCode", "if (activator.IsAlive()) NetProps.SetPropBool(activator, `pl.deadflag`, false);", 0.5, self, null)
         self.AcceptInput("RunScriptCode", "SetSliding(activator,false)", self, null)
         scope.Attacking = false
         scope.IsTaunting = false
@@ -2623,7 +2621,7 @@ MegamanV2Informe()
                         if("reflejado" in this){
                             if(!("reflejado_t" in this)) reflejado_t <- Time();
                             if(Time() - reflejado_t >= 1.0){
-                                EntFireByHandle(particle, "CallScriptFunction", hashitplayers ? "FreeUp" : "FreeUpFail", 0, null, null)
+                                EntFireByHandle(particle, "CallScriptFunction", "FreeUpFail", 0, null, null)
                                 return 60;
                             }
                         }
@@ -2655,7 +2653,7 @@ MegamanV2Informe()
                         for(local h;h=Entities.FindInSphere(h,checkpos,damage_range);){
                             if(!h.IsPlayer()) continue;
                             if(!h.IsAlive()) continue;
-                            if(spikereturn&&h.GetTeam()==2&&h==projowner){
+                            if(spikereturn&&h.GetTeam()==2&&h==projowner&&!("reflejado" in this)){
                                 if(!hashitplayers){
                                     EntFireByHandle(particle, "CallScriptFunction", "FreeUpFail", 0, null, null)
                                     EmitSoundEx({
@@ -2702,7 +2700,7 @@ MegamanV2Informe()
                                 speaker_entity = h
                                 channel = 6,
                             });
-                            hashitplayers=true
+                            if(!("reflejado" in this)) hashitplayers=true
                             spikereturn=true
                         }
                         return -1;
@@ -3377,7 +3375,6 @@ EntFireByHandle(Entities.First(), "RunScriptCode", "::BurbujaVerVida()", 1.0, nu
     if (scope.SpriteAnim == 7)
         return;
     scope.Attacking = true
-    NetProps.SetPropBool(player, "pl.deadflag", true);
     player.AcceptInput("RunScriptCode", "ProtoShieldCD=true", null, null)
     EntFireByHandle(player, "RunScriptCode", "ProtoShieldCD=false", 30, self, null)
     player.AcceptInput("RunScriptCode", "ProtoShield=true", null, null)
@@ -3396,7 +3393,7 @@ EntFireByHandle(Entities.First(), "RunScriptCode", "::BurbujaVerVida()", 1.0, nu
     MegamanV2Refrescar(scope)
     local POSE_DURA = 1.0
     local held_weapon = ::NetProps.GetPropEntity(player,"m_hActiveWeapon");
-    EntFireByHandle(self, "RunScriptCode", "if (activator.IsAlive()) NetProps.SetPropBool(activator, `pl.deadflag`, false);", POSE_DURA, player, null)
+    EntFireByHandle(self, "RunScriptCode", "if (activator.IsAlive()) NetProps.SetPropInt(activator, `m_Local.m_bDrawViewmodel`, 1);", POSE_DURA, player, null)
     EntFireByHandle(self, "RunScriptCode", "SetAttacking(activator,false)", POSE_DURA, player, null)
     EntFireByHandle(self, "RunScriptCode", "::OvBrazos(self, `megaman/protoman/protoman_hud_shield1`)", 0.05, null, null)
     EntFireByHandle(self, "RunScriptCode", "::OvBrazos(self, `megaman/protoman/protoman_hud_shield2`)", 0.1, null, null)
