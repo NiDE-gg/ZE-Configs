@@ -1,0 +1,4214 @@
+add:
+{
+	"origin" "-864 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29953"
+}
+add:
+{
+	"origin" "-864 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29955"
+}
+add:
+{
+	"origin" "-864 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29957"
+}
+add:
+{
+	"origin" "-864 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29959"
+}
+add:
+{
+	"origin" "-624 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "2481"
+}
+add:
+{
+	"origin" "-704 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29933"
+}
+add:
+{
+	"origin" "-784 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29949"
+}
+add:
+{
+	"origin" "-784 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29945"
+}
+add:
+{
+	"origin" "-704 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29929"
+}
+add:
+{
+	"origin" "-624 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29868"
+}
+add:
+{
+	"origin" "-704 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29935"
+}
+add:
+{
+	"origin" "-784 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29951"
+}
+add:
+{
+	"origin" "-624 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29897"
+}
+add:
+{
+	"origin" "-624 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29899"
+}
+add:
+{
+	"origin" "-704 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29931"
+}
+add:
+{
+	"origin" "-784 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 0 0"
+	"enabled" "1"
+	"hammerid" "29947"
+}
+add:
+{
+	"origin" "992 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30094"
+}
+add:
+{
+	"origin" "992 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30096"
+}
+add:
+{
+	"origin" "992 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30098"
+}
+add:
+{
+	"origin" "992 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30100"
+}
+add:
+{
+	"origin" "752 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30102"
+}
+add:
+{
+	"origin" "832 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30104"
+}
+add:
+{
+	"origin" "912 48 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30106"
+}
+add:
+{
+	"origin" "912 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30108"
+}
+add:
+{
+	"origin" "832 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30110"
+}
+add:
+{
+	"origin" "752 -48 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30112"
+}
+add:
+{
+	"origin" "832 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30114"
+}
+add:
+{
+	"origin" "912 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30116"
+}
+add:
+{
+	"origin" "752 -144 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30118"
+}
+add:
+{
+	"origin" "752 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30120"
+}
+add:
+{
+	"origin" "832 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30122"
+}
+add:
+{
+	"origin" "912 -240 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 180 0"
+	"enabled" "1"
+	"hammerid" "30124"
+}
+add:
+{
+	"origin" "304 -928 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30160"
+}
+add:
+{
+	"origin" "496 -928 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30162"
+}
+add:
+{
+	"origin" "208 -928 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30164"
+}
+add:
+{
+	"origin" "400 -928 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30166"
+}
+add:
+{
+	"origin" "208 -688 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30168"
+}
+add:
+{
+	"origin" "208 -768 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30170"
+}
+add:
+{
+	"origin" "208 -848 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30172"
+}
+add:
+{
+	"origin" "304 -848 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30174"
+}
+add:
+{
+	"origin" "304 -768 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30176"
+}
+add:
+{
+	"origin" "304 -688 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30178"
+}
+add:
+{
+	"origin" "400 -768 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30180"
+}
+add:
+{
+	"origin" "400 -848 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30182"
+}
+add:
+{
+	"origin" "400 -688 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30184"
+}
+add:
+{
+	"origin" "496 -688 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30186"
+}
+add:
+{
+	"origin" "496 -768 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30188"
+}
+add:
+{
+	"origin" "496 -848 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30190"
+}
+add:
+{
+	"origin" "-272 -928 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30325"
+}
+add:
+{
+	"origin" "-80 -928 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30327"
+}
+add:
+{
+	"origin" "-368 -928 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30329"
+}
+add:
+{
+	"origin" "-176 -928 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30331"
+}
+add:
+{
+	"origin" "-368 -688 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30333"
+}
+add:
+{
+	"origin" "-368 -768 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30335"
+}
+add:
+{
+	"origin" "-368 -848 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30337"
+}
+add:
+{
+	"origin" "-272 -848 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30339"
+}
+add:
+{
+	"origin" "-272 -768 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30341"
+}
+add:
+{
+	"origin" "-272 -688 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30343"
+}
+add:
+{
+	"origin" "-176 -768 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30345"
+}
+add:
+{
+	"origin" "-176 -848 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30347"
+}
+add:
+{
+	"origin" "-176 -688 80"
+	"classname" "info_player_counterterrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30349"
+}
+add:
+{
+	"origin" "-80 -688 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30351"
+}
+add:
+{
+	"origin" "-80 -768 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30353"
+}
+add:
+{
+	"origin" "-80 -848 80"
+	"classname" "info_player_terrorist"
+	"angles" "0 90 0"
+	"enabled" "1"
+	"hammerid" "30355"
+}
+add:
+{
+	"origin" "64 1840 -648"
+	"alternateticksfix" "0"
+	"pushdir" "-90 0 0"
+	"classname" "trigger_push"
+	"spawnflags" "1"
+	"speed" "400"
+	"targetname" "room1_pushwall"
+	"FallingSpeedThreshold" "-150"
+	"hammerid" "41678"
+	"model" "*1"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "664 1840 -640"
+	"pushdir" "0 180 0"
+	"classname" "trigger_push"
+	"spawnflags" "4097"
+	"speed" "400"
+	"targetname" "room1_pushwall"
+	"FallingSpeedThreshold" "-150"
+	"hammerid" "41694"
+	"model" "*2"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "1320 1120 -640"
+	"pushdir" "0 90 0"
+	"classname" "trigger_push"
+	"spawnflags" "4097"
+	"speed" "400"
+	"targetname" "room1_pushwall"
+	"FallingSpeedThreshold" "-150"
+	"hammerid" "41705"
+	"model" "*3"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "1848 392 -640"
+	"alternateticksfix" "0"
+	"pushdir" "0 180 0"
+	"OnlyFallingPlayers" "0"
+	"classname" "trigger_push"
+	"spawnflags" "4097"
+	"speed" "400"
+	"targetname" "room1_pushwall"
+	"FallingSpeedThreshold" "-150"
+	"hammerid" "41710"
+	"model" "*4"
+	"StartDisabled" "1"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"disableshadowdepth" "0"
+	"shadowdepthnocache" "0"
+	"fademindist" "-1"
+	"fademaxdist" "0"
+	"rendercolor" "255 255 255"
+	"disableflashlight" "0"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "1"
+	"fadescale" "1"
+	"classname" "func_wall_toggle"
+	"rendermode" "0"
+	"targetname" "room1_blockdoor"
+	"hammerid" "38294"
+	"model" "*5"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "180"
+	"disableshadowdepth" "0"
+	"shadowdepthnocache" "0"
+	"fademindist" "-1"
+	"fademaxdist" "0"
+	"rendercolor" "255 255 255"
+	"origin" "64 272.23 358.83"
+	"disableflashlight" "0"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"classname" "func_illusionary"
+	"fadescale" "1"
+	"rendermode" "1"
+	"hammerid" "35456"
+	"model" "*6"
+}
+add:
+{
+	"renderamt" "255"
+	"OnPlayerPickup" "cmd,Command,say (de)bugger. OBTAINED,0,1"
+	"OnPlayerPickup" "!activator,AddOutput,targetname weapon_debugger_player,0.05,-1"
+	"OnPlayerPickup" "weapon_debugger_player,AddOutput,targetname default,0,-1"
+	"OnPlayerPickup" "weapon_debugger_move,Enable,,0.12,-1"
+	"OnPlayerPickup" "weapon_debugger_move,SetMeasureReference,weapon_debugger_player,0.1,-1"
+	"OnPlayerPickup" "weapon_debugger_move,SetMeasureTarget,weapon_debugger_player,0.1,-1"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"origin" "-1056 4648 259.159"
+	"classname" "weapon_elite"
+	"spawnflags" "1"
+	"fadescale" "1"
+	"angles" "0 0 0"
+	"targetname" "weapon_debugger"
+	"hammerid" "35470"
+	"CanBePickedUp" "1"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"shadowdepthnocache" "0"
+	"model" "*7"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "0"
+	"fademaxdist" "0"
+	"parentname" "weapon_debugger"
+	"spawnpos" "0"
+	"origin" "-1038 4648 272"
+	"fademindist" "-1"
+	"ignoredebris" "0"
+	"movedir" "0 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"disableflashlight" "0"
+	"drawinfastreflection" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "weapon_debugger_mdl"
+	"hammerid" "35553"
+	"renderfx" "0"
+	"spawnflags" "6156"
+	"wait" "4"
+	"renderamt" "255"
+	"disableshadowdepth" "0"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"speed" "5"
+	"OnPressed" "weapon_debugger_maker,ForceSpawn,,0,-1"
+	"rendermode" "0"
+	"min_use_angle" "0.8"
+	"model" "*8"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "0"
+	"fademaxdist" "0"
+	"parentname" "weapon_debugger"
+	"origin" "-1024 4649 259"
+	"sounds" "0"
+	"fademindist" "-1"
+	"unlocked_sound" "0"
+	"movedir" "0 0 0"
+	"locked_sound" "0"
+	"health" "0"
+	"classname" "func_button"
+	"locked_sentence" "0"
+	"targetname" "weapon_debugger_btn"
+	"hammerid" "35594"
+	"renderfx" "0"
+	"spawnflags" "17409"
+	"wait" "1.5"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"origin" "-1036 4648 272"
+	"classname" "info_teleport_destination"
+	"angles" "0 0 0"
+	"targetname" "weapon_debugger_beam_target"
+	"hammerid" "35651"
+	"parentname" "weapon_debugger"
+}
+add:
+{
+	"Template01" "weapon_debugger_bug_beam"
+	"origin" "-1032 4727 294"
+	"classname" "point_template"
+	"spawnflags" "2"
+	"Template02" "weapon_debugger_bug_trigger"
+	"targetname" "weapon_debugger_bug_template"
+	"hammerid" "35680"
+}
+add:
+{
+	"NearestEntityDistance" "speedmod,ModifySpeed,0.5,0,1"
+	"NearestEntityDistance" "speedmod,ModifySpeed,1,6,1"
+	"NearestEntityDistance" "!activator,AddOutput,targetname debugged,0,1"
+	"NearestEntityDistance" "!activator,AddOutput,targetname default,6,1"
+	"NearestEntityDistance" "!self,Kill,,0,1"
+	"radius" "4098"
+	"origin" "-1035 4727 294"
+	"classname" "trigger_proximity"
+	"spawnflags" "4097"
+	"measuretarget" "weapon_debugger_bug_trigger"
+	"targetname" "weapon_debugger_bug_trigger"
+	"filtername" "filter_debug"
+	"hammerid" "35703"
+	"model" "*9"
+	"StartDisabled" "0"
+}
+add:
+{
+	"origin" "-1109.82 4736.28 241"
+	"Negated" "1"
+	"classname" "filter_activator_name"
+	"targetname" "filter_debug_name"
+	"filtername" "debugged"
+	"hammerid" "35725"
+}
+add:
+{
+	"Filter01" "filter_debug_name"
+	"origin" "-1100.93 4716.03 248"
+	"filtertype" "0"
+	"Negated" "0"
+	"classname" "filter_multi"
+	"targetname" "filter_debug"
+	"hammerid" "35738"
+	"Filter02" "filter_t"
+}
+add:
+{
+	"BoltWidth" "2"
+	"texture" "sprites/laserbeam.spr"
+	"TextureScroll" "35"
+	"StrikeTime" "1"
+	"rendercolor" "255 255 255"
+	"LightningEnd" "weapon_debugger_beam_target"
+	"origin" "1017 4727 294"
+	"Radius" "256"
+	"damage" "0"
+	"LightningStart" "weapon_debugger_bug_beam"
+	"HDRColorScale" "1.0"
+	"ClipStyle" "0"
+	"decalname" "Bigshot"
+	"targetpoint" "0 0 0"
+	"framerate" "0"
+	"targetname" "weapon_debugger_bug_beam"
+	"classname" "env_beam"
+	"hammerid" "35781"
+	"renderfx" "0"
+	"TouchType" "0"
+	"framestart" "0"
+	"spawnflags" "50"
+	"life" "0"
+	"renderamt" "100"
+	"NoiseAmplitude" "0"
+}
+add:
+{
+	"EntityTemplate" "weapon_debugger_bug_template"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"OnEntitySpawned" "weapon_debugger_bug_beam,TurnOn,,0.04,-1"
+	"OnEntitySpawned" "weapon_debugger_bug_trigger,Kill,,0.1,-1"
+	"OnEntitySpawned" "weapon_debugger_bug_beam,Kill,,0.5,-1"
+	"OnEntitySpawned" "weapon_debugger_bug_case,PickRandom,,0.02,-1"
+	"origin" "-1131.37 4638.25 241"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 0 0"
+	"targetname" "weapon_debugger_maker"
+	"hammerid" "35871"
+}
+add:
+{
+	"origin" "0 3001 1349"
+	"Negated" "1"
+	"classname" "filter_activator_name"
+	"targetname" "filter_debug_name"
+	"filtername" "debugged"
+	"hammerid" "36088"
+}
+add:
+{
+	"mincpulevel" "0"
+	"rendermode" "10"
+	"RandomAnimation" "0"
+	"HoldAnimation" "0"
+	"disableX360" "0"
+	"shadowdepthnocache" "0"
+	"pressuredelay" "0"
+	"angles" "0 0 0"
+	"model" "models/props_c17/light_cagelight02_off.mdl"
+	"rendercolor" "255 255 255"
+	"MaxAnimTime" "10"
+	"is_autoaim_target" "0"
+	"disablereceiveshadows" "1"
+	"SetBodyGroup" "0"
+	"StartDisabled" "0"
+	"fademaxdist" "0.01"
+	"ExplodeDamage" "0"
+	"ExplodeRadius" "0"
+	"origin" "752 3008 1608"
+	"fademindist" "0"
+	"PerformanceMode" "1"
+	"MinAnimTime" "5"
+	"skin" "0"
+	"DisableBoneFollowers" "1"
+	"solid" "0"
+	"maxgpulevel" "0"
+	"disableshadows" "1"
+	"disableflashlight" "1"
+	"drawinfastreflection" "0"
+	"classname" "prop_dynamic"
+	"targetname" "boss_bullet_mdl"
+	"maxcpulevel" "0"
+	"hammerid" "36126"
+	"renderfx" "0"
+	"body" "0"
+	"modelscale" "1.0"
+	"mingpulevel" "0"
+	"spawnflags" "256"
+	"renderamt" "0"
+	"disableshadowdepth" "1"
+	"fadescale" "1"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "99999"
+	"rendercolor" "255 255 255"
+	"origin" "64 2208 56"
+	"movedistance" "352"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "50"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room1_move"
+	"hammerid" "2284"
+	"model" "*10"
+	"startposition" "0"
+}
+add:
+{
+	"cheapwaterstartdistance" "99999"
+	"origin" "440.83 3127.01 506.279"
+	"classname" "water_lod_control"
+	"hammerid" "2521"
+	"cheapwaterenddistance" "999999"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*11"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "64 2208 320"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate_h1"
+	"hammerid" "2533"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"OnMapSpawn" "autorotate*,FireUser1,,0,-1"
+	"OnMapSpawn" "room2_shortcut,Open,,0,-1"
+	"OnMapSpawn" "cmd,Command,say PROJECT EDEN | BEGIN,5,-1"
+	"OnMapSpawn" "cmd,Command,say MAP BY GEORGE,8,-1"
+	"OnMapSpawn" "eden_text,Display,,5,-1"
+	"OnMapSpawn" "eden_text2,Display,,8,-1"
+	"OnMapSpawn" "cmd,Command,mp_roundtime 15,0,-1"
+	"origin" "349.199 3127.01 372.406"
+	"classname" "logic_auto"
+	"spawnflags" "1"
+	"hammerid" "2561"
+	"OnNewGame" "cmd,Command,mp_roundtime 15,0,-1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*12"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "64 -96 352"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "2573"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"start_active" "1"
+	"cpoint3_parent" "0"
+	"origin" "-768 1808 592"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_001"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"hammerid" "2608"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "1"
+	"cpoint3_parent" "0"
+	"origin" "-768 2576 592"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_001"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"hammerid" "2875"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "1"
+	"cpoint3_parent" "0"
+	"origin" "896 2576 592"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_001"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"hammerid" "2940"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "1"
+	"cpoint3_parent" "0"
+	"origin" "896 1808 592"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_001"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"hammerid" "3005"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 30 SECONDS,0,-1"
+	"OnTrigger" "room1_move,Open,,27.5,-1"
+	"OnTrigger" "music1,PlaySound,,0,-1"
+	"OnTrigger" "music1,Volume,10,0,-1"
+	"origin" "72 1128 224"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "4407"
+	"model" "*13"
+	"StartDisabled" "0"
+}
+add:
+{
+	"classname" "point_servercommand"
+	"targetname" "cmd"
+	"origin" "-23 988.889 169.68"
+	"hammerid" "4566"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "-90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "99999"
+	"rendercolor" "255 255 255"
+	"origin" "64 3240 224"
+	"movedistance" "416"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room1_door"
+	"hammerid" "4623"
+	"model" "*14"
+	"startposition" "0"
+	"OnFullyClosed" "afk_tp2,Enable,,0,-1"
+	"OnFullyClosed" "afk_tp2,Disable,,1,-1"
+	"OnFullyClosed" "afk_tp1,Enable,,0,-1"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 20 SECONDS,0,-1"
+	"OnTrigger" "room1_door,Open,,20,-1"
+	"OnTrigger" "room1_door,Close,,32,-1"
+	"origin" "64 3104 224"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "4647"
+	"model" "*15"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 40 SECONDS,0,-1"
+	"OnTrigger" "room1_move,Close,,37.5,-1"
+	"OnTrigger" "autorotate_h1,AddOutput,OnUser1 !self:SetSpeed:1:0.02:1,0,-1"
+	"OnTrigger" "autorotate_h1,AddOutput,OnUser1 !self:AddOutput:maxspeed 300:3:1,0,-1"
+	"OnTrigger" "autorotate_h1,AddOutput,OnUser1 !self:AddOutput:maxspeed 600:0:1,0,-1"
+	"origin" "64 2208 320"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "5046"
+	"model" "*16"
+	"StartDisabled" "0"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*17"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-4"
+	"spawnpos" "0"
+	"origin" "-8 5152 616"
+	"fademindist" "-1"
+	"ignoredebris" "0"
+	"movedir" "0 180 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "room2_door"
+	"hammerid" "6521"
+	"renderfx" "0"
+	"spawnflags" "4096"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*18"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-4"
+	"spawnpos" "0"
+	"origin" "136 5152 616"
+	"fademindist" "-1"
+	"OnFullyOpen" "afk_tp1,AddOutput,target room2_dest,25,-1"
+	"OnFullyOpen" "afk_tp3,Enable,,25,-1"
+	"ignoredebris" "0"
+	"movedir" "0 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "room2_door"
+	"hammerid" "6538"
+	"renderfx" "0"
+	"spawnflags" "4096"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*19"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "-192 5408 688"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "6671"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*20"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "-192 4896 688"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "6723"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*21"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "320 4896 688"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "6730"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*22"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "320 5408 688"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "6737"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 15 SECONDS,0,-1"
+	"OnTrigger" "room2_door,Open,,15,-1"
+	"origin" "64 4984 616"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "6744"
+	"model" "*23"
+	"StartDisabled" "0"
+}
+add:
+{
+	"target" "room3_dest"
+	"origin" "-368 6800 -208"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "room3_tp"
+	"landmark" "room3_tp"
+	"hammerid" "7632"
+	"model" "*24"
+	"StartDisabled" "0"
+}
+add:
+{
+	"origin" "-368 6800 1648"
+	"classname" "info_teleport_destination"
+	"angles" "0 0 0"
+	"targetname" "room3_dest"
+	"hammerid" "7662"
+}
+add:
+{
+	"OnTrigger" "room3_counter,Add,1,0,-1"
+	"OnTrigger" "autorotate_h2,AddOutput,OnUser1 !self:AddOutput:maxspeed 600:0:1,0,-1"
+	"OnTrigger" "autorotate_h2,AddOutput,OnUser1 !self:AddOutput:maxspeed 300:3:1,0,-1"
+	"OnTrigger" "autorotate_h2,AddOutput,OnUser1 !self:SetSpeed:1:0.02:1,0,-1"
+	"origin" "-768 6400 768"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "8322"
+	"model" "*25"
+	"StartDisabled" "0"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*26"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "-768 6400 768"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate_h2"
+	"hammerid" "8325"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*27"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "32 7200 768"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate_h3"
+	"hammerid" "8416"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"OnTrigger" "room3_counter,Add,1,0,-1"
+	"OnTrigger" "autorotate_h3,AddOutput,OnUser1 !self:AddOutput:maxspeed 600:0:1,0,-1"
+	"OnTrigger" "autorotate_h3,AddOutput,OnUser1 !self:AddOutput:maxspeed 300:3:1,0,-1"
+	"OnTrigger" "autorotate_h3,AddOutput,OnUser1 !self:SetSpeed:1:0.02:1,0,-1"
+	"origin" "32 7200 768"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "8419"
+	"model" "*28"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnHitMax" "cmd,Command,say HOLD 20 SECONDS,0,-1"
+	"OnHitMax" "room3_door,Open,,20,-1"
+	"max" "2"
+	"origin" "-995.574 7313.84 1057"
+	"classname" "math_counter"
+	"targetname" "room3_counter"
+	"hammerid" "8495"
+	"startvalue" "0"
+	"StartDisabled" "0"
+	"min" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "-90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "-1088 7232 1104"
+	"movedistance" "330"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room3_door"
+	"hammerid" "8522"
+	"model" "*29"
+	"startposition" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "0 180 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "-744 4648 -56"
+	"movedistance" "620"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room2_shortcut"
+	"hammerid" "8548"
+	"model" "*30"
+	"startposition" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "0 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "64 1544 56"
+	"movedistance" "100"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "8"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"hammerid" "8630"
+	"parentname" "room1_move"
+	"model" "*31"
+	"startposition" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "2504 392 -392"
+	"movedistance" "620"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room5_move"
+	"hammerid" "17106"
+	"model" "*32"
+	"startposition" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "-90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "2816 3152 512"
+	"movedistance" "390"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room4_door"
+	"hammerid" "17139"
+	"model" "*33"
+	"startposition" "0"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 30 SECONDS,0,-1"
+	"OnTrigger" "room4_door,Open,,30,-1"
+	"origin" "2816 3336 512"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "17154"
+	"model" "*34"
+	"StartDisabled" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"OnFullyOpen" "music1,FadeOut,5,0,-1"
+	"OnFullyOpen" "music2,Volume,0.1,0,-1"
+	"OnFullyOpen" "music2,FadeIn,5,0.1,-1"
+	"OnFullyOpen" "music1,Volume,0,5,-1"
+	"movedir" "-90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "1312 5152 1104"
+	"movedistance" "330"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room2_door2"
+	"hammerid" "17169"
+	"model" "*35"
+	"startposition" "0"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 30 SECONDS,0,-1"
+	"OnTrigger" "room2_door2,Open,,30,-1"
+	"OnTrigger" "room2_shortcut,Close,,0,-1"
+	"origin" "1192 5152 1104"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "17180"
+	"model" "*36"
+	"StartDisabled" "0"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*37"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-4"
+	"spawnpos" "0"
+	"origin" "4376 432 576"
+	"fademindist" "-1"
+	"ignoredebris" "0"
+	"movedir" "0 180 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "room5_door"
+	"hammerid" "17190"
+	"renderfx" "0"
+	"spawnflags" "4096"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*38"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-4"
+	"spawnpos" "0"
+	"origin" "4520 432 576"
+	"fademindist" "-1"
+	"ignoredebris" "0"
+	"movedir" "0 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "room5_door"
+	"hammerid" "17193"
+	"renderfx" "0"
+	"spawnflags" "4096"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"OnTrigger" "room5_door,Open,,20,-1"
+	"OnTrigger" "cmd,Command,say HOLD 20 SECONDS,0,-1"
+	"OnTrigger" "afk_tp1,AddOutput,target room5_dest,5,-1"
+	"OnTrigger" "afk_tp3,AddOutput,target room5_dest,5,-1"
+	"OnTrigger" "afk_tp4,Enable,,5,-1"
+	"origin" "4448 552 576"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "17210"
+	"model" "*39"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "cmd,Command,say HOLD 20 SECONDS,0,-1"
+	"OnTrigger" "room5_move,Open,,20,-1"
+	"OnTrigger" "room1_pushwall,Toggle,,20,-1"
+	"OnTrigger" "room5_zmpath,Open,,3,-1"
+	"OnTrigger" "afk_tp3,Disable,,20,-1"
+	"origin" "2584 432 240"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"hammerid" "17245"
+	"model" "*40"
+	"StartDisabled" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "1"
+	"fadescale" "1"
+	"classname" "func_wall_toggle"
+	"rendermode" "0"
+	"targetname" "room1_pushwall"
+	"hammerid" "17551"
+	"model" "*41"
+}
+add:
+{
+	"origin" "64 1840 -328"
+	"alternateticksfix" "0"
+	"pushdir" "-90 0 0"
+	"OnStartTouch" "!activator,AddOutput,gravity -0.3,0,-1"
+	"OnStartTouch" "!activator,AddOutput,targetname nokillplz,0,-1"
+	"classname" "trigger_push"
+	"spawnflags" "1"
+	"speed" "600"
+	"targetname" "room1_pushwall"
+	"FallingSpeedThreshold" "-150"
+	"hammerid" "17567"
+	"model" "*42"
+	"StartDisabled" "1"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "0"
+	"fadescale" "1"
+	"classname" "func_wall_toggle"
+	"rendermode" "0"
+	"targetname" "room1_pushwall"
+	"hammerid" "17584"
+	"model" "*43"
+}
+add:
+{
+	"wait" "1"
+	"origin" "64 1840 1136"
+	"OnStartTouch" "!activator,AddOutput,gravity 1,0,-1"
+	"OnStartTouch" "!activator,AddOutput,targetname default,1,-1"
+	"OnStartTouch" "!activator,AddOutput,basevelocity 0 -340 100,0.5,-1"
+	"OnStartTouch" "boss_particle,Start,,5,1"
+	"OnStartTouch" "boss_music,Volume,0.1,15,1"
+	"OnStartTouch" "boss_music,FadeIn,5,15.1,1"
+	"OnStartTouch" "music2,FadeOut,5,0,1"
+	"OnStartTouch" "weapon_debugger_btn,Lock,,5,1"
+	"OnStartTouch" "boss_hp,Enable,,20,1"
+	"OnStartTouch" "afk_tp1,AddOutput,target boss_zmjail,20,1"
+	"OnStartTouch" "afk_tp4,AddOutput,target boss_zmjail,20,1"
+	"OnStartTouch" "afk_tp5,Enable,,20,1"
+	"OnStartTouch" "boss_rotation,Trigger,,20,1"
+	"OnStartTouch" "!self,Kill,,30,1"
+	"OnStartTouch" "music2,Volume,0,5,1"
+	"OnStartTouch" "player,AddOutput,gravity 1,30,1"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "room1_pushwall"
+	"hammerid" "17612"
+	"model" "*44"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "64 2208 1096"
+	"target" "boss_zmjail"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"filtername" "filter_nokill"
+	"hammerid" "17636"
+	"model" "*45"
+	"StartDisabled" "0"
+}
+add:
+{
+	"origin" "-469.244 2004.15 1329"
+	"Negated" "1"
+	"classname" "filter_activator_name"
+	"targetname" "filter_nokill"
+	"filtername" "nokillplz"
+	"hammerid" "17655"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*46"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "2816 5008 848"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "17707"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*47"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "3920 2208 368"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "17735"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*48"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "4816 800 544"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "17755"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*49"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "3088 704 960"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "17773"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"rendermode" "0"
+	"angles" "0 0 0"
+	"model" "*50"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"volume" "0"
+	"solidbsp" "0"
+	"origin" "3088 160 960"
+	"fademindist" "-1"
+	"fanfriction" "40"
+	"dmg" "0"
+	"disableshadows" "0"
+	"classname" "func_rotating"
+	"targetname" "autorotate"
+	"hammerid" "17800"
+	"renderfx" "0"
+	"maxspeed" "300"
+	"spawnflags" "592"
+	"OnUser1" "!self,Start,,0,-1"
+	"OnUser1" "!self,Stop,,2,-1"
+	"OnUser1" "!self,FireUser1,,4,-1"
+	"renderamt" "255"
+	"fadescale" "1"
+}
+add:
+{
+	"origin" "64 2208 1761"
+	"classname" "info_teleport_destination"
+	"angles" "0 0 0"
+	"targetname" "boss_zmjail"
+	"hammerid" "17878"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"origin" "4688 280 456"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"classname" "func_illusionary"
+	"fadescale" "1"
+	"rendermode" "0"
+	"hammerid" "18002"
+	"model" "*51"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"origin" "4600 2048 104"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"classname" "func_illusionary"
+	"fadescale" "1"
+	"rendermode" "0"
+	"hammerid" "18044"
+	"model" "*52"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"origin" "3904 1944 -296"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"classname" "func_illusionary"
+	"fadescale" "1"
+	"rendermode" "0"
+	"hammerid" "18230"
+	"model" "*53"
+}
+add:
+{
+	"filterteam" "2"
+	"origin" "-23 4329.73 485.235"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_t"
+	"hammerid" "18603"
+}
+add:
+{
+	"filterteam" "3"
+	"origin" "9.81792 4339.59 488"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_ct"
+	"hammerid" "18614"
+}
+add:
+{
+	"damagecap" "20"
+	"damage" "99999"
+	"origin" "48 5168 -76"
+	"classname" "trigger_hurt"
+	"spawnflags" "1"
+	"damagemodel" "0"
+	"nodmgforce" "0"
+	"filtername" "filter_ct"
+	"damagetype" "0"
+	"hammerid" "18624"
+	"model" "*54"
+	"StartDisabled" "0"
+}
+add:
+{
+	"origin" "48 5168 -76"
+	"target" "room2_dest"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"filtername" "filter_t"
+	"hammerid" "18640"
+	"model" "*55"
+	"StartDisabled" "0"
+}
+add:
+{
+	"origin" "64 4768 481"
+	"classname" "info_teleport_destination"
+	"angles" "0 90 0"
+	"targetname" "room2_dest"
+	"hammerid" "18665"
+}
+add:
+{
+	"origin" "1320 1104 -640"
+	"target" "boss_zmjail"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"filtername" "filter_t"
+	"hammerid" "18680"
+	"model" "*56"
+	"StartDisabled" "0"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"movedir" "90 0 0"
+	"fademindist" "-1"
+	"blockdamage" "0"
+	"rendercolor" "255 255 255"
+	"origin" "3088 432 184"
+	"movedistance" "408"
+	"renderfx" "0"
+	"classname" "func_movelinear"
+	"spawnflags" "0"
+	"speed" "100"
+	"fadescale" "1"
+	"rendermode" "0"
+	"targetname" "room5_zmpath"
+	"hammerid" "18706"
+	"model" "*57"
+	"startposition" "0"
+}
+add:
+{
+	"OnPlayerInZone" "filter_in,TestActivator,,0,-1"
+	"classname" "game_zone_player"
+	"targetname" "boss_attack_radius"
+	"hammerid" "18822"
+	"OnPlayerOutZone" "filter_out,TestActivator,,0,-1"
+	"model" "*58"
+}
+add:
+{
+	"OnPass" "filter_vuln,TestActivator,,0,-1"
+	"filterteam" "3"
+	"origin" "118.041 3068.04 1329"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_in"
+	"hammerid" "18837"
+}
+add:
+{
+	"OnPass" "vuln_damage,Hurt,,0,-1"
+	"OnFail" "!activator,AddOutput,targetname vuln,0,-1"
+	"OnFail" "!activator,AddOutput,targetname default,15,-1"
+	"OnFail" "normal_damage,Hurt,,0,-1"
+	"origin" "129.706 3149.71 1329"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_name"
+	"targetname" "filter_vuln"
+	"filtername" "vuln"
+	"hammerid" "18846"
+}
+add:
+{
+	"Damage" "20"
+	"origin" "185.161 3074.77 1329"
+	"DamageType" "16384"
+	"DamageTarget" "!activator"
+	"classname" "point_hurt"
+	"DamageRadius" "0"
+	"targetname" "normal_damage"
+	"DamageDelay" "1"
+	"hammerid" "18861"
+}
+add:
+{
+	"Damage" "60"
+	"origin" "162.044 3110.82 1336"
+	"DamageType" "16384"
+	"DamageTarget" "!activator"
+	"classname" "point_hurt"
+	"DamageRadius" "0"
+	"targetname" "vuln_damage"
+	"DamageDelay" "1"
+	"hammerid" "18882"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1536"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_004"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_particle"
+	"hammerid" "18937"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_002"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_chariot"
+	"hammerid" "19202"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_003"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_dynamo"
+	"hammerid" "19462"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1344"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_008"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_push"
+	"hammerid" "19787"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1344"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_007"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_pull"
+	"hammerid" "20245"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1536"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_006"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_chariot_warning"
+	"hammerid" "20505"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1536"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_005"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_dynamo_warning"
+	"hammerid" "20700"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "-1152 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_013"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_chariot"
+	"hammerid" "21119"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "-1152 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_014"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_dynamo"
+	"hammerid" "21382"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "-1152 2208 1512"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_015"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone"
+	"hammerid" "22049"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"OnPlayerInZone" "filter_in,TestActivator,,0,-1"
+	"classname" "game_zone_player"
+	"targetname" "boss_clone_attack_radius"
+	"hammerid" "22383"
+	"model" "*59"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 3424 1512"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_015"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone"
+	"hammerid" "22456"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 3424 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_014"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_dynamo"
+	"hammerid" "22521"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 3424 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_013"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_chariot"
+	"hammerid" "22586"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "1280 2208 1512"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_015"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone"
+	"hammerid" "22651"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "1280 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_014"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_dynamo"
+	"hammerid" "22716"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "1280 2208 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_013"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_chariot"
+	"hammerid" "22781"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 992 1512"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_015"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone"
+	"hammerid" "22846"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 992 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_014"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_dynamo"
+	"hammerid" "22911"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 992 1336"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_013"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_clone_attack_chariot"
+	"hammerid" "22976"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"classname" "game_zone_player"
+	"targetname" "boss_clone_attack_radius"
+	"hammerid" "22408"
+	"OnPlayerOutZone" "filter_out,TestActivator,,0,-1"
+	"model" "*60"
+}
+add:
+{
+	"origin" "-516.568 2885.4 1329"
+	"Negated" "1"
+	"classname" "filter_activator_name"
+	"targetname" "filter_not_meteor"
+	"filtername" "meteortarget*"
+	"hammerid" "23092"
+}
+add:
+{
+	"Template01" "boss_meteor_indicator"
+	"origin" "-704 5400 1160"
+	"classname" "point_template"
+	"spawnflags" "0"
+	"targetname" "boss_template_meteor_target"
+	"Template10" "boss_meteor_indicator_move"
+	"hammerid" "23103"
+}
+add:
+{
+	"OnUser1" "boss_meteor_maker,ForceSpawnAtEntityOrigin,!caller,0,-1"
+	"OnUser1" "!self,Kill,,0,-1"
+	"OnUser1" "boss_meteor_indicator_move,Kill,,0,-1"
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "-704 5400 1192"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_009"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_meteor_indicator"
+	"hammerid" "23177"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"MeasureType" "0"
+	"origin" "-704 5400 1176"
+	"TargetReference" "meteortarget"
+	"Target" "boss_meteor_indicator"
+	"MeasureTarget" "meteortarget"
+	"classname" "logic_measure_movement"
+	"TargetScale" "1"
+	"targetname" "boss_meteor_indicator_move"
+	"hammerid" "23653"
+	"MeasureReference" "meteortarget"
+}
+add:
+{
+	"Template03" "boss_meteor_hurt"
+	"Template01" "boss_meteor_particle"
+	"origin" "-576 2864.68 1608"
+	"classname" "point_template"
+	"spawnflags" "0"
+	"Template04" "boss_meteor_relay"
+	"Template02" "boss_meteor_warning"
+	"targetname" "boss_template_meteor"
+	"hammerid" "24466"
+}
+add:
+{
+	"start_active" "1"
+	"cpoint3_parent" "0"
+	"origin" "-576 2864.68 1608"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_010"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_meteor_warning"
+	"hammerid" "24487"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "-576 2864.68 1608"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_011"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_meteor_particle"
+	"hammerid" "24815"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"origin" "-576 2864.68 1640"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_meteor_relay"
+	"OnSpawn" "!self,Kill,,0,-1"
+	"OnSpawn" "boss_meteor_warning,Stop,,5,-1"
+	"OnSpawn" "boss_meteor_particle,Start,,5,-1"
+	"OnSpawn" "boss_meteor_hurt,Enable,,5,-1"
+	"OnSpawn" "boss_meteor_hurt,Kill,,11,-1"
+	"OnSpawn" "boss_meteor_warning,Kill,,11,-1"
+	"OnSpawn" "boss_meteor_particle,Kill,,11,-1"
+	"hammerid" "25140"
+	"StartDisabled" "0"
+}
+add:
+{
+	"damagecap" "20"
+	"damage" "30"
+	"origin" "-576 2864 1664"
+	"classname" "trigger_hurt"
+	"spawnflags" "1"
+	"damagemodel" "0"
+	"nodmgforce" "0"
+	"targetname" "boss_meteor_hurt"
+	"filtername" "filter_ct"
+	"damagetype" "16384"
+	"hammerid" "25428"
+	"model" "*61"
+	"StartDisabled" "1"
+}
+add:
+{
+	"EntityTemplate" "boss_template_meteor"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "-591.858 2853.52 1329"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 0 0"
+	"targetname" "boss_meteor_maker"
+	"hammerid" "27167"
+}
+add:
+{
+	"Template03" "boss_bullet_hurt"
+	"Template01" "boss_bullet_particle"
+	"origin" "752 3008 1608"
+	"classname" "point_template"
+	"spawnflags" "0"
+	"Template04" "boss_bullet_mdl"
+	"Template02" "boss_bullet_door"
+	"targetname" "boss_template_bullet"
+	"hammerid" "27178"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "752 3008 1608"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_012"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_bullet_particle"
+	"hammerid" "27182"
+	"flag_as_weather" "0"
+	"parentname" "boss_bullet_door"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"damagecap" "20"
+	"damage" "20"
+	"origin" "752 3008 1608"
+	"classname" "trigger_hurt"
+	"spawnflags" "1"
+	"damagemodel" "0"
+	"nodmgforce" "0"
+	"targetname" "boss_bullet_hurt"
+	"damagetype" "16384"
+	"hammerid" "27383"
+	"parentname" "boss_bullet_door"
+	"model" "*62"
+	"StartDisabled" "0"
+}
+add:
+{
+	"speed" "700"
+	"loopmovesound" "0"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*63"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-1900"
+	"parentname" "boss_bullet_mdl"
+	"spawnpos" "0"
+	"origin" "752 3008 1608"
+	"fademindist" "-1"
+	"OnFullyOpen" "!self,KillHierarchy,,0,1"
+	"OnFullyOpen" "boss_bullet_hurt,Kill,,0,1"
+	"OnFullyOpen" "boss_bullet_mdl,Kill,,0,1"
+	"ignoredebris" "0"
+	"movedir" "0 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "boss_bullet_door"
+	"hammerid" "27537"
+	"renderfx" "0"
+	"spawnflags" "4108"
+	"OnUser1" "!self,Open,,0,1"
+	"OnUser1" "boss_bullet_particle,Start,,0.02,1"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"origin" "855 3293.87 1434.58"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_name"
+	"targetname" "filter_bullet"
+	"filtername" "boss_bullet_phys*"
+	"hammerid" "27726"
+}
+add:
+{
+	"start_active" "0"
+	"cpoint3_parent" "0"
+	"origin" "64 2208 1536"
+	"cpoint7_parent" "0"
+	"cpoint2_parent" "0"
+	"cpoint1_parent" "0"
+	"cpoint4_parent" "0"
+	"effect_name" "custom_particle_016"
+	"angles" "0 0 0"
+	"classname" "info_particle_system"
+	"targetname" "boss_attack_bullet_warning"
+	"hammerid" "27751"
+	"flag_as_weather" "0"
+	"cpoint6_parent" "0"
+	"cpoint5_parent" "0"
+}
+add:
+{
+	"maxspeed" "81"
+	"renderamt" "255"
+	"disablereceiveshadows" "0"
+	"fademindist" "-1"
+	"volume" "10"
+	"rendercolor" "255 255 255"
+	"origin" "64 2208 1376"
+	"fanfriction" "20"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "0"
+	"fadescale" "1"
+	"angles" "0 0 0"
+	"classname" "func_rotating"
+	"rendermode" "0"
+	"solidbsp" "0"
+	"targetname" "boss_bullet_rot"
+	"hammerid" "28143"
+	"model" "*64"
+	"dmg" "0"
+}
+add:
+{
+	"EntityTemplate" "boss_template_bullet"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "64 2312 1369"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 90 0"
+	"targetname" "boss_bullet_maker"
+	"hammerid" "28159"
+	"parentname" "boss_bullet_rot"
+}
+add:
+{
+	"EntityTemplate" "boss_template_bullet"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "-40 2208 1369"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 180 0"
+	"targetname" "boss_bullet_maker"
+	"hammerid" "28178"
+	"parentname" "boss_bullet_rot"
+}
+add:
+{
+	"EntityTemplate" "boss_template_bullet"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "168 2208 1369"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 0 0"
+	"targetname" "boss_bullet_maker"
+	"hammerid" "28182"
+	"parentname" "boss_bullet_rot"
+}
+add:
+{
+	"EntityTemplate" "boss_template_bullet"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "64 2104 1369"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 -90 0"
+	"targetname" "boss_bullet_maker"
+	"hammerid" "28184"
+	"parentname" "boss_bullet_rot"
+}
+add:
+{
+	"OnTrigger" "boss_attack_chariot_warning,Start,,0,-1"
+	"OnTrigger" "boss_attack_chariot_warning,Stop,,5,-1"
+	"OnTrigger" "boss_attack_radius,CountPlayersInZone,,5,-1"
+	"OnTrigger" "boss_attack_chariot,Stop,,6,-1"
+	"OnTrigger" "boss_branch_clone_chariot,Test,,15,-1"
+	"OnTrigger" "filter_out,AddOutput,targetname filter_in,1,-1"
+	"OnTrigger" "boss_attack_chariot,Start,,5,-1"
+	"OnTrigger" "boss_chariot_extra,PickRandom,,5,-1"
+	"origin" "-115.544 2992.42 1329"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_chariot"
+	"hammerid" "28186"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "boss_attack_dynamo_warning,Start,,0,-1"
+	"OnTrigger" "boss_attack_dynamo_warning,Stop,,5,-1"
+	"OnTrigger" "boss_attack_radius,CountPlayersInZone,,5,-1"
+	"OnTrigger" "boss_attack_dynamo,Stop,,6,-1"
+	"OnTrigger" "boss_branch_clone_dynamo,Test,,15,-1"
+	"OnTrigger" "filter_in,AddOutput,targetname filter_out,1,-1"
+	"OnTrigger" "boss_attack_dynamo,Start,,5,-1"
+	"OnTrigger" "boss_dynamo_extra,PickRandom,,5,-1"
+	"origin" "-123.443 3005.71 1336"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_dynamo"
+	"hammerid" "28225"
+	"StartDisabled" "0"
+}
+add:
+{
+	"Case02" "2"
+	"OnCase02" "boss_attack_push,Start,,0.05,-1"
+	"OnCase02" "boss_attack_push,Stop,,10,-1"
+	"OnCase02" "boss_attack_pointpush,Disable,,10,-1"
+	"OnCase02" "boss_attack_pointpush,Enable,,5,-1"
+	"OnCase02" "boss_attack_pointpush,AddOutput,magnitude 67,0,-1"
+	"origin" "-69.5072 3001.53 1329"
+	"classname" "logic_case"
+	"Case01" "1"
+	"targetname" "boss_attack_pullpush"
+	"hammerid" "28281"
+	"OnCase01" "boss_attack_pull,Start,,0.05,-1"
+	"OnCase01" "boss_attack_pull,Stop,,10,-1"
+	"OnCase01" "boss_attack_pointpush,Enable,,5,-1"
+	"OnCase01" "boss_attack_pointpush,Disable,,10,-1"
+	"OnCase01" "boss_attack_pointpush,AddOutput,magnitude -67,0,-1"
+}
+add:
+{
+	"magnitude" "67"
+	"inner_radius" "100"
+	"radius" "1900"
+	"origin" "64 2208 1368"
+	"classname" "point_push"
+	"spawnflags" "12"
+	"enabled" "0"
+	"targetname" "boss_attack_pointpush"
+	"hammerid" "28317"
+}
+add:
+{
+	"OnTrigger" "boss_attack_bullet_warning,Start,,0,-1"
+	"OnTrigger" "boss_attack_bullet_warning,Stop,,5,-1"
+	"OnTrigger" "boss_bullet_rot,Start,,2,-1"
+	"OnTrigger" "boss_bullet_timer,Enable,,2,-1"
+	"OnTrigger" "boss_bullet_timer,Disable,,10,-1"
+	"origin" "-89.4208 2988.32 1336"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_bullet"
+	"hammerid" "28383"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTimer" "boss_bullet_maker,ForceSpawn,,0,-1"
+	"OnTimer" "boss_bullet_door*,FireUser1,,0.02,-1"
+	"origin" "-79.3213 3005.53 1329"
+	"classname" "logic_timer"
+	"spawnflags" "0"
+	"UseRandomTime" "0"
+	"targetname" "boss_bullet_timer"
+	"hammerid" "28399"
+	"StartDisabled" "1"
+	"RefireTime" "0.1"
+}
+add:
+{
+	"OnTrigger" "boss_trigger_meteor1,Enable,,0,-1"
+	"OnTrigger" "boss_random_door,Open,,0,-1"
+	"OnTrigger" "boss_prox_meteor1,Enable,,0.02,-1"
+	"OnTrigger" "boss_trigger_meteor1,Disable,,0.1,-1"
+	"OnTrigger" "boss_prox_meteor1,Disable,,0.1,-1"
+	"OnTrigger" "boss_prox_meteor2,Disable,,0.3,-1"
+	"OnTrigger" "boss_trigger_meteor2,Disable,,0.3,-1"
+	"OnTrigger" "boss_prox_meteor2,Enable,,0.22,-1"
+	"OnTrigger" "boss_trigger_meteor2,Enable,,0.2,-1"
+	"OnTrigger" "boss_trigger_meteor3,Disable,,0.5,-1"
+	"OnTrigger" "boss_prox_meteor3,Disable,,0.5,-1"
+	"OnTrigger" "boss_prox_meteor3,Enable,,0.42,-1"
+	"OnTrigger" "boss_trigger_meteor3,Enable,,0.4,-1"
+	"OnTrigger" "boss_prox_meteor4,Disable,,0.7,-1"
+	"OnTrigger" "boss_trigger_meteor4,Disable,,0.7,-1"
+	"OnTrigger" "boss_prox_meteor4,Enable,,0.62,-1"
+	"OnTrigger" "boss_trigger_meteor4,Enable,,0.6,-1"
+	"OnTrigger" "boss_meteor_indicator*,Start,,1,-1"
+	"OnTrigger" "boss_meteor_indicator*,FireUser1,,6,-1"
+	"OnTrigger" "meteortarget*,AddOutput,targetname default,1,-1"
+	"origin" "-104.407 3017.4 1336"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_meteor"
+	"hammerid" "28430"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "!self,Disable,,0,-1"
+	"OnTrigger" "boss_relay_trig_meteor1,Trigger,,0,-1"
+	"wait" "0.1"
+	"origin" "64 3016 1416"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "boss_trigger_meteor1"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28441"
+	"model" "*65"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnUser1" "boss_relay_trig_meteor1,Trigger,,0,-1"
+	"OnUser1" "!self,AddOutput,NearestEntityDistance !self:FireUser1: :0:1,0.1,-1"
+	"NearestEntityDistance" "!self,Disable,,0,-1"
+	"radius" "2500"
+	"origin" "64 3300 1416"
+	"classname" "trigger_proximity"
+	"spawnflags" "1"
+	"measuretarget" "boss_prox_meteor1"
+	"targetname" "boss_prox_meteor1"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28483"
+	"parentname" "boss_random_door"
+	"model" "*66"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "boss_attack_meteor_fade,Fade,,0.1,-1"
+	"OnTrigger" "boss_template_meteor_target,ForceSpawn,,0.05,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget,0,-1"
+	"OnTrigger" "boss_trigger_meteor1,Disable,,0,-1"
+	"OnTrigger" "boss_prox_meteor1,Disable,,0.03,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget_d,0.1,-1"
+	"origin" "361 3010.31 1431.12"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_trig_meteor1"
+	"hammerid" "28514"
+	"StartDisabled" "0"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"OnFullyClosed" "!self,Open,,0,-1"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*67"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "0"
+	"spawnpos" "0"
+	"origin" "64 2208 1700"
+	"fademindist" "-1"
+	"OnFullyOpen" "!self,Close,,0,-1"
+	"ignoredebris" "0"
+	"movedir" "90 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "boss_random_door"
+	"hammerid" "28551"
+	"renderfx" "0"
+	"spawnflags" "4108"
+	"wait" "-1"
+	"renderamt" "255"
+	"fadescale" "1"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"OnUser1" "!self,AddOutput,NearestEntityDistance !self:FireUser1: :0:1,0.1,-1"
+	"OnUser1" "boss_relay_trig_meteor2,Trigger,,0,-1"
+	"NearestEntityDistance" "!self,Disable,,0,-1"
+	"radius" "2500"
+	"origin" "-1028 2208 1416"
+	"classname" "trigger_proximity"
+	"spawnflags" "1"
+	"measuretarget" "boss_prox_meteor2"
+	"targetname" "boss_prox_meteor2"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28577"
+	"parentname" "boss_random_door"
+	"model" "*68"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget_d,0.1,-1"
+	"OnTrigger" "boss_template_meteor_target,ForceSpawn,,0.05,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget,0,-1"
+	"OnTrigger" "boss_trigger_meteor2,Disable,,0,-1"
+	"OnTrigger" "boss_prox_meteor2,Disable,,0.03,-1"
+	"OnTrigger" "boss_attack_meteor_fade,Fade,,0.1,-1"
+	"origin" "-738.31 2505 1431.12"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_trig_meteor2"
+	"hammerid" "28580"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "!self,Disable,,0,-1"
+	"OnTrigger" "boss_relay_trig_meteor2,Trigger,,0,-1"
+	"wait" "0.1"
+	"origin" "-744 2208 1416"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "boss_trigger_meteor2"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28582"
+	"model" "*69"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "boss_attack_meteor_fade,Fade,,0.1,-1"
+	"OnTrigger" "boss_template_meteor_target,ForceSpawn,,0.05,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget,0,-1"
+	"OnTrigger" "boss_trigger_meteor3,Disable,,0,-1"
+	"OnTrigger" "boss_prox_meteor3,Disable,,0.03,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget_d,0.1,-1"
+	"origin" "-233 1405.69 1431.12"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_trig_meteor3"
+	"hammerid" "28649"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTrigger" "!self,Disable,,0,-1"
+	"OnTrigger" "boss_relay_trig_meteor3,Trigger,,0,-1"
+	"wait" "0.1"
+	"origin" "64 1400 1416"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "boss_trigger_meteor3"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28651"
+	"model" "*70"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnUser1" "!self,AddOutput,NearestEntityDistance !self:FireUser1: :0:1,0.1,-1"
+	"OnUser1" "boss_relay_trig_meteor3,Trigger,,0,-1"
+	"NearestEntityDistance" "!self,Disable,,0,-1"
+	"radius" "2500"
+	"origin" "64 1116 1416"
+	"classname" "trigger_proximity"
+	"spawnflags" "1"
+	"measuretarget" "boss_prox_meteor3"
+	"targetname" "boss_prox_meteor3"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28654"
+	"parentname" "boss_random_door"
+	"model" "*71"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "!self,Disable,,0,-1"
+	"OnTrigger" "boss_relay_trig_meteor4,Trigger,,0,-1"
+	"wait" "0.1"
+	"origin" "872 2208 1416"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "boss_trigger_meteor4"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28699"
+	"model" "*72"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "boss_attack_meteor_fade,Fade,,0.1,-1"
+	"OnTrigger" "boss_template_meteor_target,ForceSpawn,,0.05,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget,0,-1"
+	"OnTrigger" "boss_trigger_meteor4,Disable,,0,-1"
+	"OnTrigger" "boss_prox_meteor4,Disable,,0.03,-1"
+	"OnTrigger" "!activator,AddOutput,targetname meteortarget_d,0.1,-1"
+	"origin" "866.31 1911 1431.12"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_relay_trig_meteor4"
+	"hammerid" "28702"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnUser1" "!self,AddOutput,NearestEntityDistance !self:FireUser1: :0:1,0.1,-1"
+	"OnUser1" "boss_relay_trig_meteor3,Trigger,,0,-1"
+	"NearestEntityDistance" "!self,Disable,,0,-1"
+	"radius" "2500"
+	"origin" "1156 2208 1416"
+	"classname" "trigger_proximity"
+	"spawnflags" "1"
+	"measuretarget" "boss_prox_meteor4"
+	"targetname" "boss_prox_meteor4"
+	"filtername" "filter_not_meteor"
+	"hammerid" "28704"
+	"parentname" "boss_random_door"
+	"model" "*73"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "-13.6444 3046.46 1329"
+	"classname" "logic_branch"
+	"OnTrue" "boss_clone_attack_chariot,Start,,0,-1"
+	"OnTrue" "boss_clone_attack_chariot,Stop,,1,-1"
+	"OnTrue" "boss_clone_attack_radius,CountPlayersInZone,,0,-1"
+	"OnTrue" "boss_clone,Stop,,1,-1"
+	"targetname" "boss_branch_clone_chariot"
+	"hammerid" "29221"
+	"InitialValue" "0"
+}
+add:
+{
+	"origin" "-15.1335 3071.36 1336"
+	"classname" "logic_branch"
+	"OnTrue" "boss_clone_attack_dynamo,Start,,0,-1"
+	"OnTrue" "boss_clone_attack_dynamo,Stop,,1,-1"
+	"OnTrue" "boss_clone_attack_radius,CountPlayersInZone,,0,-1"
+	"OnTrue" "boss_clone,Stop,,1,-1"
+	"targetname" "boss_branch_clone_dynamo"
+	"hammerid" "29253"
+	"InitialValue" "0"
+}
+add:
+{
+	"OnCase02" "boss_relay_meteor,Trigger,,0,-1"
+	"origin" "-54.4408 3043.35 1329"
+	"OnCase03" "boss_attack_pullpush,PickRandom,,0,-1"
+	"classname" "logic_case"
+	"targetname" "boss_extra_attack_d"
+	"hammerid" "29285"
+	"OnCase01" "boss_relay_bullet,Trigger,,0,-1"
+}
+add:
+{
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandomShuffle,,0,-1"
+	"OnTrigger" "boss_attack_pullpush,PickRandom,,10,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandomShuffle,,20,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,30,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,40,-1"
+	"OnTrigger" "boss_clone,Start,,45,-1"
+	"OnTrigger" "boss_branch_clone_*,SetValue,1,45,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandom,,50,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,65,-1"
+	"OnTrigger" "boss_clone,Start,,70,-1"
+	"OnTrigger" "boss_extra_temp,ForceSpawn,,70,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandom,,75,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,90,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,100,-1"
+	"OnTrigger" "boss_clone,Start,,105,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandom,,110,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,125,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,135,-1"
+	"OnTrigger" "boss_clone,Start,,140,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandom,,145,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,160,-1"
+	"OnTrigger" "boss_extra_attack_d,PickRandomShuffle,,170,-1"
+	"OnTrigger" "boss_clone,Start,,175,-1"
+	"OnTrigger" "boss_chariot_or_dynamo,PickRandom,,180,-1"
+	"OnTrigger" "boss_fail,Enable,,205,-1"
+	"OnTrigger" "boss_music,Volume,0,207.5,-1"
+	"origin" "60.7641 3014.37 1329"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "boss_rotation"
+	"hammerid" "29317"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnCase02" "boss_relay_dynamo,Trigger,,0,-1"
+	"origin" "29.1319 3013.38 1329"
+	"classname" "logic_case"
+	"targetname" "boss_chariot_or_dynamo"
+	"hammerid" "29324"
+	"OnCase01" "boss_relay_chariot,Trigger,,0,-1"
+}
+add:
+{
+	"target" "room1_dest"
+	"origin" "32 72 328"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "afk_tp1"
+	"hammerid" "29425"
+	"model" "*74"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "64 3808 65"
+	"classname" "info_teleport_destination"
+	"angles" "0 90 0"
+	"targetname" "room1_dest"
+	"hammerid" "29441"
+}
+add:
+{
+	"target" "room1_dest"
+	"origin" "64 2208 -96"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "afk_tp2"
+	"hammerid" "29462"
+	"model" "*75"
+	"StartDisabled" "1"
+}
+add:
+{
+	"target" "room2_dest"
+	"origin" "48 2656 416"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "afk_tp3"
+	"hammerid" "29509"
+	"model" "*76"
+	"StartDisabled" "1"
+}
+add:
+{
+	"origin" "2512 1792 33"
+	"classname" "info_teleport_destination"
+	"angles" "0 0 0"
+	"targetname" "room5_dest"
+	"hammerid" "29637"
+}
+add:
+{
+	"target" "room5_dest"
+	"origin" "688 4936 328"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "afk_tp4"
+	"hammerid" "29652"
+	"model" "*77"
+	"StartDisabled" "1"
+}
+add:
+{
+	"target" "boss_zmjail"
+	"origin" "0 2486.59 32"
+	"classname" "trigger_teleport"
+	"spawnflags" "1"
+	"targetname" "afk_tp5"
+	"hammerid" "29834"
+	"model" "*78"
+	"StartDisabled" "1"
+}
+add:
+{
+	"effect" "2"
+	"channel" "1"
+	"fadein" "0.2"
+	"color" "207 207 207"
+	"holdtime" "3"
+	"origin" "567 -91.2273 507.289"
+	"fadeout" "0.5"
+	"fxtime" "0.2"
+	"classname" "game_text"
+	"spawnflags" "1"
+	"y" "0.4"
+	"x" "-1"
+	"color2" "128 128 128"
+	"targetname" "eden_text"
+	"hammerid" "30369"
+	"message" "PROJECT EDEN | BEGIN"
+}
+add:
+{
+	"effect" "0"
+	"channel" "2"
+	"fadein" "1.5"
+	"color" "117 207 18"
+	"holdtime" "1.2"
+	"origin" "632 -119.88 575.033"
+	"fadeout" "0.5"
+	"fxtime" "0.25"
+	"classname" "game_text"
+	"spawnflags" "1"
+	"y" "0.3"
+	"x" "-1"
+	"color2" "128 128 128"
+	"targetname" "eden_text2"
+	"hammerid" "30386"
+	"message" "MAP BY GEORGE"
+}
+add:
+{
+	"lfomodvol" "0"
+	"lfomodpitch" "0"
+	"volstart" "0"
+	"lfotype" "0"
+	"fadeinsecs" "0"
+	"spinup" "0"
+	"origin" "-252.875 1566.65 1329"
+	"fadeoutsecs" "0"
+	"message" "#music/george/eden/c_fierce.mp3"
+	"pitchstart" "100"
+	"radius" "1250"
+	"spindown" "0"
+	"health" "10"
+	"classname" "ambient_generic"
+	"targetname" "boss_music"
+	"pitch" "100"
+	"cspinup" "0"
+	"hammerid" "30471"
+	"lforate" "0"
+	"spawnflags" "49"
+	"preset" "0"
+}
+add:
+{
+	"lfomodvol" "0"
+	"lfomodpitch" "0"
+	"volstart" "0"
+	"lfotype" "0"
+	"fadeinsecs" "0"
+	"spinup" "0"
+	"origin" "192.091 95.5643 72"
+	"fadeoutsecs" "0"
+	"message" "#music/george/eden/c_crash.mp3"
+	"pitchstart" "100"
+	"radius" "1250"
+	"spindown" "0"
+	"health" "10"
+	"classname" "ambient_generic"
+	"targetname" "music2"
+	"pitch" "100"
+	"cspinup" "0"
+	"hammerid" "30508"
+	"lforate" "0"
+	"spawnflags" "49"
+	"preset" "0"
+}
+add:
+{
+	"lfomodvol" "0"
+	"lfomodpitch" "0"
+	"volstart" "0"
+	"lfotype" "0"
+	"fadeinsecs" "0"
+	"spinup" "0"
+	"origin" "261.073 58.1912 72"
+	"fadeoutsecs" "0"
+	"message" "#music/george/eden/c_ryoran.mp3"
+	"pitchstart" "100"
+	"radius" "1250"
+	"spindown" "0"
+	"health" "10"
+	"classname" "ambient_generic"
+	"targetname" "music1"
+	"pitch" "100"
+	"cspinup" "0"
+	"hammerid" "30524"
+	"lforate" "0"
+	"spawnflags" "49"
+	"preset" "0"
+}
+add:
+{
+	"forcetoenablemotion" "0"
+	"spawnobject" "0"
+	"rendermode" "0"
+	"pressuredelay" "0"
+	"gibdir" "0 0 0"
+	"model" "*79"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"ExplodeDamage" "0"
+	"Damagetype" "0"
+	"damagefilter" "filter_fuckyou"
+	"massScale" "0"
+	"ExplodeRadius" "0"
+	"damagetoenablemotion" "0"
+	"origin" "64 2208 1536"
+	"notsolid" "0"
+	"fademindist" "-1"
+	"PerformanceMode" "0"
+	"material" "0"
+	"health" "999999999999999"
+	"preferredcarryangles" "0 0 0"
+	"OnBreak" "boss_attack_*,Kill,,0,-1"
+	"OnBreak" "boss_meteor_*,Kill,,0,-1"
+	"OnBreak" "boss_bullet_*,Kill,,0,-1"
+	"OnBreak" "boss_relay_*,CancelPending,,0,-1"
+	"OnBreak" "boss_clone,Kill,,0,-1"
+	"OnBreak" "boss_chariot_or_dynamo,Kill,,0,-1"
+	"OnBreak" "boss_relay_*,Kill,,1,-1"
+	"OnBreak" "boss_particle,Kill,,0,-1"
+	"OnBreak" "boss_clone,Kill,,0,-1"
+	"OnBreak" "boss_clone_attack*,Kill,,0,-1"
+	"OnBreak" "boss_rotation,CancelPending,,0,-1"
+	"OnBreak" "boss_rotation,Kill,,1,-1"
+	"OnBreak" "boss_trigger*,Kill,,0,-1"
+	"OnBreak" "boss_prox*,Kill,,0,-1"
+	"OnBreak" "boss_random_door,Kill,,0,-1"
+	"OnBreak" "end_of_eden,Trigger,,3,-1"
+	"OnBreak" "boss_fail,Kill,,0,-1"
+	"OnBreak" "boss_music,FadeOut,5,0,-1"
+	"OnBreak" "end_music,Volume,0.1,0,-1"
+	"OnBreak" "end_music,FadeIn,3,0.1,-1"
+	"disableshadows" "0"
+	"propdata" "0"
+	"classname" "func_physbox"
+	"targetname" "boss_physbox"
+	"hammerid" "30593"
+	"renderfx" "0"
+	"explodemagnitude" "0"
+	"spawnflags" "8425472"
+	"renderamt" "255"
+	"explosion" "0"
+	"fadescale" "1"
+	"nodamageforces" "0"
+}
+add:
+{
+	"origin" "88.2964 2393 1472.9"
+	"Negated" "0"
+	"classname" "filter_damage_type"
+	"targetname" "filter_fuckyou"
+	"damagetype" "262144"
+	"hammerid" "30606"
+}
+add:
+{
+	"origin" "64 3300 1448"
+	"OnStartTouch" "boss_physbox,AddHealth,7000,0.03,-1"
+	"OnStartTouch" "boss_physbox,SetHealth,20000,0.01,1"
+	"OnStartTouch" "boss_physbox,SetDamageFilter,,0,1"
+	"OnStartTouch" "!activator,SetHealth,100,0.02,-1"
+	"OnStartTouch" "!activator,AddOutput,health 100,0.02,-1"
+	"OnStartTouch" "boss_prox_meteor*,AddOutput,NearestEntityDistance !self:FireUser1: :0:1,0.1,1"
+	"OnStartTouch" "boss_physbox,AddHealth,2000,0.03,10"
+	"OnStartTouch" "boss_physbox,AddHealth,2000,0.03,20"
+	"OnStartTouch" "boss_physbox,AddHealth,2000,0.03,30"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"targetname" "boss_hp"
+	"hammerid" "30627"
+	"model" "*80"
+	"StartDisabled" "1"
+}
+add:
+{
+	"renderamt" "60"
+	"holdtime" "4"
+	"rendercolor" "255 255 255"
+	"origin" "39.0779 1424.46 1329"
+	"classname" "env_fade"
+	"spawnflags" "4"
+	"ReverseFadeDuration" "2"
+	"targetname" "boss_attack_meteor_fade"
+	"hammerid" "30715"
+	"duration" "1"
+}
+add:
+{
+	"renderamt" "255"
+	"holdtime" "12"
+	"rendercolor" "255 255 255"
+	"origin" "21.4402 1457.04 1336"
+	"classname" "env_fade"
+	"spawnflags" "0"
+	"ReverseFadeDuration" "2"
+	"targetname" "final_fade"
+	"hammerid" "30781"
+	"duration" "4"
+}
+add:
+{
+	"wait" "1"
+	"origin" "64 2208 1872"
+	"OnStartTouch" "end_of_eden_zmcase,PickRandom,,0,-1"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "end_of_eden_zmtp"
+	"hammerid" "30797"
+	"model" "*81"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnTrigger" "final_fade,Fade,,0,-1"
+	"OnTrigger" "end_of_eden_zmtp,Enable,,10,-1"
+	"OnTrigger" "weapon_debugger_btn,Unlock,,0,-1"
+	"OnTrigger" "final_fade_rev,Fade,,5,-1"
+	"OnTrigger" "boss_teleport_out,Enable,,4.5,-1"
+	"OnTrigger" "end_of_eden_timer,Enable,,4.5,-1"
+	"OnTrigger" "end_of_eden_rotate,Start,,9.5,-1"
+	"OnTrigger" "cmd,Command,say 50 SECONDS,10,-1"
+	"OnTrigger" "cmd,Command,say 10 SECONDS,50,-1"
+	"OnTrigger" "end_of_eden_fail_trigger,Kill,,60,-1"
+	"OnTrigger" "final_fade,Fade,,60,-1"
+	"OnTrigger" "global_zone,CountPlayersInZone,,61,-1"
+	"OnTrigger" "player,SetDamageFilter,,60.9,-1"
+	"OnTrigger" "player,AddOutput,OnUser1 filter_t:TestActivator::0:1,60,-1"
+	"OnTrigger" "player,AddOutput,solid 5,60,-1"
+	"OnTrigger" "filter_t,AddOutput,OnPass !activator:SetHealth:0:0:-1,60,-1"
+	"OnTrigger" "eden_text3,Display,,59,-1"
+	"OnTrigger" "end_of_eden_timer,Disable,,60,-1"
+	"OnTrigger" "end_of_eden_push,Disable,,60,-1"
+	"OnTrigger" "end_of_eden_push,Enable,,4.5,-1"
+	"OnTrigger" "end_of_eden_fade,Fade,,19.7,-1"
+	"OnTrigger" "end_of_eden_skybox_timer,Enable,,19.7,-1"
+	"OnTrigger" "end_of_eden_skybox_timer,Kill,,60,-1"
+	"OnTrigger" "skybox_spawn_rot,Start,,19.7,-1"
+	"OnTrigger" "skybox_spawn_door,Open,,19.7,-1"
+	"OnTrigger" "end_of_eden_fade,Fade,,19.7,-1"
+	"OnTrigger" "skybox_blocks_toggle,Toggle,,19.7,-1"
+	"OnTrigger" "tonemap,SetBloomScale,3,19.7,-1"
+	"origin" "33.0756 1478.84 1329"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "end_of_eden"
+	"hammerid" "30810"
+	"StartDisabled" "0"
+}
+add:
+{
+	"effect" "2"
+	"channel" "1"
+	"fadein" "0.2"
+	"color" "207 207 207"
+	"holdtime" "5"
+	"origin" "632 -63.4907 546.897"
+	"fadeout" "0.5"
+	"fxtime" "0.2"
+	"classname" "game_text"
+	"spawnflags" "1"
+	"y" "0.4"
+	"x" "-1"
+	"color2" "128 128 128"
+	"targetname" "eden_text3"
+	"hammerid" "30844"
+	"message" "PROJECT EDEN | END"
+}
+add:
+{
+	"OnCase02" "boss_relay_meteor,Trigger,,0,-1"
+	"origin" "-148.673 2980.83 1329"
+	"OnCase03" "boss_relay_bullet,Trigger,,0,-1"
+	"classname" "logic_case"
+	"targetname" "boss_chariot_extra"
+	"hammerid" "30909"
+	"OnCase01" "boss_attack_pullpush,InValue,1,0,-1"
+}
+add:
+{
+	"OnCase02" "boss_relay_meteor,Trigger,,0,-1"
+	"origin" "-122.206 2965.64 1336"
+	"OnCase03" "boss_relay_bullet,Trigger,,0,-1"
+	"classname" "logic_case"
+	"targetname" "boss_dynamo_extra"
+	"hammerid" "30954"
+	"OnCase01" "boss_attack_pullpush,InValue,2,0,-1"
+}
+add:
+{
+	"Template01" "boss_chariot_extra"
+	"origin" "-145.394 3014.92 1329"
+	"classname" "point_template"
+	"spawnflags" "2"
+	"Template02" "boss_dynamo_extra"
+	"targetname" "boss_extra_temp"
+	"hammerid" "31002"
+}
+add:
+{
+	"damagecap" "20"
+	"damage" "25"
+	"origin" "64 2208 1376"
+	"classname" "trigger_hurt"
+	"spawnflags" "1"
+	"damagemodel" "0"
+	"nodmgforce" "0"
+	"targetname" "boss_fail"
+	"damagetype" "16384"
+	"hammerid" "31045"
+	"model" "*82"
+	"StartDisabled" "1"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"fademindist" "-1"
+	"rendercolor" "255 255 255"
+	"origin" "-752 5000 584"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"classname" "func_illusionary"
+	"fadescale" "1"
+	"rendermode" "0"
+	"hammerid" "31085"
+	"model" "*83"
+}
+add:
+{
+	"classname" "player_speedmod"
+	"targetname" "speedmod"
+	"origin" "-897.663 4766.28 241"
+	"hammerid" "44137"
+}
+add:
+{
+	"MeasureType" "1"
+	"origin" "-1090.27 4665.28 248"
+	"TargetReference" "weapon_debugger_btn"
+	"Target" "weapon_debugger_maker"
+	"MeasureTarget" "weapon_debugger_player"
+	"classname" "logic_measure_movement"
+	"TargetScale" "1"
+	"targetname" "weapon_debugger_move"
+	"hammerid" "44159"
+	"MeasureReference" "weapon_debugger_player"
+}
+add:
+{
+	"OnCase04" "weapon_debugger_bug_beam,AddOutput,rendercolor 128 128 0,0,-1"
+	"OnCase02" "weapon_debugger_bug_beam,AddOutput,rendercolor 0 255 0,0,-1"
+	"origin" "-1073.16 4778.81 241"
+	"OnCase03" "weapon_debugger_bug_beam,AddOutput,rendercolor 0 0 255,0,-1"
+	"classname" "logic_case"
+	"targetname" "weapon_debugger_bug_case"
+	"hammerid" "44221"
+	"OnCase01" "weapon_debugger_bug_beam,AddOutput,rendercolor 255 0 0,0,-1"
+}
+add:
+{
+	"classname" "func_buyzone"
+	"TeamNum" "2"
+	"model" "*84"
+	"hammerid" "44258"
+}
+add:
+{
+	"classname" "func_buyzone"
+	"TeamNum" "3"
+	"model" "*85"
+	"hammerid" "44265"
+}
+add:
+{
+	"maxspeed" "10"
+	"renderamt" "255"
+	"disablereceiveshadows" "0"
+	"volume" "10"
+	"rendercolor" "255 255 255"
+	"origin" "-6848 -320 -984"
+	"fanfriction" "20"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "16"
+	"angles" "0 0 0"
+	"classname" "func_rotating"
+	"rendermode" "0"
+	"solidbsp" "0"
+	"targetname" "end_of_eden_rotate"
+	"hammerid" "50103"
+	"model" "*86"
+	"dmg" "0"
+}
+add:
+{
+	"maxspeed" "10"
+	"renderamt" "255"
+	"disablereceiveshadows" "0"
+	"volume" "10"
+	"rendercolor" "255 255 255"
+	"origin" "-6848 -320 -1008"
+	"fanfriction" "20"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "18"
+	"angles" "0 0 0"
+	"classname" "func_rotating"
+	"rendermode" "0"
+	"solidbsp" "0"
+	"targetname" "end_of_eden_rotate"
+	"hammerid" "50170"
+	"model" "*87"
+	"dmg" "0"
+}
+add:
+{
+	"magnitude" "7"
+	"inner_radius" "0"
+	"radius" "1200"
+	"origin" "-6848 -320 -936"
+	"classname" "point_push"
+	"spawnflags" "8"
+	"enabled" "0"
+	"targetname" "end_of_eden_push"
+	"hammerid" "52390"
+}
+add:
+{
+	"OnPlayerInZone" "filter_ending2,TestActivator,,0,-1"
+	"classname" "game_zone_player"
+	"targetname" "end_of_eden_zone"
+	"hammerid" "52429"
+	"OnPlayerOutZone" "filter_ending,TestActivator,,0,-1"
+	"model" "*88"
+}
+add:
+{
+	"origin" "-6848 -320 -848"
+	"OnStartTouch" "end_of_eden_push,Disable,,0,1"
+	"OnStartTouch" "end_of_eden,CancelPending,,0,1"
+	"OnStartTouch" "filter_ct,AddOutput,OnPass !activator:SetHealth:0:0:-1,0.05,1"
+	"OnStartTouch" "player,AddOutput,solid 5,0.05,1"
+	"OnStartTouch" "player,AddOutput,OnUser1 filter_ct:TestActivator::0:1,0.05,1"
+	"OnStartTouch" "global_zone,CountPlayersInZone,,0.15,1"
+	"OnStartTouch" "player,SetDamageFilter,,0.05,1"
+	"OnStartTouch" "end_of_eden_timer,Disable,,0,1"
+	"classname" "trigger_once"
+	"spawnflags" "1"
+	"targetname" "end_of_eden_fail_trigger"
+	"filtername" "filter_t"
+	"hammerid" "52595"
+	"model" "*89"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnPass" "!activator,AddOutput,solid 5,0,-1"
+	"filterteam" "3"
+	"origin" "-7432.32 -522.348 -919"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_ending"
+	"hammerid" "52627"
+}
+add:
+{
+	"origin" "-7416.91 -690.158 -912"
+	"weapon_p90" "1"
+	"weapon_knife" "1"
+	"weapon_hegrenade" "1"
+	"weapon_elite" "1"
+	"spawnflags" "0"
+	"item_kevlar" "1"
+	"classname" "game_player_equip"
+}
+add:
+{
+	"origin" "-7416.91 -690.158 -912"
+	"targetname" "ammo_equip"
+	"spawnflags" "1"
+	"ammo_50AE" "1"
+	"classname" "game_player_equip"
+}
+add:
+{
+	"OnTrigger" "ammo_equip,Use,,0,-1"
+	"OnTrigger" "!self,Disable,,0.02,-1"
+	"OnTrigger" "!self,Enable,,0.5,-1"
+	"origin" "-89.4208 2988.32 1336"
+	"classname" "logic_relay"
+	"spawnflags" "2"
+	"targetname" "ammo_relay"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnPass" "!activator,AddOutput,solid 0,0,-1"
+	"OnPass" "!activator,SetDamageFilter,filter_fuckyou,0,-1"
+	"OnPass" "ammo_relay,Trigger,0,-1"
+	"filterteam" "3"
+	"origin" "-7416.91 -690.158 -912"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_ending2"
+	"hammerid" "52643"
+}
+add:
+{
+	"OnPass" "!activator,AddOutput,solid 5,0.01,-1"
+	"OnPass" "!activator,SetHealth,0,0.02,-1"
+	"OnPass" "!activator,SetDamageFilter,,0.01,-1"
+	"filterteam" "3"
+	"origin" "-7320.99 -811.195 -912"
+	"Negated" "Allow entities that match criteria"
+	"classname" "filter_activator_team"
+	"targetname" "filter_ending3"
+	"hammerid" "52651"
+}
+add:
+{
+	"OnTimer" "end_of_eden_zone,CountPlayersInZone,,0,-1"
+	"origin" "-7167.46 -996.147 -919"
+	"classname" "logic_timer"
+	"spawnflags" "0"
+	"UseRandomTime" "0"
+	"targetname" "end_of_eden_timer"
+	"hammerid" "52692"
+	"StartDisabled" "1"
+	"RefireTime" "0.05"
+}
+add:
+{
+	"wait" "1"
+	"origin" "64 2576 1432"
+	"OnStartTouch" "!activator,AddOutput,origin -6848 -320 -824,0,-1"
+	"OnStartTouch" "!activator,AddOutput,solid 0,0,-1"
+	"OnStartTouch" "!activator,SetDamageFilter,filter_fuckyou,0,-1"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"targetname" "boss_teleport_out"
+	"hammerid" "56781"
+	"model" "*90"
+	"StartDisabled" "1"
+}
+add:
+{
+	"OnCase04" "!activator,AddOutput,origin -5480 1048 -944,0,-1"
+	"OnCase08" "!activator,AddOutput,origin -8784 -320 -944,0,-1"
+	"OnCase02" "!activator,AddOutput,origin -8224 1048 -944,0,-1"
+	"OnCase06" "!activator,AddOutput,origin -4912 -320 -944,0,-1"
+	"origin" "393.663 1677.72 1729"
+	"OnCase05" "!activator,AddOutput,origin -6848 -2256 -944,0,-1"
+	"OnCase03" "!activator,AddOutput,origin -8224 -1696 -944,0,-1"
+	"classname" "logic_case"
+	"targetname" "end_of_eden_zmcase"
+	"hammerid" "56818"
+	"OnCase07" "!activator,AddOutput,origin -6848 1616 -944,0,-1"
+	"OnCase01" "!activator,AddOutput,origin -5480 -1696 -944,0,-1"
+}
+add:
+{
+	"renderamt" "255"
+	"holdtime" "0"
+	"rendercolor" "255 255 255"
+	"origin" "49.6329 1468.32 1336"
+	"classname" "env_fade"
+	"spawnflags" "1"
+	"ReverseFadeDuration" "2"
+	"targetname" "final_fade_rev"
+	"hammerid" "56874"
+	"duration" "4"
+}
+add:
+{
+	"wait" "1"
+	"origin" "-6848 -384 -1728"
+	"OnStartTouch" "end_of_eden_zmcase,PickRandom,,0,-1"
+	"classname" "trigger_multiple"
+	"spawnflags" "1"
+	"filtername" "filter_t"
+	"hammerid" "57019"
+	"model" "*91"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnPlayerInZone" "filter_ending3,TestActivator,,0,-1"
+	"classname" "game_zone_player"
+	"targetname" "end_of_eden_zone"
+	"hammerid" "57032"
+	"model" "*92"
+}
+add:
+{
+	"_ambientHDR" "-1 -1 -1 1"
+	"_lightHDR" "-1 -1 -1 1"
+	"_AmbientScaleHDR" "1"
+	"origin" "-7731.73 -2135.97 -959"
+	"_ambient" "0 255 255 100"
+	"classname" "light_environment"
+	"angles" "60 20 0"
+	"_light" "254 239 186 400"
+	"SunSpreadAngle" "0"
+	"pitch" "-60"
+	"hammerid" "57086"
+	"_lightscaleHDR" "1"
+}
+add:
+{
+	"renderamt" "100"
+	"holdtime" "0"
+	"rendercolor" "255 255 255"
+	"origin" "-7123.48 276.968 -919"
+	"classname" "env_fade"
+	"spawnflags" "1"
+	"targetname" "end_of_eden_fade"
+	"hammerid" "59148"
+	"duration" "2"
+}
+add:
+{
+	"forcetoenablemotion" "0"
+	"spawnobject" "0"
+	"rendermode" "1"
+	"pressuredelay" "0"
+	"gibdir" "0 0 0"
+	"model" "*93"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "1"
+	"ExplodeDamage" "0"
+	"Damagetype" "0"
+	"massScale" "0"
+	"ExplodeRadius" "0"
+	"damagetoenablemotion" "0"
+	"origin" "-8924 11608 116"
+	"notsolid" "0"
+	"PerformanceMode" "0"
+	"material" "0"
+	"health" "0"
+	"preferredcarryangles" "0 0 0"
+	"disableshadows" "1"
+	"propdata" "0"
+	"classname" "func_physbox"
+	"targetname" "skybox_physbox_blue"
+	"hammerid" "59227"
+	"renderfx" "0"
+	"explodemagnitude" "0"
+	"spawnflags" "19457"
+	"renderamt" "0"
+	"explosion" "0"
+	"nodamageforces" "1"
+}
+add:
+{
+	"forcetoenablemotion" "0"
+	"spawnobject" "0"
+	"rendermode" "1"
+	"pressuredelay" "0"
+	"gibdir" "0 0 0"
+	"model" "*94"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "1"
+	"ExplodeDamage" "0"
+	"Damagetype" "0"
+	"massScale" "0"
+	"ExplodeRadius" "0"
+	"damagetoenablemotion" "0"
+	"origin" "-8924 11608 116"
+	"notsolid" "0"
+	"PerformanceMode" "0"
+	"material" "0"
+	"health" "0"
+	"preferredcarryangles" "0 0 0"
+	"disableshadows" "1"
+	"propdata" "0"
+	"classname" "func_physbox"
+	"targetname" "skybox_physbox_red"
+	"hammerid" "59263"
+	"renderfx" "0"
+	"explodemagnitude" "0"
+	"spawnflags" "19457"
+	"renderamt" "0"
+	"explosion" "0"
+	"nodamageforces" "1"
+}
+add:
+{
+	"forcetoenablemotion" "0"
+	"spawnobject" "0"
+	"rendermode" "1"
+	"pressuredelay" "0"
+	"gibdir" "0 0 0"
+	"model" "*95"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "1"
+	"ExplodeDamage" "0"
+	"Damagetype" "0"
+	"massScale" "0"
+	"ExplodeRadius" "0"
+	"damagetoenablemotion" "0"
+	"origin" "-8924 11608 116"
+	"notsolid" "0"
+	"PerformanceMode" "0"
+	"material" "0"
+	"health" "0"
+	"preferredcarryangles" "0 0 0"
+	"disableshadows" "1"
+	"propdata" "0"
+	"classname" "func_physbox"
+	"targetname" "skybox_physbox_yellow"
+	"hammerid" "59272"
+	"renderfx" "0"
+	"explodemagnitude" "0"
+	"spawnflags" "19457"
+	"renderamt" "0"
+	"explosion" "0"
+	"nodamageforces" "1"
+}
+add:
+{
+	"forcetoenablemotion" "0"
+	"spawnobject" "0"
+	"rendermode" "1"
+	"pressuredelay" "0"
+	"gibdir" "0 0 0"
+	"model" "*96"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "1"
+	"ExplodeDamage" "0"
+	"Damagetype" "0"
+	"massScale" "0"
+	"ExplodeRadius" "0"
+	"damagetoenablemotion" "0"
+	"origin" "-8924 11608 116"
+	"notsolid" "0"
+	"PerformanceMode" "0"
+	"material" "0"
+	"health" "0"
+	"preferredcarryangles" "0 0 0"
+	"disableshadows" "1"
+	"propdata" "0"
+	"classname" "func_physbox"
+	"targetname" "skybox_physbox_green"
+	"hammerid" "59284"
+	"renderfx" "0"
+	"explodemagnitude" "0"
+	"spawnflags" "19457"
+	"renderamt" "0"
+	"explosion" "0"
+	"nodamageforces" "1"
+}
+add:
+{
+	"OnCase04" "skybox_physbox_blue,Kill,,0,-1"
+	"OnCase04" "skybox_physbox_green,Kill,,0,-1"
+	"OnCase04" "skybox_physbox_yellow,Kill,,0,-1"
+	"OnCase02" "skybox_physbox_blue,Kill,,0,-1"
+	"OnCase02" "skybox_physbox_red,Kill,,0,-1"
+	"OnCase02" "skybox_physbox_green,Kill,,0,-1"
+	"origin" "-8924 11608 -12"
+	"OnCase03" "skybox_physbox_yellow,Kill,,0,-1"
+	"OnCase03" "skybox_physbox_red,Kill,,0,-1"
+	"OnCase03" "skybox_physbox_blue,Kill,,0,-1"
+	"classname" "logic_case"
+	"targetname" "skybox_spawn_case"
+	"hammerid" "59302"
+	"OnCase01" "skybox_physbox_green,Kill,,0,-1"
+	"OnCase01" "skybox_physbox_red,Kill,,0,-1"
+	"OnCase01" "skybox_physbox_yellow,Kill,,0,-1"
+}
+add:
+{
+	"origin" "-8924 11608 52"
+	"classname" "logic_relay"
+	"spawnflags" "0"
+	"targetname" "skybox_spawn_relay"
+	"OnSpawn" "skybox_physbox_*,Alpha,255,0.05,-1"
+	"OnSpawn" "skybox_physbox_*,AddOutput,renderamt 255,0.05,-1"
+	"OnSpawn" "skybox_spawn_case,PickRandom,,0,-1"
+	"OnSpawn" "!self,Kill,,0,-1"
+	"OnSpawn" "skybox_spawn_case,Kill,,0.05,-1"
+	"hammerid" "59329"
+	"StartDisabled" "0"
+}
+add:
+{
+	"Template03" "skybox_physbox_*"
+	"Template01" "skybox_spawn_relay"
+	"origin" "-8924 11608 116"
+	"classname" "point_template"
+	"spawnflags" "0"
+	"Template02" "skybox_spawn_case"
+	"targetname" "skybox_spawn_temp"
+	"hammerid" "59348"
+}
+add:
+{
+	"OnCase04" "skybox_spawn_door,SetSpeed,157,0,-1"
+	"OnCase08" "skybox_spawn_door,SetSpeed,222,0,-1"
+	"OnCase02" "skybox_spawn_door,SetSpeed,96,0,-1"
+	"OnCase06" "skybox_spawn_door,SetSpeed,201,0,-1"
+	"origin" "-8840 10996 180"
+	"OnCase05" "skybox_spawn_door,SetSpeed,182,0,-1"
+	"OnCase03" "skybox_spawn_door,SetSpeed,123,0,-1"
+	"classname" "logic_case"
+	"targetname" "skybox_spawn_random"
+	"hammerid" "59522"
+	"OnCase07" "skybox_spawn_door,SetSpeed,217,0,-1"
+	"OnCase01" "skybox_spawn_door,SetSpeed,67,0,-1"
+}
+add:
+{
+	"OnCase04" "skybox_spawn_rot,SetSpeed,0.593,0,-1"
+	"OnCase08" "skybox_spawn_rot,SetSpeed,1,0,-1"
+	"OnCase02" "skybox_spawn_rot,SetSpeed,0.34,0,-1"
+	"OnCase06" "skybox_spawn_rot,SetSpeed,0.782,0,-1"
+	"origin" "-8964 11144 112"
+	"OnCase05" "skybox_spawn_rot,SetSpeed,0.621,0,-1"
+	"OnCase03" "skybox_spawn_rot,SetSpeed,0.47,0,-1"
+	"classname" "logic_case"
+	"targetname" "skybox_spawn_random"
+	"hammerid" "59554"
+	"OnCase07" "skybox_spawn_rot,SetSpeed,0.923,0,-1"
+	"OnCase01" "skybox_spawn_rot,SetSpeed,0.12,0,-1"
+}
+add:
+{
+	"EntityTemplate" "skybox_spawn_temp"
+	"PostSpawnSpeed" "0"
+	"PostSpawnInheritAngles" "0"
+	"origin" "-8508 11840 -104"
+	"classname" "env_entity_maker"
+	"spawnflags" "0"
+	"PostSpawnDirectionVariance" "0.15"
+	"PostSpawnDirection" "0 0 0"
+	"angles" "0 0 0"
+	"targetname" "skybox_spawn_maker"
+	"hammerid" "59583"
+	"parentname" "skybox_spawn_door"
+}
+add:
+{
+	"speed" "100"
+	"loopmovesound" "0"
+	"OnFullyClosed" "!self,Open,,0,-1"
+	"rendermode" "0"
+	"forceclosed" "0"
+	"model" "*97"
+	"rendercolor" "255 255 255"
+	"disablereceiveshadows" "0"
+	"lip" "-96"
+	"parentname" "skybox_spawn_rot"
+	"spawnpos" "0"
+	"origin" "-8508 11840 -104"
+	"OnFullyOpen" "!self,Close,,0,-1"
+	"ignoredebris" "0"
+	"movedir" "0 0 0"
+	"dmg" "0"
+	"health" "0"
+	"disableshadows" "0"
+	"classname" "func_door"
+	"locked_sentence" "0"
+	"targetname" "skybox_spawn_door"
+	"hammerid" "59585"
+	"renderfx" "0"
+	"spawnflags" "4108"
+	"wait" "4"
+	"renderamt" "255"
+	"unlocked_sentence" "0"
+}
+add:
+{
+	"maxspeed" "2376"
+	"renderamt" "255"
+	"disablereceiveshadows" "0"
+	"volume" "10"
+	"rendercolor" "255 255 255"
+	"origin" "-8704 11840 -104"
+	"fanfriction" "20"
+	"renderfx" "0"
+	"disableshadows" "0"
+	"spawnflags" "64"
+	"angles" "0 0 0"
+	"classname" "func_rotating"
+	"rendermode" "0"
+	"solidbsp" "0"
+	"targetname" "skybox_spawn_rot"
+	"hammerid" "59588"
+	"model" "*98"
+	"dmg" "0"
+}
+add:
+{
+	"OnTrigger" "!activator,Break,,0,-1"
+	"wait" "0.1"
+	"origin" "-8348 11592 -960"
+	"OnStartTouch" "!activator,Break,,0,-1"
+	"classname" "trigger_multiple"
+	"spawnflags" "1032"
+	"hammerid" "59891"
+	"model" "*99"
+	"StartDisabled" "0"
+}
+add:
+{
+	"OnTimer" "skybox_spawn_maker,ForceSpawn,,0,-1"
+	"OnTimer" "skybox_spawn_random,PickRandom,,0,-1"
+	"UpperRandomBound" "0.1"
+	"origin" "-7497 12304.4 -502.631"
+	"LowerRandomBound" "0.02"
+	"classname" "logic_timer"
+	"spawnflags" "0"
+	"UseRandomTime" "1"
+	"targetname" "end_of_eden_skybox_timer"
+	"hammerid" "59925"
+	"StartDisabled" "1"
+}
+add:
+{
+	"lfomodvol" "0"
+	"lfomodpitch" "0"
+	"volstart" "0"
+	"lfotype" "0"
+	"fadeinsecs" "0"
+	"spinup" "0"
+	"origin" "-6656 -1600 -192"
+	"fadeoutsecs" "0"
+	"message" "#music/george/eden/shakah_cut.mp3"
+	"pitchstart" "100"
+	"radius" "1250"
+	"spindown" "0"
+	"health" "10"
+	"classname" "ambient_generic"
+	"targetname" "end_music"
+	"pitch" "100"
+	"cspinup" "0"
+	"hammerid" "59956"
+	"lforate" "0"
+	"spawnflags" "49"
+	"preset" "0"
+}
+add:
+{
+	"fogdir" "1 0 0"
+	"fogblend" "0"
+	"origin" "-8276 11860 -356"
+	"fogenable" "0"
+	"fogcolor" "255 255 255"
+	"classname" "sky_camera"
+	"angles" "0 0 0"
+	"fogend" "2000.0"
+	"use_angles" "0"
+	"fogcolor2" "255 255 255"
+	"scale" "16"
+	"hammerid" "62003"
+	"fogstart" "500.0"
+}
+add:
+{
+	"classname" "env_tonemap_controller"
+	"targetname" "tonemap"
+	"origin" "-8933.23 12343 -138.333"
+	"hammerid" "62075"
+}
+add:
+{
+	"disablereceiveshadows" "0"
+	"renderamt" "255"
+	"rendercolor" "255 255 255"
+	"renderfx" "0"
+	"disableshadows" "1"
+	"spawnflags" "1"
+	"classname" "func_wall_toggle"
+	"rendermode" "0"
+	"targetname" "skybox_blocks_toggle"
+	"hammerid" "64290"
+	"model" "*100"
+}
+add:
+{
+	"classname" "game_zone_player"
+	"targetname" "global_zone"
+	"hammerid" "64441"
+	"OnPlayerOutZone" "filter_ct,TestActivator,,0,-1"
+	"OnPlayerOutZone" "filter_t,TestActivator,,0,-1"
+	"model" "*101"
+}

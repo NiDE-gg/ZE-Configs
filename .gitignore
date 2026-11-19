@@ -100,3 +100,6 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_space_race_v5_0.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v3_5.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v3_3.cfg
 cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v2_2fix.cfg
+
+# NiDE
+cstrike/addons/sourcemod/configs/stripper/maps/ze_harry_potter_v2_1.cfg
