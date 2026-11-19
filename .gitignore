@@ -103,3 +103,13 @@ cstrike/addons/sourcemod/configs/stripper/maps/ze_lotr_minas_tirith_v2_2fix.cfg
 
 # NiDE
 cstrike/addons/sourcemod/configs/stripper/maps/ze_harry_potter_v2_1.cfg
+
+//------------------------
+// Backups
+//------------------------
+
+# Backup copies made before editing a config (foo.cfg.bak, foo.cfg.bak-<date|tag>)
+# must never be published: keep them in /bak/ at the server root (ignored by /*).
+# Kept last so it wins over the !negations above.
+*.bak
+*.bak-*
