@@ -8227,8 +8227,8 @@ reserve =
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_TMP_Think();",
+        "CallScriptFunction",
+        "NIDE_TMP_Think_Scheduled",
         ::NIDE_TMP_TICK,
         null
     );
@@ -8348,8 +8348,8 @@ reserve =
 
         EntFire(
             ::NIDE_SCRIPT_NAME,
-            "RunScriptCode",
-            "NIDE_TMP_Think();",
+            "CallScriptFunction",
+            "NIDE_TMP_Think_Scheduled",
             ::NIDE_TMP_TICK,
             null
         );
@@ -10618,8 +10618,8 @@ EntFireByHandle(
 
         EntFire(
             ::NIDE_SCRIPT_NAME,
-            "RunScriptCode",
-            "NIDE_DEAGLE_Think();",
+            "CallScriptFunction",
+            "NIDE_DEAGLE_Think_Scheduled",
             0.0,
             null
         );
@@ -10862,8 +10862,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_DEAGLE_Think();",
+        "CallScriptFunction",
+        "NIDE_DEAGLE_Think_Scheduled",
         ::NIDE_DEAGLE_TICK,
         null
     );
@@ -11993,8 +11993,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_SpeedCola_Think();",
+        "CallScriptFunction",
+        "NIDE_SpeedCola_Think_Scheduled",
         ::NIDE_SPEEDCOLA_TICK,
         null
     );
@@ -12257,8 +12257,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_SpeedCola_Think();",
+        "CallScriptFunction",
+        "NIDE_SpeedCola_Think_Scheduled",
         ::NIDE_SPEEDCOLA_TICK,
         null
     );
@@ -12541,8 +12541,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_DoubleTap_Think();",
+        "CallScriptFunction",
+        "NIDE_DoubleTap_Think_Scheduled",
         ::NIDE_DOUBLETAP_TICK,
         null
     );
@@ -12676,8 +12676,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_DoubleTap_Think();",
+        "CallScriptFunction",
+        "NIDE_DoubleTap_Think_Scheduled",
         ::NIDE_DOUBLETAP_TICK,
         null
     );
@@ -13060,8 +13060,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_Tombstone_Think();",
+        "CallScriptFunction",
+        "NIDE_Tombstone_Think_Scheduled",
         ::NIDE_TOMBSTONE_TICK,
         null
     );
@@ -13315,8 +13315,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_Tombstone_Think();",
+        "CallScriptFunction",
+        "NIDE_Tombstone_Think_Scheduled",
         ::NIDE_TOMBSTONE_TICK,
         null
     );
@@ -13609,8 +13609,8 @@ EntFireByHandle(
 {
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_Tombstone_SpawnAll();",
+        "CallScriptFunction",
+        "NIDE_Tombstone_SpawnAll_Scheduled",
         ::NIDE_TOMBSTONE_SPAWN_DELAY,
         null
     );
@@ -15999,8 +15999,8 @@ EntFireByHandle(
 
         EntFire(
             ::NIDE_SCRIPT_NAME,
-            "RunScriptCode",
-            "NIDE_MysteryBox_Think();",
+            "CallScriptFunction",
+            "NIDE_MysteryBox_Think_Scheduled",
             ::NIDE_MYSTERY_BOX_TICK,
             null
         );
@@ -16193,8 +16193,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_MysteryBox_Think();",
+        "CallScriptFunction",
+        "NIDE_MysteryBox_Think_Scheduled",
         ::NIDE_MYSTERY_BOX_TICK,
         null
     );
@@ -16503,8 +16503,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_Juggernog_Think();",
+        "CallScriptFunction",
+        "NIDE_Juggernog_Think_Scheduled",
         ::NIDE_JUGGERNOG_TICK,
         null
     );
@@ -17116,8 +17116,8 @@ EntFireByHandle(
 
     EntFire(
         ::NIDE_SCRIPT_NAME,
-        "RunScriptCode",
-        "NIDE_Juggernog_Think();",
+        "CallScriptFunction",
+        "NIDE_Juggernog_Think_Scheduled",
         ::NIDE_JUGGERNOG_TICK,
         null
     );
@@ -17920,3 +17920,27 @@ EntFireByHandle(
 };
 
 
+// ============================================================================
+// SCHEDULED CALLS
+// ============================================================================
+
+// The loops above schedule themselves with CallScriptFunction on this
+// logic_script instead of RunScriptCode:
+// - RunScriptCode compiles its code string on every call, and these loops run
+//   every 0.02-0.05 s while a player is in a shop or owns a perk;
+// - every RunScriptCode is reported as "main" in SCRIPT PERF WARNING. These
+//   functions are named, so a slow tick shows up under its own name.
+//   (The ::NIDE_* functions are anonymous closures: calling them directly
+//   with CallScriptFunction would be reported as "<lambda or free run script>".)
+// CallScriptFunction looks the name up in this entity's script scope, so they
+// are declared here and not in the root table. The logic_script runs this file
+// again each round, which declares them again in its new scope.
+
+function NIDE_Juggernog_Think_Scheduled() { ::NIDE_Juggernog_Think(); }
+function NIDE_SpeedCola_Think_Scheduled() { ::NIDE_SpeedCola_Think(); }
+function NIDE_DoubleTap_Think_Scheduled() { ::NIDE_DoubleTap_Think(); }
+function NIDE_Tombstone_Think_Scheduled() { ::NIDE_Tombstone_Think(); }
+function NIDE_Tombstone_SpawnAll_Scheduled() { ::NIDE_Tombstone_SpawnAll(); }
+function NIDE_MysteryBox_Think_Scheduled() { ::NIDE_MysteryBox_Think(); }
+function NIDE_DEAGLE_Think_Scheduled() { ::NIDE_DEAGLE_Think(); }
+function NIDE_TMP_Think_Scheduled() { ::NIDE_TMP_Think(); }

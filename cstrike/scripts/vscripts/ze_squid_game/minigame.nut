@@ -12,10 +12,13 @@ class class_player_move
 }
 
 const TICKRATE = 0.25;
+const TEAM_ZOMBIE = 2; // the map's "zombies" filter_activator_team
 
 g_hModel <- null;
 g_hSound <- null;
 g_hSound1 <- null;
+g_hZmDestCase <- null;
+g_hDoomed <- [];
 g_bTicking <- false;
 g_bKilling <- false;
 g_bPreKilling <- false;
@@ -38,6 +41,8 @@ function Init()
 	g_hModel = Entities.FindByName(null, "squid_doll");
 	g_hSound = Entities.FindByName(null, "awp_sound");
 	g_hSound1 = Entities.FindByName(null, "doll_song");
+	// logic_case -> point_teleport doll_zm_dest_a/b (target !activator): the zombie houses
+	g_hZmDestCase = Entities.FindByName(null, "doll_zm_dest_case");
 	g_hSound.ValidateScriptScope()
 	// Called on g_hSound with the killed player as activator (was a RunScriptCode string compiled on every kill)
 	g_hSound.GetScriptScope().MoveToActivator <- function() { self.SetOrigin(activator.GetOrigin()); }
@@ -66,6 +71,10 @@ function Tick()
 {
 	if (!g_bTicking)
 		return;
+
+	// Schedule the next tick first: a script error further down must not stop the game loop
+	// for the rest of the round (the doll would stay still and nobody would be killed).
+	EntFireByHandle(self, "CallScriptFunction", "Tick", TICKRATE, null, null);
 
 	if (g_bPreKilling || g_bKilling)
 	{
@@ -100,11 +109,12 @@ function Tick()
 		else
 			g_fTimer_Check += TICKRATE;
 	}
-	EntFireByHandle(self, "CallScriptFunction", "Tick", TICKRATE, null, null);
 }
 
 function StartKilling()
 {
+	// Every kill queued by the previous phase (at most TICKRATE late) has landed by now.
+	g_hDoomed.clear();
 	SaveAngles();
 	g_bKilling = true;
 	g_bPreKilling = false;
@@ -143,20 +153,63 @@ function TickKillMovingPlayers()
 			if ((vVelocity.x == 0 && vVelocity.y == 0 && vVelocity.z == 0) && (vAngles1.x == vAngles2.x && vAngles1.y == vAngles2.y && vAngles1.z == vAngles2.z) && !(iButtons & (1 | 2048)))
 				continue;
 
-			local timetokill = RandomFloat(0, TICKRATE);
-
 			EntFire("models_guard", "FireUser1");
-			EntFireByHandle(handle, "SetHealth", "0", timetokill, null, null);
-			EntFireByHandle(g_hSound, "CallScriptFunction", "MoveToActivator", timetokill, handle, handle);
-			EntFireByHandle(g_hSound, "PlaySound", "", timetokill, null, null);
+
+			// Killing the last live zombie would end the round: ZR checks on death, before the
+			// respawn. Send it back to a zombie house instead, where a killed zombie would end up
+			// anyway (spawn -> mzm_tr_2 -> doll_zm_dest_case). This replaces the map's roof cage.
+			if (handle.GetTeam() == TEAM_ZOMBIE && CountLiveZombies() <= 1)
+			{
+				EntFireByHandle(g_hSound, "CallScriptFunction", "MoveToActivator", 0.0, handle, handle);
+				EntFireByHandle(g_hSound, "PlaySound", "", 0.0, null, null);
+				EntFireByHandle(g_hZmDestCase, "PickRandomShuffle", "", 0.0, handle, handle);
+			}
+			else
+			{
+				local timetokill = RandomFloat(0, TICKRATE);
+
+				g_hDoomed.push(handle);
+				EntFireByHandle(handle, "SetHealth", "0", timetokill, null, null);
+				EntFireByHandle(g_hSound, "CallScriptFunction", "MoveToActivator", timetokill, handle, handle);
+				EntFireByHandle(g_hSound, "PlaySound", "", timetokill, null, null);
+			}
 		}
 		players.remove(i);
 		i--;
 	}
 }
 
+// Live zombies anywhere on the map, minus those whose SetHealth 0 is still queued.
+function CountLiveZombies()
+{
+	local count = 0;
+	for (local h = null; h = Entities.FindByClassname(h, "player");)
+	{
+		if (!h.IsValid() || !h.IsAlive() || h.GetTeam() != TEAM_ZOMBIE)
+			continue;
+
+		local doomed = false;
+		foreach (d in g_hDoomed)
+		{
+			if (d == h)
+			{
+				doomed = true;
+				break;
+			}
+		}
+		if (!doomed)
+			count++;
+	}
+	return count;
+}
+
 function StartTouch()
 {
+	// The output is queued: a player who disconnected meanwhile arrives as a null activator.
+	// Pushing it would make IsValid() throw in SaveAngles()/TickKillMovingPlayers().
+	if (activator == null || !activator.IsValid())
+		return;
+
 	if (!g_bTicking)
 	{
 		g_bTicking = true;

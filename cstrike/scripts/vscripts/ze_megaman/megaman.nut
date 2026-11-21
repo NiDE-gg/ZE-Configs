@@ -3724,13 +3724,64 @@ foreach (m in ["megaman/overlays/nes/hpfill.vmt", "megaman/overlays/nes/nes_hpfi
 }
 ::BATTON_TECHO_MAX <- 1024
 ::BATTON_TECHO_BAJO <- 40
+// Punto de spawn valido dentro de la caja. Antes se revisaba con
+// TraceLine(p, p): un trazo de largo cero siempre da 1.0 y ademas TraceLine
+// no ve entidades, asi que nunca descartaba nada y los NPC aparecian dentro
+// de paredes o encima de puertas (func_movelinear) y las trababan.
+::NPCBOX_INTENTOS <- 16
+::NPCBOX_ANCHO <- 24           // medio ancho que tiene que quedar libre
+::NPCBOX_ALTO <- 64            // alto libre sobre el punto
+// Solo puertas: un NPC parado sobre una puerta la traba al abrirse. Otros
+// pisos que son entidades (func_brush, props, trenes de Charge Man) valen.
+::NPCBoxEsPuerta <- function(e) {
+    if (e == null || !e.IsValid()) return false
+    local c = e.GetClassname()
+    if (c == "func_door" || c == "func_door_rotating") return true
+    return e.GetName().tolower().find("door") != null
+}
+
+::NPCBoxTrazo <- function(a, b, box) {
+    local tr = { start = a, end = b, mask = 0x400B, ignore = box }
+    TraceLineEx(tr)
+    if (!("fraction" in tr)) tr.fraction <- 1.0
+    return tr
+}
+
+// true si el trazo choco con algo (mundo o una entidad solida)
+::NPCBoxChoca <- function(a, b, box) {
+    local tr = ::NPCBoxTrazo(a, b, box)
+    return tr.fraction < 1.0
+}
+
+::NPCBoxPunto <- function(box) {
+    local centro = box.GetOrigin() + (box.GetBoundingMins() + box.GetBoundingMaxs()) * 0.5
+    local mn = box.GetBoundingMins(), mx = box.GetBoundingMaxs()
+    for (local n = 0; n < ::NPCBOX_INTENTOS; n++) {
+        local p = box.GetOrigin() + Vector(RandomInt(mn.x, mx.x), RandomInt(mn.y, mx.y), RandomInt(mn.z, mx.z))
+        // 1) que se llegue desde el centro de la caja sin cruzar nada
+        if (::NPCBoxChoca(centro, p, box)) continue
+        // 2) que haya lugar alrededor y arriba (sin paredes ni puertas)
+        local libre = true
+        foreach (d in [Vector(1,0,0), Vector(-1,0,0), Vector(0,1,0), Vector(0,-1,0)])
+            if (::NPCBoxChoca(p, p + d * ::NPCBOX_ANCHO, box)) { libre = false; break }
+        if (!libre) continue
+        if (::NPCBoxChoca(p, p + Vector(0, 0, ::NPCBOX_ALTO), box)) continue
+        // 3) que lo que tenga abajo no sea una puerta
+        local suelo = ::NPCBoxTrazo(p, p - Vector(0, 0, 512), box)
+        if ("enthit" in suelo && ::NPCBoxEsPuerta(suelo.enthit)) continue
+        return p
+    }
+    return null
+}
+
 ::SpawnNPCBox <- function(hbox,npcamount=4,minindex=1,maxindex=10) {
     if(hbox==null||!hbox.IsValid())return;
     local box = hbox
     DebugDrawBox(box.GetOrigin(), Vector(box.GetBoundingMins().x, box.GetBoundingMins().y, box.GetBoundingMins().z), Vector(box.GetBoundingMaxs().x, box.GetBoundingMaxs().y, box.GetBoundingMaxs().z), 255, 255, 0, 10, 10.0)
     for (local i=0; i < npcamount; i++) {
-        local random_origin = box.GetOrigin() + Vector(RandomInt(box.GetBoundingMins().x, box.GetBoundingMaxs().x), RandomInt(box.GetBoundingMins().y, box.GetBoundingMaxs().y), RandomInt(box.GetBoundingMins().z, box.GetBoundingMaxs().z))
-        while (TraceLine(random_origin, random_origin, self) == 1.00) {
+        local random_origin = ::NPCBoxPunto(box)
+        if (random_origin == null) { continue }
+        while (true) {
             local tipo = RandomInt(minindex, maxindex)
             if (tipo == 2) {
                 local arriba = random_origin + Vector(0, 0, ::BATTON_TECHO_MAX)
