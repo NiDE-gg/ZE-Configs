@@ -1755,9 +1755,10 @@ if (!("DR_START_LOADOUT_WINDOW" in getroottable()))
 // Deagle's, stock clips). Each delivered gun gets its reserve once; a slot
 // already holding another gun (Tombstone, purchase) is left alone. The
 // DR_StartGlock_* names stay from the Glock days.
+// The Glock again since v3-2026-11-27a, alone, 250 in its reserve as before
+// (the user, 2026-11-27: "on repasse sur le glock, meme munitions").
 ::DR_START_WEAPONS <- [
-    {cls = "weapon_mac10", slot = "primary", reserve = 250},
-    {cls = "weapon_deagle", slot = "secondary", reserve = 150}
+    {cls = "weapon_glock", slot = "secondary", reserve = 250}
 ];
 
 // Classes the start cleanup keeps: the knife and the starting weapons.
@@ -2481,10 +2482,13 @@ if (!("DR_LASER_TP_COOLDOWN" in getroottable()))
     ::DR_LASER_TP_COOLDOWN <- 0.25;
 
 if (!("DR_LASER_TP_SPEED" in getroottable()))
-    ::DR_LASER_TP_SPEED <- 1000.0;
+    ::DR_LASER_TP_SPEED <- 2000.0;  // 1000 until v3-2026-11-27a (the user: "2000 comme les autres")
 
+// 1.5 s since v3-2026-11-27b: with the ball at 2000 units/s its range stays
+// about 3000 units, as at 1000 units/s for 3 s (the user, 2026-11-27:
+// "raygun: 3000 oui").
 if (!("DR_LASER_TP_LIFETIME" in getroottable()))
-    ::DR_LASER_TP_LIFETIME <- 3.0;
+    ::DR_LASER_TP_LIFETIME <- 1.5;
 
 if (!("DR_LASER_TP_DESTINATION" in getroottable()))
     ::DR_LASER_TP_DESTINATION <- "tp_dest_waiting_room_zms";
@@ -3816,7 +3820,7 @@ if (!("DR_thundergunItemPropIndex" in getroottable()))
 
 
     // ----------------------------------------------------------------------
-    // AUTO CLEANUP AFTER 3 SECONDS
+    // AUTO CLEANUP AFTER DR_LASER_TP_LIFETIME
     // ----------------------------------------------------------------------
 
     DR_Fire(
@@ -6456,6 +6460,10 @@ if (!::DR_callbacksRegistered)
     };
 
     ::DRZS_ResetZombieSpeed(zombie);
+    // A shocked zombie cannot attack either (the user, 2026-11-27,
+    // v3-2026-11-27a: "quand un zombie est touche il ne peut plus attaquer"),
+    // for the whole shock, the way the frost does it.
+    ::DRWW_FrostBlockAttack(zombie, Time() + ::DR_WUNDERWAFFE_STUN_DURATION);
 
     zombie.SetVelocity(
         Vector(0, 0, 0)
@@ -19685,9 +19693,6 @@ if (!("DRTP_ESCAPE_COUNTDOWN_CHANNEL" in getroottable()))
     ::DRTP_Escape_SetFinalEffects(id, false);
     ::DRTP_Escape_StopCountdownSound();
     ::DRTP_ESCAPE_FINAL_ACTIVE = false;
-    // The escape is over: the zombies are back to the round's own speed.
-    if ("DRZS_ResetAllZombieSpeeds" in getroottable())
-        ::DRZS_ResetAllZombieSpeeds();
     ::DRTP_ESCAPE_FINISHED = true;
 
     // The escape is closed: humans left behind can no longer win by killing
@@ -21021,7 +21026,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
 ::DRDOOR_DoorGroups <- [
     {
         id       = 1,
-        minRound = 4,
+        minRound = 6,
         priceText = "door_1right_price",
         cost     = 50,
         label    = "Juggernog Door",
@@ -21030,7 +21035,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 2,
-        minRound = 6,
+        minRound = 8,
         priceText = "door2left_price",
         cost     = 75,
         label    = "Teleporter A Door",
@@ -21039,7 +21044,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 3,
-        minRound = 4,
+        minRound = 6,
         priceText = "door_3right_price",
         cost     = 50,
         label    = "Double Tap Door",
@@ -21048,7 +21053,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 4,
-        minRound = 6,
+        minRound = 8,
         priceText = "door4_price",
         cost     = 75,
         label    = "Teleporter B Door",
@@ -21057,7 +21062,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 5,
-        minRound = 2,
+        minRound = 4,
         priceText = "door_5_price",
         cost     = 25,
         label    = "Right Starting Door",
@@ -21066,7 +21071,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 6,
-        minRound = 2,
+        minRound = 4,
         priceText = "door_6_price",
         cost     = 25,
         label    = "Left Starting Door",
@@ -21075,7 +21080,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 7,
-        minRound = 6,
+        minRound = 8,
         priceText = "door7_price",
         cost     = 100,
         label    = "Teleporter C Door",
@@ -21084,7 +21089,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 8,
-        minRound = 6,
+        minRound = 8,
         priceText = "debris1_price",
         cost     = 75,
         label    = "Double Tap Debris",
@@ -21093,7 +21098,7 @@ if (!("DRDOOR_SCRIPT_NAME" in getroottable()))
     },
     {
         id       = 9,
-        minRound = 6,
+        minRound = 8,
         priceText = "debris2_price",
         cost     = 75,
         label    = "Juggernog Debris",
@@ -23807,13 +23812,36 @@ foreach (type, models in ::DR_SPECIAL_MODELS)
 // death position, which is the eyes'); and a round won by damage dropped
 // Double Points at the zombie, which took the only place.
 // Only one bonus exists at a time: one still out gives way to the round's.
-::DR_BONUS_ROUND_END_CHANCE <- 1.0;
+// By round since v3-2026-11-28a (the user, 2026-11-28: "60 % jusqu'a la
+// manche 5, 30 % jusqu'a la 15, 15 % ensuite"): more bonuses for the humans
+// at the start of a game, fewer at its end. Each line: the last round it
+// covers and the chance at the end of those rounds; the last line's chance
+// holds for every later round. It was 30 % at every round in v3-2026-11-27a,
+// and a bonus at every round end since v3-2026-11-15f.
+::DR_BONUS_ROUND_END_CHANCES <- [
+    {lastRound = 5,  chance = 0.60},
+    {lastRound = 15, chance = 0.30},
+    {lastRound = 0,  chance = 0.15}
+];
 ::DR_BONUS_ROUND_END_DELAY <- 0.2;
 ::DR_BONUS_ROUND_END_RETRIES <- 3;
 
+// The chance of a bonus at the end of this round.
+::DR_Bonus_RoundEndChance <- function(roundNumber)
+{
+    local steps = ::DR_BONUS_ROUND_END_CHANCES;
+    foreach (step in steps)
+    {
+        if (roundNumber <= step.lastRound)
+            return step.chance;
+    }
+    return steps[steps.len() - 1].chance;
+};
+
+// Called while DRZS_ROUND_NUMBER is still the round that ends.
 ::DR_Bonus_OnRoundEnd <- function()
 {
-    if (RandomFloat(0.0, 1.0) > ::DR_BONUS_ROUND_END_CHANCE)
+    if (RandomFloat(0.0, 1.0) > ::DR_Bonus_RoundEndChance(::DRZS_ROUND_NUMBER))
         return;
     DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DR_Bonus_RoundEndDrop(0);",
         ::DR_BONUS_ROUND_END_DELAY, null);
@@ -23946,7 +23974,10 @@ if (!("DRZS_RESTART_PENDING" in getroottable()))
 
 // Round 1: 3500 HP, then +250 per round, 15000 at most (the user, 2026-11-17,
 // v3-2026-11-17a: "vie de depart des zombies: 3500 +250 per round max 15000";
-// it was 3000 and 12000 since 2026-11-10).
+// it was 3000 and 12000 since 2026-11-10). 4000 at round 1 since
+// v3-2026-11-27a (the user: "vie: 4000 au depart ... on garde la meme
+// evolution des vies"), and 3500 again since v3-2026-11-28a (the user,
+// 2026-11-28: "go 3500 mais on garde 250").
 if (!("DRZS_ZOMBIE_MIN_HEALTH" in getroottable()))
     ::DRZS_ZOMBIE_MIN_HEALTH <- 3500;
 else
@@ -24012,11 +24043,18 @@ if (!("DRZS_ROUND_TIME_STEP" in getroottable()))
 else
     ::DRZS_ROUND_TIME_STEP = 5.0;
 
+// A dog wave is shorter: DRZS_DOG_ROUND_TIME whatever its number (the user,
+// 2026-11-27, v3-2026-11-27a: "la manche des chiens: plus courte: 25s pour
+// toute les manches"). It had the time of its round, 35 s at round 5, 40 at 10.
+::DRZS_DOG_ROUND_TIME <- 25.0;
+
 ::DRZS_GetRoundTime <- function(roundNumber)
 {
     local round = roundNumber.tointeger();
     if (round < 1)
         round = 1;
+    if (::DRZS_IsDogRound(round))
+        return ::DRZS_DOG_ROUND_TIME;
     return ::DRZS_ROUND_TIME + ::DRZS_ROUND_TIME_STEP * ((round - 1) / 5);
 };
 
@@ -24038,25 +24076,30 @@ if (!("DRZS_ROUND_END_REASON" in getroottable()))
 if (!("DRZS_ROUND_HIT_STATES" in getroottable()))
     ::DRZS_ROUND_HIT_STATES <- {};
 
-// 0.90 at round 1 since v3-2026-11-15h (the user, 2026-11-15: "on part a 0.9
-// au stage 1, la logique des rounds suivant reste la meme"); it was 0.80.
+// 0.80 at round 1 and up to 1.20 since v3-2026-11-27a (the user, 2026-11-27:
+// "vitesse 0.8 ... la vitesse elle continue d'augmenter jusqu'a 1.2"). It was
+// 0.90 to 1.00 since v3-2026-11-15h, and 0.80 to 1.00 before.
 if (!("DRZS_ZOMBIE_MIN_SPEED" in getroottable()))
-    ::DRZS_ZOMBIE_MIN_SPEED <- 0.90;
+    ::DRZS_ZOMBIE_MIN_SPEED <- 0.80;
 else
-    ::DRZS_ZOMBIE_MIN_SPEED = 0.90;
+    ::DRZS_ZOMBIE_MIN_SPEED = 0.80;
 
 if (!("DRZS_ZOMBIE_MAX_SPEED" in getroottable()))
-    ::DRZS_ZOMBIE_MAX_SPEED <- 1.00;
+    ::DRZS_ZOMBIE_MAX_SPEED <- 1.20;
 else
-    ::DRZS_ZOMBIE_MAX_SPEED = 1.00;
+    ::DRZS_ZOMBIE_MAX_SPEED = 1.20;
 
-// DRZS_ZOMBIE_MIN_SPEED at round 1, +0.15/11 per round, never above
-// DRZS_ZOMBIE_MAX_SPEED: from 0.90 the 1.00 ceiling is reached at round 9
-// (from 0.80 it came only with round 16); 1.00 from round 16 in any case.
+// DRZS_ZOMBIE_MIN_SPEED at round 1, then the same step at every round, never
+// above DRZS_ZOMBIE_MAX_SPEED. Since v3-2026-11-28a the step is 0.40/19 (the
+// user, 2026-11-28, to "0.80, puis 1.00 a la manche 11 et 1.20 a la 20": "ca
+// me va"): 1.01 at round 11 and the 1.20 ceiling at round 20. In
+// v3-2026-11-27a the step was still 0.15/11 (1.00 at round 16, 1.20 at round
+// 31). DRZS_ZOMBIE_SPEED_ROUND is the round from which the ceiling applies
+// whatever the step: the same round, so the speed never jumps.
 if (!("DRZS_ZOMBIE_SPEED_LINEAR" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.15 / 11.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR <- (0.40 / 19.0);
 else
-    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.15 / 11.0);
+    ::DRZS_ZOMBIE_SPEED_LINEAR = (0.40 / 19.0);
 
 if (!("DRZS_ZOMBIE_SPEED_QUADRATIC" in getroottable()))
     ::DRZS_ZOMBIE_SPEED_QUADRATIC <- 0.0;
@@ -24064,9 +24107,9 @@ else
     ::DRZS_ZOMBIE_SPEED_QUADRATIC = 0.0;
 
 if (!("DRZS_ZOMBIE_SPEED_ROUND" in getroottable()))
-    ::DRZS_ZOMBIE_SPEED_ROUND <- 16.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND <- 20.0;
 else
-    ::DRZS_ZOMBIE_SPEED_ROUND = 16.0;
+    ::DRZS_ZOMBIE_SPEED_ROUND = 20.0;
 
 if (!("DRZS_ROUND_KILLS" in getroottable()))
     ::DRZS_ROUND_KILLS <- 0;
@@ -24676,11 +24719,10 @@ if (!("DRZS_ANTICT_PUSH_STRENGTH" in getroottable()))
 // Number of the wave that started with no pause (0: none): the zombies that
 // lived through that change keep their form (DRZS_Dog_Ensure).
 ::DRZS_DOG_KEEP_ROUND <- 0;
-// Zombie speed for the whole escape (the user, 2026-11-17, v3-2026-11-17a:
-// "pendant toute l'escape quand les teleporteurs sont actifs: on passe a 1.2,
-// les chiens garde la meme vitesse"): above DRZS_ZOMBIE_MAX_SPEED on purpose,
-// whatever the round. Dogs keep DRZS_DOG_SPEED (DRZS_GetNormalSpeedFor).
-::DRZS_ESCAPE_ZOMBIE_SPEED <- 1.20;
+// The escape no longer has a zombie speed of its own (it was 1.20 from
+// v3-2026-11-17a to 17b): since v3-2026-11-27a the round's speed goes on
+// (the user, 2026-11-27: "l'activation des teleporteurs ne met plus
+// automatiquement la vitesse a 1.2").
 
 ::DRZS_EscapeRunning <- function()
 {
@@ -25524,9 +25566,6 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 // round token when it comes and does nothing.
 ::DRZS_Escape_CapRound <- function()
 {
-    // The escape has just opened: its zombie speed applies at once
-    // (v3-2026-11-17a), to the zombies already on the map too.
-    ::DRZS_ResetAllZombieSpeeds();
     if (::DRZS_ROUND_PHASE != "active")
         return;
     local limit = Time() + ::DRZS_ESCAPE_ROUND_TIME;
@@ -25706,10 +25745,6 @@ if (!("DRZS_LAST_ROUND_SOUND_TIME" in getroottable()))
 
 ::DRZS_GetZombieSpeed <- function()
 {
-    // The escape has its own speed (DRZS_ESCAPE_ZOMBIE_SPEED).
-    if (::DRZS_EscapeRunning())
-        return ::DRZS_ESCAPE_ZOMBIE_SPEED;
-
     local roundNumber = ::DRZS_ROUND_NUMBER;
 
     if (roundNumber < 1)
@@ -28150,30 +28185,33 @@ foreach (name in [::DRWW_BALL, ::DRWW_ICE_BALL, ::DRWW_FROST,
 // Values of 2026-11-17 (v3-2026-11-17a, the user's list): reserve 20 and 40
 // with the Pack-a-Punch for the four guns (30 and 200); the upgraded Winter's
 // Howl holds 6 in its clip (4).
+// Values of 2026-11-27 (v3-2026-11-27a, the user's gameplay review): reserve
+// 15 for the four guns (20), 25 with the Pack-a-Punch (40); upgraded clip 5
+// for the three FAMAS guns (6) and 7 for the Ray Gun (10).
 ::DRWW_ITEMS <- {
     wunderwaffe = {
-        label = "Wunderwaffe DG-2", clip = 3, reserve = 20, papClip = 6, papReserve = 40,
+        label = "Wunderwaffe DG-2", clip = 3, reserve = 15, papClip = 5, papReserve = 25,
         damage = 1000.0, papDamage = 2000.0, cooldown = ::DR_WUNDERWAFFE_COOLDOWN,
         shoot = "DRWW_Shoot", roundOnly = false,
         models = {view = "v_famas_wunderwaffe", world = "w_famas_wunderwaffe"},
         register = "DRWW_RegisterAfterGive", boxRegister = "DRWW_RegisterWunderwaffeWeapon"
     },
     thundergun = {
-        label = "Thundergun", clip = 3, reserve = 20, papClip = 6, papReserve = 40,
+        label = "Thundergun", clip = 3, reserve = 15, papClip = 5, papReserve = 25,
         damage = 500.0, papDamage = 1000.0, cooldown = ::DR_THUNDERGUN_COOLDOWN,
         shoot = "DRWW_ShootThundergun", roundOnly = false,
         models = {view = "v_famas_thundergun", world = "w_famas_thundergun"},
         register = "DRWW_RegisterThundergunAfterGive", boxRegister = "DRWW_RegisterThundergunWeapon"
     },
     freezegun = {
-        label = "Winter's Howl", clip = 3, reserve = 20, papClip = 6, papReserve = 40,
+        label = "Winter's Howl", clip = 3, reserve = 15, papClip = 5, papReserve = 25,
         damage = 500.0, papDamage = 1000.0, cooldown = ::DR_FREEZEGUN_COOLDOWN,
         shoot = "DRWW_ShootFreezegun", roundOnly = false,
         models = {view = "v_famas_freezegun", world = "w_famas_freezegun"},
         register = "DRWW_RegisterFreezegunAfterGive", boxRegister = "DRWW_RegisterFreezegunWeapon"
     },
     raygun = {
-        label = "Ray Gun", clip = 5, reserve = 20, papClip = 10, papReserve = 40,
+        label = "Ray Gun", clip = 5, reserve = 15, papClip = 7, papReserve = 25,
         damage = 1000.0, papDamage = 2000.0, cooldown = ::DR_LASER_TP_COOLDOWN,
         shoot = "DRWW_ShootRaygun", roundOnly = false,
         models = {view = "v_p228_raygun", world = "w_p228_raygun"},
@@ -29556,9 +29594,24 @@ if (::DRMB_players.len() > 0)
 // Seconds a window waits between two torn boards. 0 since v3-2026-11-12b
 // (the user: zombies break as fast as they hit); it was 1.0.
 ::DRBAR_TEAR_COOLDOWN <- 0.0;
-::DRBAR_REPAIR_TIME <- 1.5;
+// One board a second and 20 units of reach since v3-2026-11-27a (the user,
+// 2026-11-27: "reparation toute les secondes", "on peut passer a 20 ?"); it
+// was 1.5 s and 12 units.
+::DRBAR_REPAIR_TIME <- 1.0;
 // How far from the boards a repairer's box may be (0 = touching only).
-::DRBAR_REPAIR_GAP <- 12.0;
+::DRBAR_REPAIR_GAP <- 20.0;
+// A repair refused because someone stands in the window says so to the
+// repairer, at most once per this many seconds (it was silent).
+::DRBAR_BLOCKED_NOTICE <- 1.0;
+::DRBAR_blockedNotice <- {};
+::DRBAR_NoticeBlocked <- function(human, now)
+{
+    local index = human.entindex();
+    if (::DRBAR_blockedNotice.rawin(index) && now < ::DRBAR_blockedNotice[index])
+        return;
+    ::DRBAR_blockedNotice[index] <- now + ::DRBAR_BLOCKED_NOTICE;
+    ClientPrint(human, 4, "Barricade blocked: someone is in the window");
+};
 // Money for the human who puts a board back (the user, 2026-11-12).
 ::DRBAR_REWARD <- 250;
 // A player's box: half width and standing height.
@@ -29838,7 +29891,10 @@ if (!("DRBAR_saved" in getroottable()))
     if (!::DRBAR_InReach(w, human))
         return "far";
     if (::DRBAR_Occupied(w))
+    {
+        ::DRBAR_NoticeBlocked(human, now);
         return "wait";
+    }
     w.nextRepair = now + ::DRBAR_REPAIR_TIME;
     ::DRBAR_SetBoards(w, w.boards + 1);
     // The board is this human's: their turn is spent, and they are paid.
@@ -29955,7 +30011,7 @@ DR_Fire(::DR_SCRIPT_NAME, "RunScriptCode", "DRBAR_Install();", 0.10, null);
 ::DR_Diag_BeginRound();
 
 ::DRPOWER_Install();
-::DR_BUILD_ID <- "v3-2026-11-17b";
+::DR_BUILD_ID <- "v3-2026-11-28a";
 printl("[Der Riese] Loaded: " + ::DR_BUILD_ID);
 
 // >>> Compile Pal pack hints (compile_pal_list.ps1)
